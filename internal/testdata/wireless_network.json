@@ -1,0 +1,14 @@
+{
+  "id": "ssid", "wlanId": "group", "name": "Original",
+  "band": 1, "security": 3, "broadcast": false, "enable11r": true, "pmfMode": 3,
+  "guestNetEnable": true, "wlanScheduleEnable": true, "action": 1, "scheduleId": "schedule",
+  "macFilterEnable": true, "policy": 1, "macFilterId": "filter",
+  "rateLimit": {"rateLimitId": "client-rate", "downLimitEnable": true, "downLimit": 25, "downLimitType": 1, "upLimitEnable": true, "upLimit": 10, "upLimitType": 1},
+  "ssidRateLimit": {"rateLimitId": "ssid-rate", "downLimitEnable": true, "downLimit": 50, "downLimitType": 1, "upLimitEnable": false},
+  "rateAndBeaconCtrl": {"rate2gCtrlEnable": true, "rate5gCtrlEnable": false, "rate6gCtrlEnable": false, "lowerDensity2g": 5.5, "higherDensity2g": 54, "cckRatesDisable": false, "clientRatesRequire2g": true, "sendBeacons2g": true},
+  "multiCastSetting": {"multiCastEnable": false, "channelUtil": 70, "arpCastEnable": false, "ipv6CastEnable": false, "filterEnable": true, "filterMode": 1, "macGroupId": "multicast-group"},
+  "pskSetting": {"versionPsk": 4, "encryptionPsk": 3, "gikRekeyPskEnable": true, "rekeyPskInterval": 4, "intervalPskType": 2, "securityKey": "untrusted-api-value"},
+  "vlanSetting": {"mode": 1, "customConfig": {"customMode": 0, "bridgeVlan": 20, "lanNetworkId": "network-20", "lanNetworkVlanIds": {"network-20": [20]}}},
+  "mloEnable": true, "prohibitWifiShare": true,
+  "idInt": 17, "index": 2, "site": "site", "resource": "derived", "portalEnable": false, "accessEnable": true
+}

@@ -1,3 +1,6 @@
+# Omitted radio/security settings use defaults only on creation.
+# After import, omit them to preserve the observed settings.
+# Keep passphrase configured for later secured updates.
 resource "omada_wireless_network" "example" {
   site_id       = omada_site.example.id
   name          = "HomeWiFi"

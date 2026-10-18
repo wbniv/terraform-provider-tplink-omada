@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -17,6 +15,7 @@ import (
 
 var _ resource.Resource = &WirelessNetworkResource{}
 var _ resource.ResourceWithImportState = &WirelessNetworkResource{}
+var _ resource.ResourceWithModifyPlan = &WirelessNetworkResource{}
 
 // WirelessNetworkResource manages an Omada SSID/WLAN.
 type WirelessNetworkResource struct {
@@ -71,43 +70,38 @@ func (r *WirelessNetworkResource) Schema(_ context.Context, _ resource.SchemaReq
 				Required:    true,
 			},
 			"band": schema.Int64Attribute{
-				Description: "Radio band bitmask: 1=2.4GHz, 2=5GHz, 3=both.",
+				Description: "Radio band bitmask: 1=2.4GHz, 2=5GHz, 3=both. Defaults to 3 on creation; omission preserves existing settings.",
 				Optional:    true,
 				Computed:    true,
-				Default:     int64default.StaticInt64(3),
 			},
 			"security": schema.Int64Attribute{
-				Description: "Security mode: 0=Open, 3=WPA2/WPA3. Note: do NOT use 2 (WPA2-only fails on v6).",
+				Description: "Security mode: 0=Open, 3=WPA2/WPA3-Personal. Defaults to 3 on creation; omission preserves existing settings. Other modes are unsupported.",
 				Optional:    true,
 				Computed:    true,
-				Default:     int64default.StaticInt64(3),
 			},
 			"passphrase": schema.StringAttribute{
-				Description: "The Wi-Fi password (WPA pre-shared key). Required when security > 0.",
+				Description: "The Wi-Fi password (WPA pre-shared key). Required for secured creation and updates without a previously configured key, including imports. API-returned keys are not trusted. Removing this attribute does not clear the remote key; set security to 0 to open the network.",
 				Optional:    true,
 				Sensitive:   true,
 			},
 			"broadcast": schema.BoolAttribute{
-				Description: "Whether the SSID is broadcast (visible). Set false for hidden networks.",
+				Description: "Whether the SSID is broadcast (visible). Set false for hidden networks. Defaults to true on creation; omission preserves existing settings.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(true),
 			},
 			"vlan_id": schema.Int64Attribute{
 				Description: "Custom VLAN ID to assign to this SSID. If not set, uses the default VLAN.",
 				Optional:    true,
 			},
 			"enable_11r": schema.BoolAttribute{
-				Description: "Enable 802.11r Fast Roaming.",
+				Description: "Enable 802.11r Fast Roaming. Defaults to false on creation; omission preserves existing settings.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 			"pmf_mode": schema.Int64Attribute{
-				Description: "Protected Management Frames mode: 1=disabled, 2=optional, 3=required.",
+				Description: "Protected Management Frames mode: 1=disabled, 2=optional, 3=required. Defaults to 2 on creation; omission preserves existing settings. Verify mode meanings for your controller version.",
 				Optional:    true,
 				Computed:    true,
-				Default:     int64default.StaticInt64(2),
 			},
 		},
 	}
@@ -132,6 +126,11 @@ func (r *WirelessNetworkResource) Create(ctx context.Context, req resource.Creat
 	var plan WirelessNetworkResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := validateSSIDCreate(plan); err != nil {
+		resp.Diagnostics.AddError("Invalid wireless network configuration", err.Error())
 		return
 	}
 
@@ -168,7 +167,7 @@ func (r *WirelessNetworkResource) Create(ctx context.Context, req resource.Creat
 		},
 	}
 
-	if !plan.Passphrase.IsNull() && !plan.Passphrase.IsUnknown() {
+	if plan.Security.ValueInt64() == 3 {
 		ssid.PSKSetting = &client.PSKSetting{
 			VersionPsk:    2,
 			EncryptionPsk: 3,
@@ -176,31 +175,19 @@ func (r *WirelessNetworkResource) Create(ctx context.Context, req resource.Creat
 		}
 	}
 
-	if !plan.VlanID.IsNull() && !plan.VlanID.IsUnknown() {
-		vlanID := int(plan.VlanID.ValueInt64())
-		customConfig := &client.CustomConfig{
-			BridgeVlan: vlanID,
-		}
-		// Look up the network ID for this VLAN to populate lanNetworkId
-		// (required by the Omada API for SSID creation).
-		networks, err := r.client.ListNetworks(ctx, siteID)
-		if err == nil {
-			for _, n := range networks {
-				if n.Vlan == vlanID {
-					customConfig.LanNetworkID = n.ID
-					customConfig.LanNetworkVlanIds = map[string][]int{
-						n.ID: {vlanID},
-					}
-					break
-				}
-			}
-		}
-		ssid.VlanSetting = &client.VlanSetting{
-			Mode:         1,
-			CustomConfig: customConfig,
-		}
-	} else {
-		ssid.VlanSetting = &client.VlanSetting{Mode: 0}
+	vlanPayload := map[string]any{}
+	if err := r.applySSIDVLAN(ctx, siteID, vlanPayload, plan.VlanID); err != nil {
+		resp.Diagnostics.AddError("Cannot configure wireless network VLAN", err.Error())
+		return
+	}
+	vlanJSON, err := json.Marshal(vlanPayload["vlanSetting"])
+	if err != nil {
+		resp.Diagnostics.AddError("Error preparing wireless network VLAN", err.Error())
+		return
+	}
+	if err := json.Unmarshal(vlanJSON, &ssid.VlanSetting); err != nil {
+		resp.Diagnostics.AddError("Error preparing wireless network VLAN", err.Error())
+		return
 	}
 
 	created, err := r.client.CreateWirelessNetwork(ctx, siteID, wlanGroupID, ssid)
@@ -218,6 +205,13 @@ func (r *WirelessNetworkResource) Create(ctx context.Context, req resource.Creat
 	plan.PmfMode = types.Int64Value(int64(created.PmfMode))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	if !resp.Diagnostics.HasError() && resp.Private != nil {
+		marker := []byte("false")
+		if plan.Security.ValueInt64() == 3 && !plan.Passphrase.IsNull() {
+			marker = []byte("true")
+		}
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, ssidConfiguredKey, marker)...)
+	}
 }
 
 func (r *WirelessNetworkResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -250,15 +244,16 @@ func (r *WirelessNetworkResource) Read(ctx context.Context, req resource.ReadReq
 		state.VlanID = types.Int64Value(int64(ssid.VlanSetting.CurrentVlanId))
 	}
 
-	// Read passphrase from PSKSetting — the v6 API does return securityKey
-	if ssid.PSKSetting != nil && ssid.PSKSetting.SecurityKey != "" {
-		state.Passphrase = types.StringValue(ssid.PSKSetting.SecurityKey)
-	}
+	// Keep only the key supplied through Terraform. Controller responses may be
+	// masked, omitted, or plaintext with no reliable discriminator.
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *WirelessNetworkResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// The framework initializes the response from the plan, not prior state.
+	// Failed discovery, PATCH, or readback must not commit an unapplied plan.
+	resp.State = req.State
 	var plan WirelessNetworkResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -275,79 +270,34 @@ func (r *WirelessNetworkResource) Update(ctx context.Context, req resource.Updat
 	wlanGroupID := state.WlanGroupID.ValueString()
 	ssidID := state.ID.ValueString()
 
-	// Build a structured update payload (same shape as Create) rather than
-	// patching the raw GET response — avoids sending back read-only or
-	// unrecognized fields that cause -1001 errors.
-	ssid := &client.WirelessNetwork{
-		Name:               plan.Name.ValueString(),
-		Band:               int(plan.Band.ValueInt64()),
-		Security:           int(plan.Security.ValueInt64()),
-		Broadcast:          plan.Broadcast.ValueBool(),
-		Enable11r:          plan.Enable11r.ValueBool(),
-		PmfMode:            int(plan.PmfMode.ValueInt64()),
-		WlanScheduleEnable: false,
-		MacFilterEnable:    false,
-		RateLimit:          &client.RateLimit{},
-		SSIDRateLimit:      &client.RateLimit{},
-		RateAndBeaconCtrl:  &client.RateAndBeaconCtrl{},
-		MultiCastSetting: &client.MultiCastSetting{
-			MultiCastEnable: true,
-			ChannelUtil:     100,
-			ArpCastEnable:   true,
-			Ipv6CastEnable:  true,
-		},
+	current, err := r.client.GetWirelessNetworkRaw(ctx, siteID, wlanGroupID, ssidID)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading wireless network before update", err.Error())
+		return
+	}
+	marker, diagnostics := req.Private.GetKey(ctx, ssidConfiguredKey)
+	resp.Diagnostics.Append(diagnostics...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	payload, changed, err := r.prepareSSIDUpdate(ctx, siteID, current, plan, state, string(marker) == "true")
+	if err != nil {
+		resp.Diagnostics.AddError("Cannot safely update wireless network", err.Error())
+		return
 	}
 
-	if !plan.Passphrase.IsNull() && !plan.Passphrase.IsUnknown() {
-		ssid.PSKSetting = &client.PSKSetting{
-			VersionPsk:    2,
-			EncryptionPsk: 3,
-			SecurityKey:   plan.Passphrase.ValueString(),
-		}
-	}
-
-	if !plan.VlanID.IsNull() && !plan.VlanID.IsUnknown() {
-		vlanID := int(plan.VlanID.ValueInt64())
-		customConfig := &client.CustomConfig{
-			BridgeVlan: vlanID,
-		}
-		networks, listErr := r.client.ListNetworks(ctx, siteID)
-		if listErr == nil {
-			for _, n := range networks {
-				if n.Vlan == vlanID {
-					customConfig.LanNetworkID = n.ID
-					customConfig.LanNetworkVlanIds = map[string][]int{
-						n.ID: {vlanID},
-					}
-					break
-				}
-			}
-		}
-		ssid.VlanSetting = &client.VlanSetting{
-			Mode:         1,
-			CustomConfig: customConfig,
-		}
+	var updated *client.WirelessNetwork
+	if changed {
+		updated, err = r.client.UpdateWirelessNetwork(ctx, siteID, wlanGroupID, ssidID, payload)
 	} else {
-		ssid.VlanSetting = &client.VlanSetting{Mode: 0}
+		updated, err = r.client.GetWirelessNetwork(ctx, siteID, wlanGroupID, ssidID)
 	}
-
-	jsonBytes, err := json.Marshal(ssid)
 	if err != nil {
-		resp.Diagnostics.AddError("Error marshaling update payload", err.Error())
-		return
-	}
-	var updatePayload map[string]interface{}
-	if err := json.Unmarshal(jsonBytes, &updatePayload); err != nil {
-		resp.Diagnostics.AddError("Error preparing update payload", err.Error())
+		resp.Diagnostics.AddError("Error updating or reading back wireless network", err.Error())
 		return
 	}
 
-	updated, err := r.client.UpdateWirelessNetwork(ctx, siteID, wlanGroupID, ssidID, updatePayload)
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating wireless network", err.Error())
-		return
-	}
-
+	plan.Name = types.StringValue(updated.Name)
 	plan.ID = state.ID
 	plan.SiteID = state.SiteID
 	plan.WlanGroupID = state.WlanGroupID
@@ -357,7 +307,17 @@ func (r *WirelessNetworkResource) Update(ctx context.Context, req resource.Updat
 	plan.Enable11r = types.BoolValue(updated.Enable11r)
 	plan.PmfMode = types.Int64Value(int64(updated.PmfMode))
 
+	if plan.VlanID.IsUnknown() {
+		plan.VlanID = state.VlanID
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	if !resp.Diagnostics.HasError() && resp.Private != nil {
+		marker := []byte("false")
+		if plan.Security.ValueInt64() == 3 && !plan.Passphrase.IsNull() {
+			marker = []byte("true")
+		}
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, ssidConfiguredKey, marker)...)
+	}
 }
 
 func (r *WirelessNetworkResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -412,12 +372,8 @@ func (r *WirelessNetworkResource) ImportState(ctx context.Context, req resource.
 		state.VlanID = types.Int64Null()
 	}
 
-	// Read passphrase from PSKSetting — the v6 API returns securityKey
-	if ssid.PSKSetting != nil && ssid.PSKSetting.SecurityKey != "" {
-		state.Passphrase = types.StringValue(ssid.PSKSetting.SecurityKey)
-	} else {
-		state.Passphrase = types.StringNull()
-	}
+	// Import never turns an API-returned key or mask into a trusted secret.
+	state.Passphrase = types.StringNull()
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

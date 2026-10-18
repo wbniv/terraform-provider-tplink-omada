@@ -777,14 +777,9 @@ func (c *Client) GetWirelessNetworkRaw(ctx context.Context, siteID, wlanGroupID,
 		return nil, err
 	}
 
-	var paginated PaginatedResult
-	if err := json.Unmarshal(resp.Result, &paginated); err != nil {
-		return nil, err
-	}
-
 	var ssids []map[string]interface{}
-	if err := json.Unmarshal(paginated.Data, &ssids); err != nil {
-		return nil, err
+	if err := decodePaginatedData(resp.Result, &ssids); err != nil {
+		return nil, fmt.Errorf("decoding SSIDs: %w", err)
 	}
 
 	for _, s := range ssids {
@@ -826,18 +821,13 @@ func (c *Client) UpdateWirelessNetwork(ctx context.Context, siteID, wlanGroupID,
 		delete(ssid, f)
 	}
 
-	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPatch, fmt.Sprintf("/setting/wlans/%s/ssids/%s", wlanGroupID, ssidID), ssid)
+	_, err := c.doSiteRequest(ctx, siteID, http.MethodPatch, fmt.Sprintf("/setting/wlans/%s/ssids/%s", wlanGroupID, ssidID), ssid)
 	if err != nil {
 		return nil, err
 	}
-	if isEmptyResult(resp.Result) {
-		return c.GetWirelessNetwork(ctx, siteID, wlanGroupID, ssidID)
-	}
-	var updated WirelessNetwork
-	if err := json.Unmarshal(resp.Result, &updated); err != nil {
-		return nil, fmt.Errorf("decoding updated SSID: %w", err)
-	}
-	return &updated, nil
+	// Some versions return an empty or partial PATCH result. Read the actual
+	// configuration rather than treating missing fields as false or zero.
+	return c.GetWirelessNetwork(ctx, siteID, wlanGroupID, ssidID)
 }
 
 // DeleteWirelessNetwork deletes an SSID.
