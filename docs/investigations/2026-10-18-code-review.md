@@ -10,17 +10,18 @@ The baseline reproductions use local HTTP servers. Request contents and returned
 
 ## Repair progress — updated 2026-10-19
 
-The detailed findings and original logs below describe the reviewed baseline. Three separate patches now pass their regression tests and are committed and pushed to Will's fork. Real-controller validation and upstream PR submission remain pending. The [PR tracker](../plans/provider-reliability-prs.md#commits-and-fork-branches--2026-10-19) records the commits and remaining gates.
+The detailed findings and original logs below describe the reviewed baseline. A, B, and C pass their regression tests and are committed and pushed to Will's fork. D1 (SSID preservation) also passes local verification and is committed/pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774). Real-controller validation and upstream PR submission remain pending. The [PR tracker](../plans/provider-reliability-prs.md#commits-and-fork-branches--2026-10-19) records the commits and remaining gates.
 
 | Work | Findings | Current evidence and status |
 | --- | --- | --- |
 | A — Authentication | F01, F07, F08 | Implemented and locally verified on `fix/client-authentication`; certificate, cancellation, retry, concurrency, and race tests pass. [Evidence](authentication-fix/README.md). |
 | B — Switch ports | F02 | Implemented and locally verified in the separate `fix/switch-port-updates` worktree; 13 lifecycle cases and Terraform acceptance on mock standard/ES routes pass, including compatibility with stored PR #23. [Evidence](switch-port-fix/README.md). |
 | C — AP radios | F03 | Implemented and locally verified on `fix/ap-radio-updates`; 14 lifecycle cases and Terraform sequences for default/nondefault dual-band and single-band APs pass, including combined A compatibility. [Evidence](ap-radio-fix/README.md). |
-| D–H | F04–F06, F09–F14 | Open; D, SSID preservation/identity/drift, is next. Scope and dependencies are recorded in the tracker. |
+| D1 — SSID preservation | F04 | Implemented and locally verified on `fix/ssid-update-preservation`, committed and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774); 47 lifecycle/validation cases and eight Terraform scenarios pass, including A compatibility. [Evidence](ssid-fix/README.md). |
+| D2/D3, E–H | F05, F06, F09–F14 | Open; D2, mode-aware SSID VLAN state, is next, followed by D3 group identity. Scope and dependencies are recorded in the tracker. |
 | I — Switch planning | F15 | New P2 finding discovered during B: importing with the entire `ports` list omitted leaves a persistent update plan. Reproduced on the baseline and B; root cause and fix remain open. [Probe and logs](switch-port-fix/README.md#new-finding-f15-omitted-whole-ports-list-does-not-settle-after-import). |
 
-F15 is additional to the original 14 findings. B documents the complete-port-list workaround; it does not resolve F15. Formatting, vet, build, and full unit tests pass for A, B, and C in Go 1.25.6 containers. These results establish local behavior, with hardware compatibility still to be checked.
+F15 is additional to the original 14 findings. B documents the complete-port-list workaround; it does not resolve F15. Formatting, vet, build, and full unit tests pass for A, B, C, and D1 in Go 1.25.6 containers. These results establish local behavior, with hardware compatibility still to be checked.
 
 ## Findings at a glance
 

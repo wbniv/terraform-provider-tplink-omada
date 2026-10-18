@@ -1,0 +1,26 @@
+?   	github.com/terraform-provider-tplink-omada	[no test files]
+ok  	github.com/terraform-provider-tplink-omada/internal/client	0.612s
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	0.125s
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.808s
+=== RUN   TestAccWirelessNetworkCreate
+=== RUN   TestAccWirelessNetworkCreate/defaults
+=== RUN   TestAccWirelessNetworkCreate/explicit
+=== RUN   TestAccWirelessNetworkCreate/unknown_at_plan
+--- PASS: TestAccWirelessNetworkCreate (7.99s)
+    --- PASS: TestAccWirelessNetworkCreate/defaults (2.70s)
+    --- PASS: TestAccWirelessNetworkCreate/explicit (3.52s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_at_plan (1.77s)
+=== RUN   TestAccWirelessNetworkPreservation
+=== RUN   TestAccWirelessNetworkPreservation/plaintext
+=== RUN   TestAccWirelessNetworkPreservation/masked
+=== RUN   TestAccWirelessNetworkPreservation/absent
+=== RUN   TestAccWirelessNetworkPreservation/open
+=== RUN   TestAccWirelessNetworkPreservation/unmanaged
+--- PASS: TestAccWirelessNetworkPreservation (34.99s)
+    --- PASS: TestAccWirelessNetworkPreservation/plaintext (11.05s)
+    --- PASS: TestAccWirelessNetworkPreservation/masked (8.46s)
+    --- PASS: TestAccWirelessNetworkPreservation/absent (7.71s)
+    --- PASS: TestAccWirelessNetworkPreservation/open (6.13s)
+    --- PASS: TestAccWirelessNetworkPreservation/unmanaged (1.64s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	42.992s

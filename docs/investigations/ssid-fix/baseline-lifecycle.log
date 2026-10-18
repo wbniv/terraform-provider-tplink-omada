@@ -1,0 +1,319 @@
+=== RUN   TestWirelessNetworkPreservation
+=== RUN   TestWirelessNetworkPreservation/rename
+    wireless_network_update_test.go:245: unrelated field changed: guestNetEnable
+    wireless_network_update_test.go:245: unrelated field changed: wlanScheduleEnable
+    wireless_network_update_test.go:245: unrelated field changed: action
+    wireless_network_update_test.go:245: unrelated field changed: scheduleId
+    wireless_network_update_test.go:245: unrelated field changed: macFilterEnable
+    wireless_network_update_test.go:245: unrelated field changed: policy
+    wireless_network_update_test.go:245: unrelated field changed: macFilterId
+    wireless_network_update_test.go:245: unrelated field changed: rateLimit
+    wireless_network_update_test.go:245: unrelated field changed: ssidRateLimit
+    wireless_network_update_test.go:245: unrelated field changed: rateAndBeaconCtrl
+    wireless_network_update_test.go:245: unrelated field changed: multiCastSetting
+    wireless_network_update_test.go:245: unrelated field changed: mloEnable
+    wireless_network_update_test.go:245: unrelated field changed: prohibitWifiShare
+    wireless_network_update_test.go:263: PSK field changed: rekeyPskInterval
+    wireless_network_update_test.go:263: PSK field changed: intervalPskType
+    wireless_network_update_test.go:263: PSK field changed: versionPsk
+    wireless_network_update_test.go:263: PSK field changed: gikRekeyPskEnable
+    wireless_network_update_test.go:280: VLAN association changed
+=== RUN   TestWirelessNetworkPreservation/direct_array
+    wireless_network_update_test.go:245: unrelated field changed: guestNetEnable
+    wireless_network_update_test.go:245: unrelated field changed: wlanScheduleEnable
+    wireless_network_update_test.go:245: unrelated field changed: action
+    wireless_network_update_test.go:245: unrelated field changed: scheduleId
+    wireless_network_update_test.go:245: unrelated field changed: macFilterEnable
+    wireless_network_update_test.go:245: unrelated field changed: policy
+    wireless_network_update_test.go:245: unrelated field changed: macFilterId
+    wireless_network_update_test.go:245: unrelated field changed: rateLimit
+    wireless_network_update_test.go:245: unrelated field changed: ssidRateLimit
+    wireless_network_update_test.go:245: unrelated field changed: rateAndBeaconCtrl
+    wireless_network_update_test.go:245: unrelated field changed: multiCastSetting
+    wireless_network_update_test.go:245: unrelated field changed: mloEnable
+    wireless_network_update_test.go:245: unrelated field changed: prohibitWifiShare
+    wireless_network_update_test.go:263: PSK field changed: gikRekeyPskEnable
+    wireless_network_update_test.go:263: PSK field changed: rekeyPskInterval
+    wireless_network_update_test.go:263: PSK field changed: intervalPskType
+    wireless_network_update_test.go:263: PSK field changed: versionPsk
+    wireless_network_update_test.go:280: VLAN association changed
+=== RUN   TestWirelessNetworkPreservation/partial_PATCH_result
+    wireless_network_update_test.go:245: unrelated field changed: guestNetEnable
+    wireless_network_update_test.go:245: unrelated field changed: wlanScheduleEnable
+    wireless_network_update_test.go:245: unrelated field changed: action
+    wireless_network_update_test.go:245: unrelated field changed: scheduleId
+    wireless_network_update_test.go:245: unrelated field changed: macFilterEnable
+    wireless_network_update_test.go:245: unrelated field changed: policy
+    wireless_network_update_test.go:245: unrelated field changed: macFilterId
+    wireless_network_update_test.go:245: unrelated field changed: rateLimit
+    wireless_network_update_test.go:245: unrelated field changed: ssidRateLimit
+    wireless_network_update_test.go:245: unrelated field changed: rateAndBeaconCtrl
+    wireless_network_update_test.go:245: unrelated field changed: multiCastSetting
+    wireless_network_update_test.go:245: unrelated field changed: mloEnable
+    wireless_network_update_test.go:245: unrelated field changed: prohibitWifiShare
+    wireless_network_update_test.go:263: PSK field changed: gikRekeyPskEnable
+    wireless_network_update_test.go:263: PSK field changed: rekeyPskInterval
+    wireless_network_update_test.go:263: PSK field changed: intervalPskType
+    wireless_network_update_test.go:263: PSK field changed: versionPsk
+    wireless_network_update_test.go:280: VLAN association changed
+=== RUN   TestWirelessNetworkPreservation/full_PATCH_result
+    wireless_network_update_test.go:245: unrelated field changed: guestNetEnable
+    wireless_network_update_test.go:245: unrelated field changed: wlanScheduleEnable
+    wireless_network_update_test.go:245: unrelated field changed: action
+    wireless_network_update_test.go:245: unrelated field changed: scheduleId
+    wireless_network_update_test.go:245: unrelated field changed: macFilterEnable
+    wireless_network_update_test.go:245: unrelated field changed: policy
+    wireless_network_update_test.go:245: unrelated field changed: macFilterId
+    wireless_network_update_test.go:245: unrelated field changed: rateLimit
+    wireless_network_update_test.go:245: unrelated field changed: ssidRateLimit
+    wireless_network_update_test.go:245: unrelated field changed: rateAndBeaconCtrl
+    wireless_network_update_test.go:245: unrelated field changed: multiCastSetting
+    wireless_network_update_test.go:245: unrelated field changed: mloEnable
+    wireless_network_update_test.go:245: unrelated field changed: prohibitWifiShare
+    wireless_network_update_test.go:263: PSK field changed: rekeyPskInterval
+    wireless_network_update_test.go:263: PSK field changed: intervalPskType
+    wireless_network_update_test.go:263: PSK field changed: versionPsk
+    wireless_network_update_test.go:263: PSK field changed: gikRekeyPskEnable
+    wireless_network_update_test.go:280: VLAN association changed
+=== RUN   TestWirelessNetworkPreservation/absent_optional_fields_and_explicit_zero
+    wireless_network_update_test.go:245: unrelated field changed: guestNetEnable
+    wireless_network_update_test.go:245: unrelated field changed: wlanScheduleEnable
+    wireless_network_update_test.go:245: unrelated field changed: action
+    wireless_network_update_test.go:245: unrelated field changed: scheduleId
+    wireless_network_update_test.go:245: unrelated field changed: macFilterEnable
+    wireless_network_update_test.go:245: unrelated field changed: policy
+    wireless_network_update_test.go:245: unrelated field changed: macFilterId
+    wireless_network_update_test.go:245: unrelated field changed: rateLimit
+    wireless_network_update_test.go:245: unrelated field changed: ssidRateLimit
+    wireless_network_update_test.go:245: unrelated field changed: rateAndBeaconCtrl
+    wireless_network_update_test.go:245: unrelated field changed: multiCastSetting
+    wireless_network_update_test.go:245: unrelated field changed: mloEnable
+    wireless_network_update_test.go:245: unrelated field changed: prohibitWifiShare
+    wireless_network_update_test.go:263: PSK field changed: versionPsk
+    wireless_network_update_test.go:263: PSK field changed: gikRekeyPskEnable
+    wireless_network_update_test.go:263: PSK field changed: rekeyPskInterval
+    wireless_network_update_test.go:263: PSK field changed: intervalPskType
+    wireless_network_update_test.go:280: VLAN association changed
+=== RUN   TestWirelessNetworkPreservation/incomplete_beacon_settings
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/empty_filter_association
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/incomplete_rate_limits
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/incomplete_VLAN_association
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/unsupported_VLAN_custom_mode
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/no-op
+    wireless_network_update_test.go:217: writes=1, want 0
+    wireless_network_update_test.go:245: unrelated field changed: guestNetEnable
+    wireless_network_update_test.go:245: unrelated field changed: wlanScheduleEnable
+    wireless_network_update_test.go:245: unrelated field changed: action
+    wireless_network_update_test.go:245: unrelated field changed: scheduleId
+    wireless_network_update_test.go:245: unrelated field changed: macFilterEnable
+    wireless_network_update_test.go:245: unrelated field changed: policy
+    wireless_network_update_test.go:245: unrelated field changed: macFilterId
+    wireless_network_update_test.go:245: unrelated field changed: rateLimit
+    wireless_network_update_test.go:245: unrelated field changed: ssidRateLimit
+    wireless_network_update_test.go:245: unrelated field changed: rateAndBeaconCtrl
+    wireless_network_update_test.go:245: unrelated field changed: multiCastSetting
+    wireless_network_update_test.go:245: unrelated field changed: mloEnable
+    wireless_network_update_test.go:245: unrelated field changed: prohibitWifiShare
+    wireless_network_update_test.go:263: PSK field changed: gikRekeyPskEnable
+    wireless_network_update_test.go:263: PSK field changed: rekeyPskInterval
+    wireless_network_update_test.go:263: PSK field changed: intervalPskType
+    wireless_network_update_test.go:263: PSK field changed: versionPsk
+    wireless_network_update_test.go:280: VLAN association changed
+=== RUN   TestWirelessNetworkPreservation/unknown_computed_settings
+    wireless_network_update_test.go:245: unrelated field changed: guestNetEnable
+    wireless_network_update_test.go:245: unrelated field changed: wlanScheduleEnable
+    wireless_network_update_test.go:245: unrelated field changed: action
+    wireless_network_update_test.go:245: unrelated field changed: scheduleId
+    wireless_network_update_test.go:245: unrelated field changed: macFilterEnable
+    wireless_network_update_test.go:245: unrelated field changed: policy
+    wireless_network_update_test.go:245: unrelated field changed: macFilterId
+    wireless_network_update_test.go:245: unrelated field changed: rateLimit
+    wireless_network_update_test.go:245: unrelated field changed: ssidRateLimit
+    wireless_network_update_test.go:245: unrelated field changed: rateAndBeaconCtrl
+    wireless_network_update_test.go:245: unrelated field changed: multiCastSetting
+    wireless_network_update_test.go:245: unrelated field changed: mloEnable
+    wireless_network_update_test.go:245: unrelated field changed: prohibitWifiShare
+    wireless_network_update_test.go:263: PSK field changed: versionPsk
+    wireless_network_update_test.go:263: PSK field changed: gikRekeyPskEnable
+    wireless_network_update_test.go:263: PSK field changed: rekeyPskInterval
+    wireless_network_update_test.go:263: PSK field changed: intervalPskType
+    wireless_network_update_test.go:280: VLAN association changed
+=== RUN   TestWirelessNetworkPreservation/null_computed_settings
+    wireless_network_update_test.go:245: unrelated field changed: guestNetEnable
+    wireless_network_update_test.go:245: unrelated field changed: wlanScheduleEnable
+    wireless_network_update_test.go:245: unrelated field changed: action
+    wireless_network_update_test.go:245: unrelated field changed: scheduleId
+    wireless_network_update_test.go:245: unrelated field changed: macFilterEnable
+    wireless_network_update_test.go:245: unrelated field changed: policy
+    wireless_network_update_test.go:245: unrelated field changed: macFilterId
+    wireless_network_update_test.go:245: unrelated field changed: rateLimit
+    wireless_network_update_test.go:245: unrelated field changed: ssidRateLimit
+    wireless_network_update_test.go:245: unrelated field changed: rateAndBeaconCtrl
+    wireless_network_update_test.go:245: unrelated field changed: multiCastSetting
+    wireless_network_update_test.go:245: unrelated field changed: mloEnable
+    wireless_network_update_test.go:245: unrelated field changed: prohibitWifiShare
+    wireless_network_update_test.go:263: PSK field changed: versionPsk
+    wireless_network_update_test.go:263: PSK field changed: gikRekeyPskEnable
+    wireless_network_update_test.go:263: PSK field changed: rekeyPskInterval
+    wireless_network_update_test.go:263: PSK field changed: intervalPskType
+    wireless_network_update_test.go:280: VLAN association changed
+=== RUN   TestWirelessNetworkPreservation/password_rotation
+    wireless_network_update_test.go:245: unrelated field changed: guestNetEnable
+    wireless_network_update_test.go:245: unrelated field changed: wlanScheduleEnable
+    wireless_network_update_test.go:245: unrelated field changed: action
+    wireless_network_update_test.go:245: unrelated field changed: scheduleId
+    wireless_network_update_test.go:245: unrelated field changed: macFilterEnable
+    wireless_network_update_test.go:245: unrelated field changed: policy
+    wireless_network_update_test.go:245: unrelated field changed: macFilterId
+    wireless_network_update_test.go:245: unrelated field changed: rateLimit
+    wireless_network_update_test.go:245: unrelated field changed: ssidRateLimit
+    wireless_network_update_test.go:245: unrelated field changed: rateAndBeaconCtrl
+    wireless_network_update_test.go:245: unrelated field changed: multiCastSetting
+    wireless_network_update_test.go:245: unrelated field changed: mloEnable
+    wireless_network_update_test.go:245: unrelated field changed: prohibitWifiShare
+    wireless_network_update_test.go:263: PSK field changed: gikRekeyPskEnable
+    wireless_network_update_test.go:263: PSK field changed: rekeyPskInterval
+    wireless_network_update_test.go:263: PSK field changed: intervalPskType
+    wireless_network_update_test.go:263: PSK field changed: versionPsk
+    wireless_network_update_test.go:280: VLAN association changed
+=== RUN   TestWirelessNetworkPreservation/legacy_state_key_is_untrusted
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/missing_trusted_key
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/empty_key
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/unknown_key
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/unknown_root_field
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/unknown_nested_field
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/incomplete_snapshot
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/incomplete_schedule
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/incomplete_filter
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/incomplete_rekey
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/incomplete_multicast
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/malformed_snapshot
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/null_nested_object
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/unsupported_existing_security
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/unsupported_planned_security
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/open_with_password
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/open_to_secured_requires_new_key
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/VLAN_change
+    wireless_network_update_test.go:245: unrelated field changed: guestNetEnable
+    wireless_network_update_test.go:245: unrelated field changed: wlanScheduleEnable
+    wireless_network_update_test.go:245: unrelated field changed: action
+    wireless_network_update_test.go:245: unrelated field changed: scheduleId
+    wireless_network_update_test.go:245: unrelated field changed: macFilterEnable
+    wireless_network_update_test.go:245: unrelated field changed: policy
+    wireless_network_update_test.go:245: unrelated field changed: macFilterId
+    wireless_network_update_test.go:245: unrelated field changed: rateLimit
+    wireless_network_update_test.go:245: unrelated field changed: ssidRateLimit
+    wireless_network_update_test.go:245: unrelated field changed: rateAndBeaconCtrl
+    wireless_network_update_test.go:245: unrelated field changed: multiCastSetting
+    wireless_network_update_test.go:245: unrelated field changed: mloEnable
+    wireless_network_update_test.go:245: unrelated field changed: prohibitWifiShare
+    wireless_network_update_test.go:263: PSK field changed: rekeyPskInterval
+    wireless_network_update_test.go:263: PSK field changed: intervalPskType
+    wireless_network_update_test.go:263: PSK field changed: versionPsk
+    wireless_network_update_test.go:263: PSK field changed: gikRekeyPskEnable
+=== RUN   TestWirelessNetworkPreservation/VLAN_removal
+    wireless_network_update_test.go:245: unrelated field changed: guestNetEnable
+    wireless_network_update_test.go:245: unrelated field changed: wlanScheduleEnable
+    wireless_network_update_test.go:245: unrelated field changed: action
+    wireless_network_update_test.go:245: unrelated field changed: scheduleId
+    wireless_network_update_test.go:245: unrelated field changed: macFilterEnable
+    wireless_network_update_test.go:245: unrelated field changed: policy
+    wireless_network_update_test.go:245: unrelated field changed: macFilterId
+    wireless_network_update_test.go:245: unrelated field changed: rateLimit
+    wireless_network_update_test.go:245: unrelated field changed: ssidRateLimit
+    wireless_network_update_test.go:245: unrelated field changed: rateAndBeaconCtrl
+    wireless_network_update_test.go:245: unrelated field changed: multiCastSetting
+    wireless_network_update_test.go:245: unrelated field changed: mloEnable
+    wireless_network_update_test.go:245: unrelated field changed: prohibitWifiShare
+    wireless_network_update_test.go:263: PSK field changed: versionPsk
+    wireless_network_update_test.go:263: PSK field changed: gikRekeyPskEnable
+    wireless_network_update_test.go:263: PSK field changed: rekeyPskInterval
+    wireless_network_update_test.go:263: PSK field changed: intervalPskType
+=== RUN   TestWirelessNetworkPreservation/VLAN_network_lookup_fails
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/VLAN_network_missing
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/VLAN_network_ambiguous
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/invalid_VLAN
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/invalid_VLAN_association
+    wireless_network_update_test.go:205: diagnostics: []
+=== RUN   TestWirelessNetworkPreservation/read_failure
+    wireless_network_update_test.go:217: writes=1, want 0
+    wireless_network_update_test.go:225: error replaced prior state
+=== RUN   TestWirelessNetworkPreservation/missing_SSID
+    wireless_network_update_test.go:217: writes=1, want 0
+    wireless_network_update_test.go:225: error replaced prior state
+=== RUN   TestWirelessNetworkPreservation/PATCH_failure_retains_prior_state
+    wireless_network_update_test.go:225: error replaced prior state
+=== RUN   TestWirelessNetworkPreservation/readback_failure_retains_prior_state
+    wireless_network_update_test.go:225: error replaced prior state
+--- FAIL: TestWirelessNetworkPreservation (0.72s)
+    --- FAIL: TestWirelessNetworkPreservation/rename (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/direct_array (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/partial_PATCH_result (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/full_PATCH_result (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/absent_optional_fields_and_explicit_zero (0.02s)
+    --- FAIL: TestWirelessNetworkPreservation/incomplete_beacon_settings (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/empty_filter_association (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/incomplete_rate_limits (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/incomplete_VLAN_association (0.00s)
+    --- FAIL: TestWirelessNetworkPreservation/unsupported_VLAN_custom_mode (0.00s)
+    --- FAIL: TestWirelessNetworkPreservation/no-op (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/unknown_computed_settings (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/null_computed_settings (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/password_rotation (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/legacy_state_key_is_untrusted (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/missing_trusted_key (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/empty_key (0.03s)
+    --- FAIL: TestWirelessNetworkPreservation/unknown_key (0.02s)
+    --- FAIL: TestWirelessNetworkPreservation/unknown_root_field (0.03s)
+    --- FAIL: TestWirelessNetworkPreservation/unknown_nested_field (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/incomplete_snapshot (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/incomplete_schedule (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/incomplete_filter (0.07s)
+    --- FAIL: TestWirelessNetworkPreservation/incomplete_rekey (0.02s)
+    --- FAIL: TestWirelessNetworkPreservation/incomplete_multicast (0.07s)
+    --- FAIL: TestWirelessNetworkPreservation/malformed_snapshot (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/null_nested_object (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/unsupported_existing_security (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/unsupported_planned_security (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/open_with_password (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/open_to_secured_requires_new_key (0.02s)
+    --- FAIL: TestWirelessNetworkPreservation/VLAN_change (0.02s)
+    --- FAIL: TestWirelessNetworkPreservation/VLAN_removal (0.03s)
+    --- FAIL: TestWirelessNetworkPreservation/VLAN_network_lookup_fails (0.02s)
+    --- FAIL: TestWirelessNetworkPreservation/VLAN_network_missing (0.03s)
+    --- FAIL: TestWirelessNetworkPreservation/VLAN_network_ambiguous (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/invalid_VLAN (0.09s)
+    --- FAIL: TestWirelessNetworkPreservation/invalid_VLAN_association (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/read_failure (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/missing_SSID (0.01s)
+    --- FAIL: TestWirelessNetworkPreservation/PATCH_failure_retains_prior_state (0.00s)
+    --- FAIL: TestWirelessNetworkPreservation/readback_failure_retains_prior_state (0.01s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/resources	0.783s
+FAIL

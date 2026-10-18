@@ -1,0 +1,100 @@
+=== RUN   TestWirelessNetworkPreservation
+=== RUN   TestWirelessNetworkPreservation/rename
+=== RUN   TestWirelessNetworkPreservation/direct_array
+=== RUN   TestWirelessNetworkPreservation/partial_PATCH_result
+=== RUN   TestWirelessNetworkPreservation/full_PATCH_result
+=== RUN   TestWirelessNetworkPreservation/absent_optional_fields_and_explicit_zero
+=== RUN   TestWirelessNetworkPreservation/incomplete_beacon_settings
+=== RUN   TestWirelessNetworkPreservation/empty_filter_association
+=== RUN   TestWirelessNetworkPreservation/incomplete_rate_limits
+=== RUN   TestWirelessNetworkPreservation/incomplete_VLAN_association
+=== RUN   TestWirelessNetworkPreservation/unsupported_VLAN_custom_mode
+=== RUN   TestWirelessNetworkPreservation/no-op
+=== RUN   TestWirelessNetworkPreservation/unknown_computed_settings
+=== RUN   TestWirelessNetworkPreservation/null_computed_settings
+=== RUN   TestWirelessNetworkPreservation/password_rotation
+=== RUN   TestWirelessNetworkPreservation/legacy_state_key_is_untrusted
+=== RUN   TestWirelessNetworkPreservation/missing_trusted_key
+=== RUN   TestWirelessNetworkPreservation/empty_key
+=== RUN   TestWirelessNetworkPreservation/unknown_key
+=== RUN   TestWirelessNetworkPreservation/unknown_root_field
+=== RUN   TestWirelessNetworkPreservation/unknown_nested_field
+=== RUN   TestWirelessNetworkPreservation/incomplete_snapshot
+=== RUN   TestWirelessNetworkPreservation/incomplete_schedule
+=== RUN   TestWirelessNetworkPreservation/incomplete_filter
+=== RUN   TestWirelessNetworkPreservation/incomplete_rekey
+=== RUN   TestWirelessNetworkPreservation/incomplete_multicast
+=== RUN   TestWirelessNetworkPreservation/malformed_snapshot
+=== RUN   TestWirelessNetworkPreservation/null_nested_object
+=== RUN   TestWirelessNetworkPreservation/unsupported_existing_security
+=== RUN   TestWirelessNetworkPreservation/unsupported_planned_security
+=== RUN   TestWirelessNetworkPreservation/open_with_password
+=== RUN   TestWirelessNetworkPreservation/open_to_secured_requires_new_key
+=== RUN   TestWirelessNetworkPreservation/VLAN_change
+=== RUN   TestWirelessNetworkPreservation/VLAN_removal
+=== RUN   TestWirelessNetworkPreservation/VLAN_network_lookup_fails
+=== RUN   TestWirelessNetworkPreservation/VLAN_network_missing
+=== RUN   TestWirelessNetworkPreservation/VLAN_network_ambiguous
+=== RUN   TestWirelessNetworkPreservation/invalid_VLAN
+=== RUN   TestWirelessNetworkPreservation/invalid_VLAN_association
+=== RUN   TestWirelessNetworkPreservation/read_failure
+=== RUN   TestWirelessNetworkPreservation/missing_SSID
+=== RUN   TestWirelessNetworkPreservation/PATCH_failure_retains_prior_state
+=== RUN   TestWirelessNetworkPreservation/readback_failure_retains_prior_state
+--- PASS: TestWirelessNetworkPreservation (0.17s)
+    --- PASS: TestWirelessNetworkPreservation/rename (0.01s)
+    --- PASS: TestWirelessNetworkPreservation/direct_array (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/partial_PATCH_result (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/full_PATCH_result (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/absent_optional_fields_and_explicit_zero (0.01s)
+    --- PASS: TestWirelessNetworkPreservation/incomplete_beacon_settings (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/empty_filter_association (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/incomplete_rate_limits (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/incomplete_VLAN_association (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/unsupported_VLAN_custom_mode (0.01s)
+    --- PASS: TestWirelessNetworkPreservation/no-op (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/unknown_computed_settings (0.01s)
+    --- PASS: TestWirelessNetworkPreservation/null_computed_settings (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/password_rotation (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/legacy_state_key_is_untrusted (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/missing_trusted_key (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/empty_key (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/unknown_key (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/unknown_root_field (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/unknown_nested_field (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/incomplete_snapshot (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/incomplete_schedule (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/incomplete_filter (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/incomplete_rekey (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/incomplete_multicast (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/malformed_snapshot (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/null_nested_object (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/unsupported_existing_security (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/unsupported_planned_security (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/open_with_password (0.01s)
+    --- PASS: TestWirelessNetworkPreservation/open_to_secured_requires_new_key (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/VLAN_change (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/VLAN_removal (0.01s)
+    --- PASS: TestWirelessNetworkPreservation/VLAN_network_lookup_fails (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/VLAN_network_missing (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/VLAN_network_ambiguous (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/invalid_VLAN (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/invalid_VLAN_association (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/read_failure (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/missing_SSID (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/PATCH_failure_retains_prior_state (0.00s)
+    --- PASS: TestWirelessNetworkPreservation/readback_failure_retains_prior_state (0.01s)
+=== RUN   TestWirelessNetworkCreateValidation
+=== RUN   TestWirelessNetworkCreateValidation/missing_password
+=== RUN   TestWirelessNetworkCreateValidation/empty_password
+=== RUN   TestWirelessNetworkCreateValidation/unsupported_security
+=== RUN   TestWirelessNetworkCreateValidation/open_with_password
+=== RUN   TestWirelessNetworkCreateValidation/unresolved_VLAN
+--- PASS: TestWirelessNetworkCreateValidation (0.00s)
+    --- PASS: TestWirelessNetworkCreateValidation/missing_password (0.00s)
+    --- PASS: TestWirelessNetworkCreateValidation/empty_password (0.00s)
+    --- PASS: TestWirelessNetworkCreateValidation/unsupported_security (0.00s)
+    --- PASS: TestWirelessNetworkCreateValidation/open_with_password (0.00s)
+    --- PASS: TestWirelessNetworkCreateValidation/unresolved_VLAN (0.00s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.181s

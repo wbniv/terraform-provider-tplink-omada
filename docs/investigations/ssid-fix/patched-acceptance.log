@@ -1,0 +1,22 @@
+=== RUN   TestAccWirelessNetworkCreate
+=== RUN   TestAccWirelessNetworkCreate/defaults
+=== RUN   TestAccWirelessNetworkCreate/explicit
+=== RUN   TestAccWirelessNetworkCreate/unknown_at_plan
+--- PASS: TestAccWirelessNetworkCreate (4.63s)
+    --- PASS: TestAccWirelessNetworkCreate/defaults (1.56s)
+    --- PASS: TestAccWirelessNetworkCreate/explicit (1.41s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_at_plan (1.66s)
+=== RUN   TestAccWirelessNetworkPreservation
+=== RUN   TestAccWirelessNetworkPreservation/plaintext
+=== RUN   TestAccWirelessNetworkPreservation/masked
+=== RUN   TestAccWirelessNetworkPreservation/absent
+=== RUN   TestAccWirelessNetworkPreservation/open
+=== RUN   TestAccWirelessNetworkPreservation/unmanaged
+--- PASS: TestAccWirelessNetworkPreservation (28.54s)
+    --- PASS: TestAccWirelessNetworkPreservation/plaintext (7.83s)
+    --- PASS: TestAccWirelessNetworkPreservation/masked (7.24s)
+    --- PASS: TestAccWirelessNetworkPreservation/absent (6.43s)
+    --- PASS: TestAccWirelessNetworkPreservation/open (5.45s)
+    --- PASS: TestAccWirelessNetworkPreservation/unmanaged (1.59s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	33.182s

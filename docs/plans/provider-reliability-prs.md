@@ -6,7 +6,8 @@ This is the working record for fixing the [code-review findings](../investigatio
 
 ## Current work
 
-- [ ] Next implementation: D, SSID preservation, WLAN-group identity, and VLAN drift (F04/F13/F14). Follow the [SSID repair plan](ssid-reliability.md), beginning with D1's retained reproduction and Terraform import-and-rename test.
+- [x] Implement and locally verify D1, SSID update preservation (F04), on `fix/ssid-update-preservation` in `/home/will/terraform-provider-tplink-omada-ssids`, based on `6bc71b3`. Committed and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774); [evidence and PR notes](../investigations/ssid-fix/README.md).
+- [ ] Next implementation: D2/F14, mode-aware SSID VLAN state; then D3/F13, group identity. Follow the [SSID repair plan](ssid-reliability.md). D1 is committed and pushed; controlled-controller validation and upstream submission remain pending.
 - [x] Implement and locally verify C, AP radio preservation (F03), in `/home/will/terraform-provider-tplink-omada-ap-radios` on `fix/ap-radio-updates`, based on `6bc71b3`. [C evidence and review notes](../investigations/ap-radio-fix/README.md).
 - [ ] Finish C's controlled-AP validation and PR-submission review. A, B, and C are committed and pushed to Will's fork; no upstream PR has been opened.
 - [x] Implement and locally verify PR B in worktree `/home/will/terraform-provider-tplink-omada-switch-ports`, branch `fix/switch-port-updates`, based directly on `6bc71b3`. A remains isolated on `fix/client-authentication`. [B evidence and review notes](../investigations/switch-port-fix/README.md).
@@ -21,18 +22,20 @@ This is the working record for fixing the [code-review findings](../investigatio
 
 ## Commits and fork branches — 2026-10-19
 
-Will authorized commit and push. Upstream does not grant this account push access, so the branches are published to [Will's fork](https://github.com/wbniv/terraform-provider-tplink-omada). All three code commits retain the validated file hashes and are based directly on `6bc71b3`.
+Will authorized commit and push. Upstream does not grant this account push access, so the branches are published to [Will's fork](https://github.com/wbniv/terraform-provider-tplink-omada). All four code commits retain the validated file hashes and are based directly on `6bc71b3`.
 
 | Work | Branch | Commit | Scope |
 | --- | --- | --- | --- |
 | A | `fix/client-authentication` | [52ed681](https://github.com/wbniv/terraform-provider-tplink-omada/commit/52ed681674e5a0058ae7807fcd08399c21fa021a) | Two client files |
 | B | `fix/switch-port-updates` | [1c7f535](https://github.com/wbniv/terraform-provider-tplink-omada/commit/1c7f535e86a4db9de53645c2c844d49429ee5694) | Five switch source/test/documentation files |
 | C | `fix/ap-radio-updates` | [9f4b4f8](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9f4b4f8c3ccd1c61f10dd2622f2ae2b3bcb9679b) | Seven AP source/test/documentation/example files |
+| D1 | `fix/ssid-update-preservation` | [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774) | Eleven SSID source/test/fixture/documentation/example/template files |
 
-Plans, investigations, and evidence are maintained separately on `docs/provider-reliability-review` in the original checkout, `/home/will/terraform-provider-tplink-omada`. A is retained as a local and remote branch; B and C retain their dedicated worktrees. This documentation branch contains baseline production code. Use a fix branch to inspect or run that fix.
+Plans, investigations, and evidence are maintained separately on `docs/provider-reliability-review` in the original checkout, `/home/will/terraform-provider-tplink-omada`. A is retained as a local and remote branch; B, C, and D1 retain their dedicated worktrees. This documentation branch contains baseline production code. Use a fix branch to inspect or run that fix.
 
 - [x] Recheck upstream `main`, open PR heads/checks, and contribution requirements before committing. No explicit AI-attribution requirement was found; no tool/model metadata was guessed.
-- [x] Commit each code patch with a conventional title and push all three branches atomically to `fork`.
+- [x] Commit A, B, and C with conventional titles and push those three branches atomically to `fork`.
+- [x] Commit D1 with its breaking-change title/footer and push `fix/ssid-update-preservation` to `fork`; verify every committed file against the tested hashes.
 - [ ] Open upstream PRs, then record their URLs and CI results. The existing CI workflow triggers on pushes to `main` and pull requests targeting `main`; these fork feature-branch pushes do not trigger that workflow.
 
 ## Proposed PR boundaries
@@ -44,7 +47,7 @@ These are local work labels, not GitHub issue or PR numbers. Keep each patch rev
 | A | F01, F07, F08 | Certificate deadlock, consistent session tokens, concurrent refresh, cancellation, multipart retry | None | Implemented and locally verified; controller test pending |
 | B | F02 | Preserve switch-port VLAN lists and honor supported writable fields | Stored #23 compatibility verified | Implemented and locally verified; controller test pending |
 | C | F03 | Preserve omitted/unknown AP radio settings through Terraform updates | A compatibility verified | Implemented and locally verified; controller test pending |
-| D | F04, F13, F14 | SSID update preservation, WLAN-group identity, VLAN drift | Check controller PATCH semantics | Open |
+| D | F04, F13, F14 | SSID update preservation, WLAN-group identity, VLAN drift | A + D1 verified; hardware PATCH contract pending | D1 locally verified and pushed; D2/D3 open |
 | E | F05, F06 | Site and site-settings credential rotation/state | A | Open |
 | F | F12 | HTTP status/envelope validation, typed errors, bounded/redacted diagnostics | Coordinate with A's request helper | Open |
 | G | F09, F10 | Complete pagination and trustworthy missing-resource handling | F before missing-object classification | Open |
@@ -113,14 +116,16 @@ Verification and remaining submission gates: [C evidence](../investigations/ap-r
 
 ### D — Wireless networks
 
-Detailed plan: [SSID preservation, identity, and VLAN state](ssid-reliability.md), prepared 2026-10-19. It defines D1 preservation, D2 VLAN readback, and D3 group identity, with ownership/API decisions, review screens, regression cases, and PR gates. Implementation has not started.
+Detailed plan: [SSID preservation, identity, and VLAN state](ssid-reliability.md), prepared 2026-10-19. It defines D1 preservation, D2 VLAN readback, and D3 group identity, with ownership/API decisions, review screens, regression cases, and PR gates. D1 is implemented and locally verified; [evidence and PR notes](../investigations/ssid-fix/README.md) record baseline failures, 47 passing lifecycle/validation cases, eight Terraform scenarios, A compatibility, migration decisions, and tested file hashes. D1 is committed and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774). D2 and D3 remain planned.
 
-- [ ] Preserve guest controls, MAC filtering, schedules, rate limits, multicast, and PSK mode during unrelated changes.
-- [ ] Determine which fields the controller requires on PATCH and whitelist writable fields; do not echo raw read-only fields.
+- [x] Preserve guest controls, MAC filtering, schedules, rate limits, multicast, and PSK mode during unrelated changes.
+- [x] Inventory writable fields from the official v5.9 reference and existing v6 model, copy them recursively, exclude known read-only fields, and reject unknown/incomplete snapshots.
+- [ ] Verify the inferred full-object PATCH contract and PMF meanings against a controlled controller; mock tests do not establish firmware compatibility.
 - [ ] Implement a supported WLAN-group move or explicitly require replacement, with a migration/recreation note.
 - [ ] Clear stale custom VLAN state when the controller returns default VLAN mode.
-- [ ] Cover import, rename, group change, custom-to-default VLAN drift, masked passphrases, and configured security changes.
-- [ ] Split preservation and identity/drift fixes if API validation makes one PR unwieldy.
+- [x] Cover import, rename, defaults/unknown values, masked/absent API passphrases, old untrusted state, configured security changes, VLAN writes, failure state, and repeated plans.
+- [ ] Cover group changes and custom-to-default VLAN drift under D3 and D2 respectively.
+- [x] Split D1 preservation, D2 VLAN drift, and D3 group identity.
 
 ### E — Credentials
 
@@ -211,5 +216,6 @@ Preserve the earlier [open-PR plan](open-pull-requests.md) and its recorded chec
 | A | Base `6bc71b3`; head `52ed681`; `fix/client-authentication`, pushed to fork | Go 1.25.6: formatting, vet, build, full unit suite, targeted race regressions | Pass; committed file hashes match tested files; same regressions fail on baseline; no live controller; [logs and scope](../investigations/authentication-fix/README.md) |
 | B | Base `6bc71b3`; head `1c7f535`; `fix/switch-port-updates`, pushed to fork | Go 1.25.6 full gates; 13 lifecycle cases; Terraform 1.15.8 standard/ES acceptance; combined #23 acceptance | Pass; committed file hashes match tested files; no live switch; F15 remains open; [evidence](../investigations/switch-port-fix/README.md) |
 | C | Base `6bc71b3`; head `9f4b4f8`; `fix/ap-radio-updates`, pushed to fork | Go 1.25.6 full gates; 14 lifecycle cases; Terraform 1.15.8 dual/default, dual/nondefault, and single-band acceptance; A + C full unit/acceptance checks | Pass on 2026-10-19; committed file hashes match tested files; no live AP; removed defaults documented; [evidence](../investigations/ap-radio-fix/README.md) |
+| D1 | Base `6bc71b3`; head `80991a5`; `fix/ssid-update-preservation`, pushed to fork | Go 1.25.6 full gates; 47 lifecycle/validation cases; eight Terraform 1.15.8 scenarios; A + D1 full unit/acceptance checks | Pass on 2026-10-19; matching host/container hashes; baseline 42 update cases and five import scenarios fail; no hardware; [evidence](../investigations/ssid-fix/README.md) |
 
 Keep the baseline evidence unchanged. Add patch evidence separately, and distinguish implemented, locally verified, controller-verified, submitted, and merged states.
