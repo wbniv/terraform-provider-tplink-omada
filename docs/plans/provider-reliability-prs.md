@@ -8,7 +8,8 @@ This is the working record for fixing the [code-review findings](../investigatio
 
 - [x] Implement and locally verify D1, SSID update preservation (F04), on `fix/ssid-update-preservation` in `/home/will/terraform-provider-tplink-omada-ssids`, based on `6bc71b3`. Committed and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774); [evidence and PR notes](../investigations/ssid-fix/README.md).
 - [x] Implement and locally verify D2/F14, mode-aware SSID VLAN state, on `fix/ssid-vlan-state` in `/home/will/terraform-provider-tplink-omada-ssid-vlan`, stacked on D1 `80991a5`. Committed and pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3); [D2 evidence and PR notes](../investigations/ssid-vlan-fix/README.md).
-- [ ] Next implementation: D3/F13, WLAN-group identity. D2 still needs controller/submission review. Follow the [SSID repair plan](ssid-reliability.md). D1 is committed and pushed; controlled-controller validation and upstream submission remain pending.
+- [x] Implement and locally verify D3/F13, WLAN-group replacement, on `fix/ssid-group-identity` in `/home/will/terraform-provider-tplink-omada-ssid-group`, stacked on D2 `0bbd076`. Committed and pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e); [D3 evidence and PR notes](../investigations/ssid-group-fix/README.md).
+- [ ] Next implementation: E, credential rotation/state (F05/F06). Hardware/submission gates remain open for D1–D3.
 - [x] Implement and locally verify C, AP radio preservation (F03), in `/home/will/terraform-provider-tplink-omada-ap-radios` on `fix/ap-radio-updates`, based on `6bc71b3`. [C evidence and review notes](../investigations/ap-radio-fix/README.md).
 - [ ] Finish C's controlled-AP validation and PR-submission review. A, B, and C are committed and pushed to Will's fork; no upstream PR has been opened.
 - [x] Implement and locally verify PR B in worktree `/home/will/terraform-provider-tplink-omada-switch-ports`, branch `fix/switch-port-updates`, based directly on `6bc71b3`. A remains isolated on `fix/client-authentication`. [B evidence and review notes](../investigations/switch-port-fix/README.md).
@@ -23,7 +24,7 @@ This is the working record for fixing the [code-review findings](../investigatio
 
 ## Commits and fork branches — 2026-10-19
 
-Will authorized commit and push. Upstream does not grant this account push access, so the branches are published to [Will's fork](https://github.com/wbniv/terraform-provider-tplink-omada). All four code commits retain the validated file hashes and are based directly on `6bc71b3`.
+Will authorized commit and push. Upstream does not grant this account push access, so the branches are published to [Will's fork](https://github.com/wbniv/terraform-provider-tplink-omada). All six code commits retain the validated file hashes. A–D1 are based directly on `6bc71b3`; D2 stacks on D1 and D3 stacks on D2.
 
 | Work | Branch | Commit | Scope |
 | --- | --- | --- | --- |
@@ -31,14 +32,18 @@ Will authorized commit and push. Upstream does not grant this account push acces
 | B | `fix/switch-port-updates` | [1c7f535](https://github.com/wbniv/terraform-provider-tplink-omada/commit/1c7f535e86a4db9de53645c2c844d49429ee5694) | Five switch source/test/documentation files |
 | C | `fix/ap-radio-updates` | [9f4b4f8](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9f4b4f8c3ccd1c61f10dd2622f2ae2b3bcb9679b) | Seven AP source/test/documentation/example files |
 | D1 | `fix/ssid-update-preservation` | [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774) | Eleven SSID source/test/fixture/documentation/example/template files |
+| D2 | `fix/ssid-vlan-state` | [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3) | Nine VLAN source/test/documentation/template files; based on D1 |
+| D3 | `fix/ssid-group-identity` | [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e) | Seven group-identity source/test/documentation/template/example files; based on D2 |
 
 D2 is committed and pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3) on `fork/fix/ssid-vlan-state`, based on D1 `80991a5`. Its nine committed file hashes match the recorded tested sources.
 
-Plans, investigations, and evidence are maintained separately on `docs/provider-reliability-review` in the original checkout, `/home/will/terraform-provider-tplink-omada`. A is retained as a local and remote branch; B, C, D1, and D2 retain their dedicated worktrees. This documentation branch contains baseline production code. Use a fix branch to inspect or run that fix.
+Plans, investigations, and evidence are maintained separately on `docs/provider-reliability-review` in the original checkout, `/home/will/terraform-provider-tplink-omada`. A is retained as a local and remote branch; B, C, D1, D2, and D3 retain their dedicated worktrees. This documentation branch contains baseline production code. Use a fix branch to inspect or run that fix.
 
 - [x] Recheck upstream `main`, open PR heads/checks, and contribution requirements before committing. No explicit AI-attribution requirement was found; no tool/model metadata was guessed.
 - [x] Commit A, B, and C with conventional titles and push those three branches atomically to `fork`.
 - [x] Commit D1 with its breaking-change title/footer and push `fix/ssid-update-preservation` to `fork`; verify every committed file against the tested hashes.
+- [x] Commit/push D2 as `0bbd076` and documentation as `2b31fb1`; verify matching remote refs and all nine committed code/doc hashes.
+- [x] Commit/push D3 as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e) with its breaking-change note; all seven committed hashes match the tested files.
 - [ ] Open upstream PRs, then record their URLs and CI results. The existing CI workflow triggers on pushes to `main` and pull requests targeting `main`; these fork feature-branch pushes do not trigger that workflow.
 
 ## Proposed PR boundaries
@@ -50,7 +55,7 @@ These are local work labels, not GitHub issue or PR numbers. Keep each patch rev
 | A | F01, F07, F08 | Certificate deadlock, consistent session tokens, concurrent refresh, cancellation, multipart retry | None | Implemented and locally verified; controller test pending |
 | B | F02 | Preserve switch-port VLAN lists and honor supported writable fields | Stored #23 compatibility verified | Implemented and locally verified; controller test pending |
 | C | F03 | Preserve omitted/unknown AP radio settings through Terraform updates | A compatibility verified | Implemented and locally verified; controller test pending |
-| D | F04, F13, F14 | SSID update preservation, WLAN-group identity, VLAN drift | D2 stacks on D1; A + D1 + D2 verified; hardware pending | D1 and D2 pushed; D3 open |
+| D | F04, F13, F14 | SSID update preservation, WLAN-group identity, VLAN drift | D1 → D2 → D3; A + D1 + D2 + D3 verified; hardware pending | D1, D2, and D3 pushed |
 | E | F05, F06 | Site and site-settings credential rotation/state | A | Open |
 | F | F12 | HTTP status/envelope validation, typed errors, bounded/redacted diagnostics | Coordinate with A's request helper | Open |
 | G | F09, F10 | Complete pagination and trustworthy missing-resource handling | F before missing-object classification | Open |
@@ -119,7 +124,7 @@ Verification and remaining submission gates: [C evidence](../investigations/ap-r
 
 ### D — Wireless networks
 
-Detailed plan: [SSID preservation, identity, and VLAN state](ssid-reliability.md), prepared 2026-10-19. It defines D1 preservation, D2 VLAN readback, and D3 group identity, with ownership/API decisions, review screens, regression cases, and PR gates. D1 is implemented and locally verified; [evidence and PR notes](../investigations/ssid-fix/README.md) record baseline failures, 47 passing lifecycle/validation cases, eight Terraform scenarios, A compatibility, migration decisions, and tested file hashes. D1 is committed and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774). D2 is locally verified and committed/pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3) on D1; [D2 evidence](../investigations/ssid-vlan-fix/README.md) records 95 lifecycle cases, three new Terraform scenarios, full D1 regression, and A compatibility. D3 remains planned.
+Detailed plan: [SSID preservation, identity, and VLAN state](ssid-reliability.md), prepared 2026-10-19. It defines D1 preservation, D2 VLAN readback, and D3 group identity, with ownership/API decisions, review screens, regression cases, and PR gates. D1 is implemented and locally verified; [evidence and PR notes](../investigations/ssid-fix/README.md) record baseline failures, 47 passing lifecycle/validation cases, eight Terraform scenarios, A compatibility, migration decisions, and tested file hashes. D1 is committed and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774). D2 is locally verified and committed/pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3) on D1; [D2 evidence](../investigations/ssid-vlan-fix/README.md) records 95 lifecycle cases, three new Terraform scenarios, full D1 regression, and A compatibility. D3 is locally verified and committed/pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e) on D2; [D3 evidence](../investigations/ssid-group-fix/README.md) records 21 direct cases, 13 new Terraform scenarios, full D1/D2 regression, A compatibility, and recreation risks.
 
 - [x] Preserve guest controls, MAC filtering, schedules, rate limits, multicast, and PSK mode during unrelated changes.
 - [x] Inventory writable fields from the official v5.9 reference and existing v6 model, copy them recursively, exclude known read-only fields, and reject unknown/incomplete snapshots.
@@ -128,7 +133,7 @@ Detailed plan: [SSID preservation, identity, and VLAN state](ssid-reliability.md
 - [x] Clear stale custom VLAN state when the controller returns default VLAN mode; share interpretation across refresh/import/data-source/write-readback paths and reject incomplete/unsupported snapshots.
 - [x] Cover import, rename, defaults/unknown values, masked/absent API passphrases, old untrusted state, configured security changes, VLAN writes, failure state, and repeated plans.
 - [x] Cover default/custom VLAN drift, stale fields, import, observed readback, restoration/removal plans, and stable repeated plans in D2.
-- [ ] Cover group changes under D3.
+- [x] Cover D3 group replacement planning, old/new identities, unchanged/omitted/unknown values, import, site replacement, both lifecycle orders, failure/retry, and stable plans. Known invalid recreation credentials fail planning before deletion.
 - [ ] Review SSID create recovery when POST succeeds but the following transport/lookup/JSON decode fails before the resource receives the new ID. D2's created-ID preservation covers a returned decoded object; earlier client failures need separate evidence and a repair.
 - [x] Split D1 preservation, D2 VLAN drift, and D3 group identity.
 
@@ -223,5 +228,6 @@ Preserve the earlier [open-PR plan](open-pull-requests.md) and its recorded chec
 | C | Base `6bc71b3`; head `9f4b4f8`; `fix/ap-radio-updates`, pushed to fork | Go 1.25.6 full gates; 14 lifecycle cases; Terraform 1.15.8 dual/default, dual/nondefault, and single-band acceptance; A + C full unit/acceptance checks | Pass on 2026-10-19; committed file hashes match tested files; no live AP; removed defaults documented; [evidence](../investigations/ap-radio-fix/README.md) |
 | D1 | Base `6bc71b3`; head `80991a5`; `fix/ssid-update-preservation`, pushed to fork | Go 1.25.6 full gates; 47 lifecycle/validation cases; eight Terraform 1.15.8 scenarios; A + D1 full unit/acceptance checks | Pass on 2026-10-19; matching host/container hashes; baseline 42 update cases and five import scenarios fail; no hardware; [evidence](../investigations/ssid-fix/README.md) |
 | D2 | Base D1 `80991a5`; `fix/ssid-vlan-state`, `0bbd076` | Go 1.25.6 full gates; 95 lifecycle cases; three D2 Terraform scenarios plus all eight D1 scenarios; A + D1 + D2 unit/acceptance checks | Pass on 2026-10-19; host/container hashes match; D1 baseline has 59 lifecycle failures and all three new Terraform failures; no hardware; [evidence](../investigations/ssid-vlan-fix/README.md) |
+| D3 | Base D2 `0bbd076`; `fix/ssid-group-identity`, `ec2d949`, pushed to fork | Go 1.25.6 full gates; 21 direct cases; 13 D3 Terraform scenarios plus all 11 D1/D2 scenarios; A + D1 + D2 + D3 unit/acceptance checks | Pass on 2026-10-19; seven host/container hashes match; D2 baseline has 10 direct-case and nine new Terraform failures; no hardware; [evidence](../investigations/ssid-group-fix/README.md) |
 
 Keep the baseline evidence unchanged. Add patch evidence separately, and distinguish implemented, locally verified, controller-verified, submitted, and merged states.

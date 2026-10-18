@@ -1,0 +1,50 @@
+=== RUN   TestWirelessNetworkGroupIdentityPlan
+=== RUN   TestWirelessNetworkGroupIdentityPlan/unchanged
+=== RUN   TestWirelessNetworkGroupIdentityPlan/changed
+=== RUN   TestWirelessNetworkGroupIdentityPlan/omitted_retains_import
+=== RUN   TestWirelessNetworkGroupIdentityPlan/omitted_already_known
+=== RUN   TestWirelessNetworkGroupIdentityPlan/explicit_unknown
+=== RUN   TestWirelessNetworkGroupIdentityPlan/initial_explicit
+=== RUN   TestWirelessNetworkGroupIdentityPlan/initial_omitted
+=== RUN   TestWirelessNetworkGroupIdentityPlan/initial_unknown
+=== RUN   TestWirelessNetworkGroupIdentityPlan/destroy
+--- PASS: TestWirelessNetworkGroupIdentityPlan (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/unchanged (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/changed (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/omitted_retains_import (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/omitted_already_known (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/explicit_unknown (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/initial_explicit (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/initial_omitted (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/initial_unknown (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/destroy (0.00s)
+=== RUN   TestWirelessNetworkGroupIdentityUpdateGuard
+=== RUN   TestWirelessNetworkGroupIdentityUpdateGuard/"group-b"
+=== RUN   TestWirelessNetworkGroupIdentityUpdateGuard/<unknown>
+=== RUN   TestWirelessNetworkGroupIdentityUpdateGuard/<null>
+--- PASS: TestWirelessNetworkGroupIdentityUpdateGuard (0.01s)
+    --- PASS: TestWirelessNetworkGroupIdentityUpdateGuard/"group-b" (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityUpdateGuard/<unknown> (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityUpdateGuard/<null> (0.00s)
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/secured_without_key
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/omitted_security_defaults_to_secured
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/open_with_key
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/unsupported_security
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/unsupported_security_with_unknown_key
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/unknown_security_deferred
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/unknown_key_deferred
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/secured_with_key
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/open_without_key
+--- PASS: TestWirelessNetworkGroupIdentityRecreationPlan (0.01s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/secured_without_key (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/omitted_security_defaults_to_secured (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/open_with_key (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/unsupported_security (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/unsupported_security_with_unknown_key (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/unknown_security_deferred (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/unknown_key_deferred (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/secured_with_key (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/open_without_key (0.00s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.028s

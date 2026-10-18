@@ -1,0 +1,58 @@
+=== RUN   TestAccWirelessNetworkCreate
+=== RUN   TestAccWirelessNetworkCreate/defaults
+=== RUN   TestAccWirelessNetworkCreate/explicit
+=== RUN   TestAccWirelessNetworkCreate/unknown_at_plan
+--- PASS: TestAccWirelessNetworkCreate (7.97s)
+    --- PASS: TestAccWirelessNetworkCreate/defaults (4.45s)
+    --- PASS: TestAccWirelessNetworkCreate/explicit (1.59s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_at_plan (1.93s)
+=== RUN   TestAccWirelessNetworkGroupIdentity
+=== RUN   TestAccWirelessNetworkGroupIdentity/import_retains_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_defaults
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_before_destroy
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_changed_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_same_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/site_replacement
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/delete_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/duplicate_name_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_omitted_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_unknown_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password
+--- PASS: TestAccWirelessNetworkGroupIdentity (33.10s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/import_retains_group (5.89s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_defaults (2.11s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings (2.13s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_before_destroy (2.26s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_changed_group (2.73s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_same_group (2.29s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/site_replacement (2.24s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_failure_retry (2.32s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/delete_failure_retry (3.02s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/duplicate_name_retry (2.64s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_omitted_group (1.36s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_unknown_group (1.40s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password (2.70s)
+=== RUN   TestAccWirelessNetworkPreservation
+=== RUN   TestAccWirelessNetworkPreservation/plaintext
+=== RUN   TestAccWirelessNetworkPreservation/masked
+=== RUN   TestAccWirelessNetworkPreservation/absent
+=== RUN   TestAccWirelessNetworkPreservation/open
+=== RUN   TestAccWirelessNetworkPreservation/unmanaged
+--- PASS: TestAccWirelessNetworkPreservation (26.06s)
+    --- PASS: TestAccWirelessNetworkPreservation/plaintext (6.75s)
+    --- PASS: TestAccWirelessNetworkPreservation/masked (6.26s)
+    --- PASS: TestAccWirelessNetworkPreservation/absent (6.26s)
+    --- PASS: TestAccWirelessNetworkPreservation/open (5.27s)
+    --- PASS: TestAccWirelessNetworkPreservation/unmanaged (1.52s)
+=== RUN   TestAccWirelessNetworkVLANState
+=== RUN   TestAccWirelessNetworkVLANState/default_clears_fields
+=== RUN   TestAccWirelessNetworkVLANState/default_retains_stale_fields
+=== RUN   TestAccWirelessNetworkVLANState/import_default
+--- PASS: TestAccWirelessNetworkVLANState (11.39s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_clears_fields (4.87s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_retains_stale_fields (4.86s)
+    --- PASS: TestAccWirelessNetworkVLANState/import_default (1.65s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	78.571s

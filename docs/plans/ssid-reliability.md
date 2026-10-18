@@ -1,6 +1,6 @@
 # D — SSID preservation, identity, and VLAN state
 
-Prepared for Will on 2026-10-19. Status: D1 implemented, locally verified, committed, and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774) in `/home/will/terraform-provider-tplink-omada-ssids`, branch `fix/ssid-update-preservation`, based on `6bc71b3`; D2 is implemented, locally verified, committed, and pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3) on `fix/ssid-vlan-state` in `/home/will/terraform-provider-tplink-omada-ssid-vlan`, based on D1 commit `80991a5`; D3 remains planned. Parent: [provider reliability tracker](provider-reliability-prs.md#d--wireless-networks).
+Prepared for Will on 2026-10-19. Status: D1 implemented, locally verified, committed, and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774) in `/home/will/terraform-provider-tplink-omada-ssids`, branch `fix/ssid-update-preservation`, based on `6bc71b3`; D2 is implemented, locally verified, committed, and pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3) on `fix/ssid-vlan-state` in `/home/will/terraform-provider-tplink-omada-ssid-vlan`, based on D1 commit `80991a5`; D3 is implemented, locally verified, committed, and pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e) on `fix/ssid-group-identity`, based on D2 `0bbd076` in `/home/will/terraform-provider-tplink-omada-ssid-group`. Parent: [provider reliability tracker](provider-reliability-prs.md#d--wireless-networks).
 
 ## D1 implementation status — 2026-10-19
 
@@ -12,7 +12,7 @@ Prepared for Will on 2026-10-19. Status: D1 implemented, locally verified, commi
 - [x] Commit and push D1 as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774); committed hashes match the tested files.
 - [ ] Complete hardware/submission gates. No upstream PR has been opened.
 - [x] Implement and locally verify D2's mode-aware VLAN state mapping; see [D2 evidence](../investigations/ssid-vlan-fix/README.md).
-- [ ] Implement D3's group-change lifecycle next.
+- [x] Implement and locally verify D3's replacement lifecycle; see [D3 evidence](../investigations/ssid-group-fix/README.md).
 
 The PATCH contract remains an inference from TP-Link's v5.9 documentation and the existing v6 client model. Unknown fields/modes fail before writes. Hardware validation remains unchecked; the evidence records the PMF/version discrepancy and secret ownership decisions explicitly.
 
@@ -25,6 +25,17 @@ The PATCH contract remains an inference from TP-Link's v5.9 documentation and th
 - [x] Commit and push D2 as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3); committed hashes match the tested files.
 - [ ] Complete D2 hardware/submission gates; no upstream PR has been opened.
 - [ ] Review earlier SSID create readback failures that can lose the newly allocated ID; D2 retains identity when a decoded SSID reaches the resource, while transport/lookup/decode recovery is separate.
+
+## D3 implementation status — 2026-10-19
+
+- [x] Stack `fix/ssid-group-identity` on D2 `0bbd076` in `/home/will/terraform-provider-tplink-omada-ssid-group`; preserve the D1/D2 lifecycle fixes during recreation.
+- [x] Require replacement for group changes while retaining omitted imported/current groups. Guard invalid Update identities before lifecycle API requests.
+- [x] Reject known invalid creation/recreation security/password settings during planning; retain unknown values until apply.
+- [x] Verify 21 direct cases and 13 D3 Terraform scenarios (47 steps), both replacement orders, import/unknown values, failure/retry, and stable plans. Baseline has 10 direct-case and nine Terraform-scenario failures.
+- [x] Pass all 24 D1–D3 Terraform scenarios (120 steps), full Go gates, example formatting, and A + D1 + D2 + D3 compatibility in Docker.
+- [x] Update resource/schema/template/example documentation and record breaking behavior, source hashes, and logs in [D3 evidence](../investigations/ssid-group-fix/README.md).
+- [x] Commit and push D3 as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e); all seven committed hashes match the tested files.
+- [ ] Complete D3 hardware/submission gates; no upstream PR has been opened.
 
 ## Outcome and starting evidence
 
@@ -46,13 +57,15 @@ Code to inspect: [resource lifecycle/schema](https://github.com/emanuelbesliu/te
 | --- | --- | --- | --- |
 | D1 | `fix/ssid-update-preservation` | F04: preservation, defaults, secret handling, update/readback regressions, migration notes. | Baseline; check compatibility with authentication A (`52ed681`). |
 | D2 | `fix/ssid-vlan-state` | F14: mode-aware VLAN state mapping shared by Read/Import and relevant write readback. | Stacked on D1 `80991a5` so write/readback checks use the preservation and secret-handling fixes; review D2 against that base. |
-| D3 | `fix/ssid-group-identity` | F13: group-change planning and lifecycle, import identity, migration/downtime note. | Prefer an independent patch; if replacement needs D1's create/default fixes, record and test that stack. |
+| D3 | `fix/ssid-group-identity` | F13: group-change planning and lifecycle, import identity, migration/downtime note. | Stack on D2 `0bbd076` to exercise replacement with D1 creation defaults/secret handling and D2 mode-aware import/readback; review the D3 diff against D2. |
 
-Suggested titles: `fix(resources): preserve SSID settings during updates`, `fix(resources): clear stale SSID VLAN state`, and `fix!: require replacement for SSID WLAN group changes` if replacement is selected. Use a breaking-change title/footer for D1 if omission/default semantics change.
+Suggested titles: `fix(resources): preserve SSID settings during updates`, `fix(resources): clear stale SSID VLAN state`, and `fix(resources)!: require replacement for SSID WLAN group changes`. Use a breaking-change title/footer for D1 if omission/default semantics change.
 
 - [x] Create D1 from the recorded baseline; retain A–C and the documentation branch separately.
 - [x] Create D2 on D1 `80991a5`; include the matching data-source mapping and retain separate patch scope.
-- [ ] Create D3 from its chosen base.
+- [x] Create D3 from D2 `0bbd076`; replacement lifecycle tests depend on the corrected creation/import behavior of D1/D2.
+- [x] Recheck upstream `main` and contribution files at D3 start; baseline remains `6bc71b3`, with no explicit AI-attribution policy.
+- [x] Reproduce F13, require group replacement, and verify old/new identities and failure/retry behavior in Docker.
 - [ ] Recheck upstream heads and contribution requirements before starting and before submission.
 - [x] Keep new controller evidence and patch logs under `docs/investigations/ssid-fix/`; preserve original reproductions and logs.
 
@@ -87,12 +100,12 @@ The current schema defaults `band=3`, `security=3`, `broadcast=true`, `enable_11
 
 ### WLAN-group identity
 
-The current client exposes create/read/update/delete within a group and no move operation. The proposed default is to require replacement when a known configured `wlan_group_id` changes. Adopt an in-place move only after identifying and verifying a supported controller operation, including the resulting ID and readback path.
+The current client exposes create/read/update/delete within a group and no move operation. D3 selects replacement when configured `wlan_group_id` changes. Run `UseStateForUnknown` before `RequiresReplace` so omitted group values retain imported identity; explicit unknown configuration remains unknown and can conservatively plan replacement. Adopt an in-place move only after identifying and verifying a supported controller operation, including the resulting ID and readback path.
 
-- [ ] Test replacement planning, unchanged/omitted/unknown group values, and the existing `UseStateForUnknown` behavior. Omission after import must not silently switch to a different group.
-- [ ] If replacement is selected, verify destruction uses the old group and creation uses the new group; verify the new ID and a stable follow-up plan. Review create-before-destroy behavior and duplicate-name handling explicitly.
-- [ ] Document possible connectivity interruption and the loss of unmanaged settings during recreation. Specify what configuration must be supplied to recreate the desired SSID; preserving unmanaged settings during ordinary updates does not promise preservation across replacement.
-- [ ] Preserve `site_id` replacement semantics and the three-part import ID `siteID/wlanGroupID/ssidID`. Fix the current documentation/example that omits the site component.
+- [x] Test replacement planning, unchanged/omitted/unknown group values, and `UseStateForUnknown` ordering. Omission after import retains the imported group; explicit unknown configuration conservatively plans replacement.
+- [x] Verify destruction uses the old group and creation uses the new group, with a new ID and stable follow-up plan. Cover create-before-destroy and duplicate-name rejection/retry.
+- [x] Document connectivity interruption, creation defaults, required security/password/VLAN configuration, and loss of unmanaged settings during recreation. Known invalid security/password combinations fail planning before deletion; unknown values remain an apply-time risk.
+- [x] Preserve `site_id` replacement and the three-part import ID `siteID/wlanGroupID/ssidID`; D1 corrected the example and D3 verifies both identity paths.
 
 ## Review screens and resulting actions
 
@@ -111,7 +124,7 @@ These are illustrative acceptance targets for the existing Terraform CLI and tes
 
 ### 2. Group-change review
 
-| Review screen: `terraform plan` | Expected display/effect if replacement is selected |
+| Review screen: `terraform plan` | Verified plan/lifecycle behavior in the mock tests |
 | --- | --- |
 | Configured change | `wlan_group_id: "group-a" → "group-b"` |
 | Planned action | Replace the SSID; the plan visibly distinguishes destruction and creation. |
@@ -133,7 +146,7 @@ These are illustrative acceptance targets for the existing Terraform CLI and tes
 ```mermaid
 flowchart TD
     A[Terraform config, prior state, and plan] --> B{WLAN group changed?}
-    B -->|Yes| C[Plan replacement or a verified move]
+    B -->|Yes| C[Plan replacement and validate known creation settings]
     C --> D[Review recreation settings and apply lifecycle]
     B -->|No| E[Read current SSID and required related objects]
     E --> F{Complete writable snapshot and valid inputs?}
@@ -165,10 +178,10 @@ flowchart TD
 
 - [x] Promote F04 into maintained lifecycle and Terraform tests and capture failure on the recorded base.
 - [x] Promote F14 into maintained D2 lifecycle and Terraform tests.
-- [ ] Promote F13 for D3.
+- [x] Promote F13 into maintained D3 regression tests.
 - [x] Add real Terraform mock acceptance for D1 import/rename, creation, explicit changes, unknown values, secret handling, VLAN writes, and repeated plans.
 - [x] Add D2 VLAN drift/refresh/import acceptance with observed state, planned restoration/removal, and stable plans.
-- [ ] Add D3 group planning/lifecycle acceptance.
+- [x] Add D3 group planning/lifecycle acceptance, including replacement settings and failure/retry.
 - [x] Assert the allowlist excludes read-only fields and that all validation precedes writes. Separate expected fixture failures from actual passing patch validation.
 
 ## Verification and PR package
@@ -212,9 +225,14 @@ D1 is complete locally and committed/pushed to Will's fork; hardware testing and
 
 - [x] Implement and verify D2's mode-aware VLAN mapping; record its deliberate D1 dependency.
 
+### 2026-10-19 — D3 implementation
+
+- [x] Select replacement, implement/verify D3, and record the D2 stack dependency and recreation risks.
+- [x] Commit/push D3 as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e).
+
 ### Undated — Remaining implementation
 
-- [ ] Resolve the group-change mechanism and implement/verify D3.
+- [ ] Continue with credential rotation/state work E (F05/F06) in the parent tracker; retain earlier SSID create-readback recovery as a separate follow-up.
 
 ### Conditional — Controller access and upstream review
 

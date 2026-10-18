@@ -10,7 +10,7 @@ The baseline reproductions use local HTTP servers. Request contents and returned
 
 ## Repair progress — updated 2026-10-19
 
-The detailed findings and original logs below describe the reviewed baseline. A, B, and C pass their regression tests and are committed and pushed to Will's fork. D1 (SSID preservation) also passes local verification and is committed/pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774). D2 (SSID VLAN state) is locally verified on top of D1 and committed/pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3). Real-controller validation and upstream PR submission remain pending. The [PR tracker](../plans/provider-reliability-prs.md#commits-and-fork-branches--2026-10-19) records the commits and remaining gates.
+The detailed findings and original logs below describe the reviewed baseline. A, B, and C pass their regression tests and are committed and pushed to Will's fork. D1 (SSID preservation) also passes local verification and is committed/pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774). D2 (SSID VLAN state) is locally verified on top of D1 and committed/pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3). D3 (SSID group identity) is locally verified on D2 and committed/pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e). Real-controller validation and upstream PR submission remain pending. The [PR tracker](../plans/provider-reliability-prs.md#commits-and-fork-branches--2026-10-19) records the commits and remaining gates.
 
 | Work | Findings | Current evidence and status |
 | --- | --- | --- |
@@ -19,10 +19,11 @@ The detailed findings and original logs below describe the reviewed baseline. A,
 | C — AP radios | F03 | Implemented and locally verified on `fix/ap-radio-updates`; 14 lifecycle cases and Terraform sequences for default/nondefault dual-band and single-band APs pass, including combined A compatibility. [Evidence](ap-radio-fix/README.md). |
 | D1 — SSID preservation | F04 | Implemented and locally verified on `fix/ssid-update-preservation`, committed and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774); 47 lifecycle/validation cases and eight Terraform scenarios pass, including A compatibility. [Evidence](ssid-fix/README.md). |
 | D2 — SSID VLAN state | F14 | Implemented and locally verified on `fix/ssid-vlan-state`, based on D1, committed/pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3); 95 lifecycle cases, three new Terraform scenarios, full D1 regression, and A compatibility pass. [Evidence](ssid-vlan-fix/README.md). |
-| D3, E–H | F05, F06, F09–F13 | Open; D3 group identity is next. Scope and dependencies are recorded in the tracker. |
+| D3 — SSID group identity | F13 | Implemented and locally verified on `fix/ssid-group-identity`, based on D2, committed/pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e); 21 direct cases, 13 new Terraform scenarios, full D1/D2 regression and A compatibility pass. [Evidence](ssid-group-fix/README.md). |
+| E–H | F05, F06, F09–F12 | Open; E credential rotation/state is next. Scope and dependencies are recorded in the tracker. |
 | I — Switch planning | F15 | New P2 finding discovered during B: importing with the entire `ports` list omitted leaves a persistent update plan. Reproduced on the baseline and B; root cause and fix remain open. [Probe and logs](switch-port-fix/README.md#new-finding-f15-omitted-whole-ports-list-does-not-settle-after-import). |
 
-F15 is additional to the original 14 findings. B documents the complete-port-list workaround; it does not resolve F15. Formatting, vet, build, and full unit tests pass for A, B, C, D1, and D2 in Go 1.25.6 containers. These results establish local behavior, with hardware compatibility still to be checked.
+F15 is additional to the original 14 findings. B documents the complete-port-list workaround; it does not resolve F15. Formatting, vet, build, and full unit tests pass for A, B, C, D1, D2, and D3 in Go 1.25.6 containers. These results establish local behavior, with hardware compatibility still to be checked.
 
 ## Findings at a glance
 
@@ -234,12 +235,13 @@ Run `bash docs/investigations/reproduce.sh` from this checkout to reproduce in a
 - [x] Implement and locally verify F01 and the F07/F08 authentication design together, with deadline and race coverage (A).
 - [x] Implement and locally verify F02 switch-port preservation, including real Terraform planning against mock controllers (B).
 - [x] Implement and locally verify F03 AP radio preservation, including default migration and partial-failure state recovery (C).
-- [ ] Next: fix F04 SSID preservation alongside F13/F14 identity and VLAN drift (D); retain tests through Terraform where unknown planning values matter.
+- [x] Fix and locally verify F04 SSID preservation alongside F13/F14 identity and VLAN drift (D1–D3), including actual Terraform unknown-value planning tests. D3 is committed/pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e); hardware/upstream gates remain open.
 - [ ] Fix both credential paths, F05/F06, with explicit rotation tests.
 - [ ] Fix F12's HTTP classification, F09's pagination, then F10's missing-resource handling in that order so absence is trustworthy.
-- [ ] Fix F11, F13, and F14; add import, identity-change, and remote-drift acceptance cases.
+- [x] Fix F13/F14 locally with import, identity-change, and remote-drift acceptance cases.
+- [ ] Fix F11 network adoption under H.
 - [ ] Investigate and fix F15's persistent plan when the whole switch ports list is omitted (I).
-- [ ] Complete controlled-hardware validation and submission review for A, B, and C; record publication and merge separately.
+- [ ] Complete controlled-hardware validation and submission review for A–D3; record publication and merge separately.
 - [ ] Add local mock acceptance tests to CI alongside a targeted race job. Keep live-controller compatibility testing as a separate gate for payload/API changes.
 
-The original investigation did not change production code. Subsequent A, B, and C fixes are isolated in the local branches recorded above; their evidence is stored separately from the baseline logs. No review comments or PRs have been posted to GitHub by this work.
+The original investigation did not change production code. Subsequent A–D3 fixes are isolated in the branches recorded above; their evidence is stored separately from the baseline logs. No review comments or PRs have been posted to GitHub by this work.

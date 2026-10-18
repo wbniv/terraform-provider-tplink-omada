@@ -1,0 +1,62 @@
+?   	github.com/terraform-provider-tplink-omada	[no test files]
+ok  	github.com/terraform-provider-tplink-omada/internal/client	0.249s
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	0.030s
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.318s
+=== RUN   TestAccWirelessNetworkCreate
+=== RUN   TestAccWirelessNetworkCreate/defaults
+=== RUN   TestAccWirelessNetworkCreate/explicit
+=== RUN   TestAccWirelessNetworkCreate/unknown_at_plan
+--- PASS: TestAccWirelessNetworkCreate (3.82s)
+    --- PASS: TestAccWirelessNetworkCreate/defaults (1.25s)
+    --- PASS: TestAccWirelessNetworkCreate/explicit (1.28s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_at_plan (1.28s)
+=== RUN   TestAccWirelessNetworkGroupIdentity
+=== RUN   TestAccWirelessNetworkGroupIdentity/import_retains_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_defaults
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_before_destroy
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_changed_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_same_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/site_replacement
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/delete_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/duplicate_name_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_omitted_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_unknown_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password
+--- PASS: TestAccWirelessNetworkGroupIdentity (28.37s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/import_retains_group (3.49s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_defaults (1.95s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings (1.97s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_before_destroy (2.01s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_changed_group (2.05s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_same_group (2.04s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/site_replacement (2.02s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_failure_retry (2.30s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/delete_failure_retry (2.63s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/duplicate_name_retry (2.57s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_omitted_group (1.33s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_unknown_group (1.39s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password (2.64s)
+=== RUN   TestAccWirelessNetworkPreservation
+=== RUN   TestAccWirelessNetworkPreservation/plaintext
+=== RUN   TestAccWirelessNetworkPreservation/masked
+=== RUN   TestAccWirelessNetworkPreservation/absent
+=== RUN   TestAccWirelessNetworkPreservation/open
+=== RUN   TestAccWirelessNetworkPreservation/unmanaged
+--- PASS: TestAccWirelessNetworkPreservation (26.11s)
+    --- PASS: TestAccWirelessNetworkPreservation/plaintext (6.39s)
+    --- PASS: TestAccWirelessNetworkPreservation/masked (6.49s)
+    --- PASS: TestAccWirelessNetworkPreservation/absent (6.42s)
+    --- PASS: TestAccWirelessNetworkPreservation/open (5.31s)
+    --- PASS: TestAccWirelessNetworkPreservation/unmanaged (1.50s)
+=== RUN   TestAccWirelessNetworkVLANState
+=== RUN   TestAccWirelessNetworkVLANState/default_clears_fields
+=== RUN   TestAccWirelessNetworkVLANState/default_retains_stale_fields
+=== RUN   TestAccWirelessNetworkVLANState/import_default
+--- PASS: TestAccWirelessNetworkVLANState (11.56s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_clears_fields (5.02s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_retains_stale_fields (4.94s)
+    --- PASS: TestAccWirelessNetworkVLANState/import_default (1.60s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	69.874s

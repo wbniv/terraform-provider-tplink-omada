@@ -1,0 +1,64 @@
+=== RUN   TestWirelessNetworkGroupIdentityPlan
+=== RUN   TestWirelessNetworkGroupIdentityPlan/unchanged
+=== RUN   TestWirelessNetworkGroupIdentityPlan/changed
+    wireless_network_group_test.go:66: plan="group-b" replace=false diagnostics=[]; want "group-b" replace=true
+=== RUN   TestWirelessNetworkGroupIdentityPlan/omitted_retains_import
+=== RUN   TestWirelessNetworkGroupIdentityPlan/omitted_already_known
+=== RUN   TestWirelessNetworkGroupIdentityPlan/explicit_unknown
+    wireless_network_group_test.go:66: plan=<unknown> replace=false diagnostics=[]; want <unknown> replace=true
+=== RUN   TestWirelessNetworkGroupIdentityPlan/initial_explicit
+=== RUN   TestWirelessNetworkGroupIdentityPlan/initial_omitted
+=== RUN   TestWirelessNetworkGroupIdentityPlan/initial_unknown
+=== RUN   TestWirelessNetworkGroupIdentityPlan/destroy
+--- FAIL: TestWirelessNetworkGroupIdentityPlan (0.01s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/unchanged (0.00s)
+    --- FAIL: TestWirelessNetworkGroupIdentityPlan/changed (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/omitted_retains_import (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/omitted_already_known (0.00s)
+    --- FAIL: TestWirelessNetworkGroupIdentityPlan/explicit_unknown (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/initial_explicit (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/initial_omitted (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/initial_unknown (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityPlan/destroy (0.00s)
+=== RUN   TestWirelessNetworkGroupIdentityUpdateGuard
+=== RUN   TestWirelessNetworkGroupIdentityUpdateGuard/"group-b"
+    wireless_network_group_test.go:111: expected diagnostic and unchanged state before any request; diagnostics=[{decoding response (status 500, body: unexpected controller request
+        ): invalid character 'u' looking for beginning of value Error reading wireless network before update}] requests=1 state=tftypes.Object["band":tftypes.Number, "broadcast":tftypes.Bool, "enable_11r":tftypes.Bool, "id":tftypes.String, "name":tftypes.String, "passphrase":tftypes.String, "pmf_mode":tftypes.Number, "security":tftypes.Number, "site_id":tftypes.String, "vlan_id":tftypes.Number, "wlan_group_id":tftypes.String]<"band":tftypes.Number<null>, "broadcast":tftypes.Bool<null>, "enable_11r":tftypes.Bool<null>, "id":tftypes.String<"ssid">, "name":tftypes.String<"Original">, "passphrase":tftypes.String<null>, "pmf_mode":tftypes.Number<null>, "security":tftypes.Number<null>, "site_id":tftypes.String<"site">, "vlan_id":tftypes.Number<null>, "wlan_group_id":tftypes.String<"group-a">>
+=== RUN   TestWirelessNetworkGroupIdentityUpdateGuard/<unknown>
+    wireless_network_group_test.go:111: expected diagnostic and unchanged state before any request; diagnostics=[{decoding response (status 500, body: unexpected controller request
+        ): invalid character 'u' looking for beginning of value Error reading wireless network before update}] requests=1 state=tftypes.Object["band":tftypes.Number, "broadcast":tftypes.Bool, "enable_11r":tftypes.Bool, "id":tftypes.String, "name":tftypes.String, "passphrase":tftypes.String, "pmf_mode":tftypes.Number, "security":tftypes.Number, "site_id":tftypes.String, "vlan_id":tftypes.Number, "wlan_group_id":tftypes.String]<"band":tftypes.Number<null>, "broadcast":tftypes.Bool<null>, "enable_11r":tftypes.Bool<null>, "id":tftypes.String<"ssid">, "name":tftypes.String<"Original">, "passphrase":tftypes.String<null>, "pmf_mode":tftypes.Number<null>, "security":tftypes.Number<null>, "site_id":tftypes.String<"site">, "vlan_id":tftypes.Number<null>, "wlan_group_id":tftypes.String<"group-a">>
+=== RUN   TestWirelessNetworkGroupIdentityUpdateGuard/<null>
+    wireless_network_group_test.go:111: expected diagnostic and unchanged state before any request; diagnostics=[{decoding response (status 500, body: unexpected controller request
+        ): invalid character 'u' looking for beginning of value Error reading wireless network before update}] requests=1 state=tftypes.Object["band":tftypes.Number, "broadcast":tftypes.Bool, "enable_11r":tftypes.Bool, "id":tftypes.String, "name":tftypes.String, "passphrase":tftypes.String, "pmf_mode":tftypes.Number, "security":tftypes.Number, "site_id":tftypes.String, "vlan_id":tftypes.Number, "wlan_group_id":tftypes.String]<"band":tftypes.Number<null>, "broadcast":tftypes.Bool<null>, "enable_11r":tftypes.Bool<null>, "id":tftypes.String<"ssid">, "name":tftypes.String<"Original">, "passphrase":tftypes.String<null>, "pmf_mode":tftypes.Number<null>, "security":tftypes.Number<null>, "site_id":tftypes.String<"site">, "vlan_id":tftypes.Number<null>, "wlan_group_id":tftypes.String<"group-a">>
+--- FAIL: TestWirelessNetworkGroupIdentityUpdateGuard (0.01s)
+    --- FAIL: TestWirelessNetworkGroupIdentityUpdateGuard/"group-b" (0.00s)
+    --- FAIL: TestWirelessNetworkGroupIdentityUpdateGuard/<unknown> (0.00s)
+    --- FAIL: TestWirelessNetworkGroupIdentityUpdateGuard/<null> (0.00s)
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/secured_without_key
+    wireless_network_group_test.go:147: diagnostics=[]; want error=true
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/omitted_security_defaults_to_secured
+    wireless_network_group_test.go:147: diagnostics=[]; want error=true
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/open_with_key
+    wireless_network_group_test.go:147: diagnostics=[]; want error=true
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/unsupported_security
+    wireless_network_group_test.go:147: diagnostics=[]; want error=true
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/unsupported_security_with_unknown_key
+    wireless_network_group_test.go:147: diagnostics=[]; want error=true
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/unknown_security_deferred
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/unknown_key_deferred
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/secured_with_key
+=== RUN   TestWirelessNetworkGroupIdentityRecreationPlan/open_without_key
+--- FAIL: TestWirelessNetworkGroupIdentityRecreationPlan (0.01s)
+    --- FAIL: TestWirelessNetworkGroupIdentityRecreationPlan/secured_without_key (0.00s)
+    --- FAIL: TestWirelessNetworkGroupIdentityRecreationPlan/omitted_security_defaults_to_secured (0.00s)
+    --- FAIL: TestWirelessNetworkGroupIdentityRecreationPlan/open_with_key (0.00s)
+    --- FAIL: TestWirelessNetworkGroupIdentityRecreationPlan/unsupported_security (0.00s)
+    --- FAIL: TestWirelessNetworkGroupIdentityRecreationPlan/unsupported_security_with_unknown_key (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/unknown_security_deferred (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/unknown_key_deferred (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/secured_with_key (0.00s)
+    --- PASS: TestWirelessNetworkGroupIdentityRecreationPlan/open_without_key (0.00s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/resources	0.036s
+FAIL

@@ -1,0 +1,62 @@
+=== RUN   TestAccWirelessNetworkGroupIdentity
+=== RUN   TestAccWirelessNetworkGroupIdentity/import_retains_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_defaults
+    wireless_network_group_test.go:317: Step 2/3 error: Pre-apply plan check(s) failed:
+        SSID actions [update], want [delete create]
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings
+    wireless_network_group_test.go:317: Step 2/3 error: Pre-apply plan check(s) failed:
+        SSID actions [update], want [delete create]
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_before_destroy
+    wireless_network_group_test.go:317: Step 2/3 error: Pre-apply plan check(s) failed:
+        SSID actions [update], want [create delete]
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_changed_group
+    wireless_network_group_test.go:317: Step 2/3 error: Pre-apply plan check(s) failed:
+        SSID actions [update], want [delete create]
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_same_group
+    wireless_network_group_test.go:317: Step 2/3 error: Pre-apply plan check(s) failed:
+        SSID actions [update], want [delete create]
+=== RUN   TestAccWirelessNetworkGroupIdentity/site_replacement
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_failure_retry
+    wireless_network_group_test.go:317: Step 2/4, expected an error with pattern, no match on: Pre-apply plan check(s) failed:
+        SSID actions [update], want [delete create]
+=== RUN   TestAccWirelessNetworkGroupIdentity/delete_failure_retry
+    wireless_network_group_test.go:317: Step 2/5, expected an error with pattern, no match on: Pre-apply plan check(s) failed:
+        SSID actions [update], want [delete create]
+    panic.go:615: Error running post-test destroy, there may be dangling resources: exit status 1
+        
+        Error: Error deleting wireless network
+        
+        API error -1001: fixture delete failure
+=== RUN   TestAccWirelessNetworkGroupIdentity/duplicate_name_retry
+    wireless_network_group_test.go:317: Step 2/5, expected an error with pattern, no match on: Error running apply: exit status 1
+        
+        Error: Provider produced inconsistent result after apply
+        
+        When applying changes to omada_wireless_network.test, provider
+        "provider[\"registry.terraform.io/hashicorp/omada\"]" produced an unexpected
+        new value: .wlan_group_id: was cty.StringVal("group-b"), but now
+        cty.StringVal("group-a").
+        
+        This is a bug in the provider, which should be reported in the provider's own
+        issue tracker.
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_omitted_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_unknown_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password
+    wireless_network_group_test.go:317: Step 2/5, expected an error but got none
+--- FAIL: TestAccWirelessNetworkGroupIdentity (26.75s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/import_retains_group (6.94s)
+    --- FAIL: TestAccWirelessNetworkGroupIdentity/replace_with_defaults (3.05s)
+    --- FAIL: TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings (1.57s)
+    --- FAIL: TestAccWirelessNetworkGroupIdentity/create_before_destroy (1.30s)
+    --- FAIL: TestAccWirelessNetworkGroupIdentity/unknown_changed_group (1.27s)
+    --- FAIL: TestAccWirelessNetworkGroupIdentity/unknown_same_group (1.27s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/site_replacement (2.13s)
+    --- FAIL: TestAccWirelessNetworkGroupIdentity/create_failure_retry (1.35s)
+    --- FAIL: TestAccWirelessNetworkGroupIdentity/delete_failure_retry (1.55s)
+    --- FAIL: TestAccWirelessNetworkGroupIdentity/duplicate_name_retry (1.66s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_omitted_group (1.53s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_unknown_group (1.53s)
+    --- FAIL: TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password (1.62s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/provider	26.806s
+FAIL

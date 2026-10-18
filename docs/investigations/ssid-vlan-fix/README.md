@@ -15,7 +15,7 @@ Prepared for Will on 2026-10-19. Implemented, locally verified, committed, and p
 - [x] Commit and push D2 as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3); committed hashes match the tested files.
 - [ ] Publish the PR when requested.
 
-This changes state interpretation only. The existing `vlan_id` configuration contract still applies: omission requests the default VLAN, and a configured custom VLAN is restored after detected drift. D3 group identity remains open. HTTP-envelope validation, pagination, and missing-resource classification retain their separate work items.
+This changes state interpretation only. The existing `vlan_id` configuration contract still applies: omission requests the default VLAN, and a configured custom VLAN is restored after detected drift. D3 group identity is now implemented and locally verified separately; see [D3 evidence](../ssid-group-fix/README.md). HTTP-envelope validation, pagination, and missing-resource classification retain their separate work items.
 
 ## Response decisions
 

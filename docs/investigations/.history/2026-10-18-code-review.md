@@ -1,9 +1,14 @@
 | Date | Change |
 |------|--------|
+| [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/2b31fb1) | docs: record SSID VLAN fix and verification |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/7f00504) | docs: record SSID preservation fix and verification |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/4c6433b) | docs: track provider reliability fixes and validation evidence |
 
 <!--history-meta v1
+2b31fb1	author	Will Norris
+2b31fb1	added	4
+2b31fb1	deleted	3
+2b31fb1	files	1
 7f00504	author	Will Norris
 7f00504	added	4
 7f00504	deleted	3
