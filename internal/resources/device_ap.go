@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -125,10 +124,9 @@ func (r *DeviceAPResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Computed:    true,
 			},
 			"radio_2g_enable": schema.BoolAttribute{
-				Description: "Enable 2.4GHz radio.",
+				Description: "Enable 2.4GHz radio. When omitted, preserve the current controller value.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(true),
 			},
 			"radio_2g_channel_width": schema.StringAttribute{
 				Description: "2.4GHz channel width. RADIO_20=2; RADIO_40=3; RADIO_40_20=4 (Auto).",
@@ -146,10 +144,9 @@ func (r *DeviceAPResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Computed:    true,
 			},
 			"radio_2g_tx_power_level": schema.Int64Attribute{
-				Description: "2.4GHz TX power level: 0=Low, 1=Medium, 2=High, 3=Custom, 4=Auto.",
+				Description: "2.4GHz TX power level: 0=Low, 1=Medium, 2=High, 3=Custom, 4=Auto. When omitted, preserve the current controller value.",
 				Optional:    true,
 				Computed:    true,
-				Default:     int64default.StaticInt64(4),
 			},
 			"radio_5g_enable": schema.BoolAttribute{
 				Description: "Enable 5GHz radio. Null on 2.4GHz-only APs.",
@@ -370,58 +367,6 @@ func applyAPPlanToRaw(rawConfig map[string]interface{}, plan *DeviceAPResourceMo
 	}
 }
 
-// buildAPRadioConfig builds the radio config payload for PUT /eaps/{mac}/config/radios.
-func buildAPRadioConfig(plan *DeviceAPResourceModel) *client.APRadioConfig {
-	config := &client.APRadioConfig{}
-
-	has2g := !plan.Radio2gEnable.IsNull() || !plan.Radio2gChannelWidth.IsNull() ||
-		!plan.Radio2gChannel.IsNull() || !plan.Radio2gTxPower.IsNull() || !plan.Radio2gTxPowerLevel.IsNull()
-	has5g := !plan.Radio5gEnable.IsNull() || !plan.Radio5gChannelWidth.IsNull() ||
-		!plan.Radio5gChannel.IsNull() || !plan.Radio5gTxPower.IsNull() || !plan.Radio5gTxPowerLevel.IsNull()
-
-	if has2g {
-		r := &client.APRadioSetting{}
-		if !plan.Radio2gEnable.IsNull() && !plan.Radio2gEnable.IsUnknown() {
-			r.RadioEnable = plan.Radio2gEnable.ValueBool()
-		}
-		if !plan.Radio2gChannelWidth.IsNull() && !plan.Radio2gChannelWidth.IsUnknown() {
-			r.ChannelWidth = plan.Radio2gChannelWidth.ValueString()
-		}
-		if !plan.Radio2gChannel.IsNull() && !plan.Radio2gChannel.IsUnknown() {
-			r.Channel = plan.Radio2gChannel.ValueString()
-		}
-		if !plan.Radio2gTxPower.IsNull() && !plan.Radio2gTxPower.IsUnknown() {
-			r.TxPower = int(plan.Radio2gTxPower.ValueInt64())
-		}
-		if !plan.Radio2gTxPowerLevel.IsNull() && !plan.Radio2gTxPowerLevel.IsUnknown() {
-			r.TxPowerLevel = int(plan.Radio2gTxPowerLevel.ValueInt64())
-		}
-		config.RadioSetting2g = r
-	}
-
-	if has5g {
-		r := &client.APRadioSetting{}
-		if !plan.Radio5gEnable.IsNull() && !plan.Radio5gEnable.IsUnknown() {
-			r.RadioEnable = plan.Radio5gEnable.ValueBool()
-		}
-		if !plan.Radio5gChannelWidth.IsNull() && !plan.Radio5gChannelWidth.IsUnknown() {
-			r.ChannelWidth = plan.Radio5gChannelWidth.ValueString()
-		}
-		if !plan.Radio5gChannel.IsNull() && !plan.Radio5gChannel.IsUnknown() {
-			r.Channel = plan.Radio5gChannel.ValueString()
-		}
-		if !plan.Radio5gTxPower.IsNull() && !plan.Radio5gTxPower.IsUnknown() {
-			r.TxPower = int(plan.Radio5gTxPower.ValueInt64())
-		}
-		if !plan.Radio5gTxPowerLevel.IsNull() && !plan.Radio5gTxPowerLevel.IsUnknown() {
-			r.TxPowerLevel = int(plan.Radio5gTxPowerLevel.ValueInt64())
-		}
-		config.RadioSetting5g = r
-	}
-
-	return config
-}
-
 // buildAPAdvancedConfig builds the advanced config payload for PUT /eaps/{mac}/config/advanced.
 func buildAPAdvancedConfig(plan *DeviceAPResourceModel) *client.APAdvancedConfig {
 	config := &client.APAdvancedConfig{}
@@ -488,14 +433,24 @@ func (r *DeviceAPResource) applyAPConfig(ctx context.Context, siteID, mac string
 	if err != nil {
 		return fmt.Errorf("reading AP config: %w", err)
 	}
+	// Validate and prepare both radio bands before making any writes. Only
+	// explicit, known changes may replace current controller radio settings.
+	radios, err := buildAPRadioConfig(rawConfig, plan)
+	if err != nil {
+		return fmt.Errorf("preparing AP radio config: %w", err)
+	}
+	delete(rawConfig, "radioSetting2g")
+	delete(rawConfig, "radioSetting5g")
 	applyAPPlanToRaw(rawConfig, plan)
 	if _, err := r.client.UpdateAPConfig(ctx, siteID, mac, rawConfig); err != nil {
 		return fmt.Errorf("updating AP config: %w", err)
 	}
 
 	// 2. Radio settings — PUT /eaps/{mac}/config/radios
-	if err := r.client.UpdateAPRadioConfig(ctx, siteID, mac, buildAPRadioConfig(plan)); err != nil {
-		return fmt.Errorf("updating AP radio config: %w", err)
+	if radios.RadioSetting2g != nil || radios.RadioSetting5g != nil {
+		if err := r.client.UpdateAPRadioConfig(ctx, siteID, mac, radios); err != nil {
+			return fmt.Errorf("updating AP radio config: %w", err)
+		}
 	}
 
 	// 3. Advanced settings — PUT /eaps/{mac}/config/advanced
@@ -558,6 +513,15 @@ func (r *DeviceAPResource) Update(ctx context.Context, req resource.UpdateReques
 
 	if err := r.applyAPConfig(ctx, siteID, mac, &plan); err != nil {
 		resp.Diagnostics.AddError("Error updating AP config", err.Error())
+		// Earlier endpoints may have succeeded. Save observed settings rather
+		// than the requested plan so a later refresh/retry sees partial progress.
+		current, readErr := r.client.GetAPConfig(ctx, siteID, mac)
+		if readErr != nil {
+			resp.Diagnostics.AddWarning("Unable to refresh AP after failed update", readErr.Error())
+			return
+		}
+		apConfigToState(current, &state)
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 		return
 	}
 
@@ -615,6 +579,12 @@ func apConfigToState(cfg *client.APConfig, state *DeviceAPResourceModel) {
 		state.Radio2gChannel = types.StringValue(cfg.RadioSetting2g.Channel)
 		state.Radio2gTxPower = types.Int64Value(int64(cfg.RadioSetting2g.TxPower))
 		state.Radio2gTxPowerLevel = types.Int64Value(int64(cfg.RadioSetting2g.TxPowerLevel))
+	} else {
+		state.Radio2gEnable = types.BoolNull()
+		state.Radio2gChannelWidth = types.StringNull()
+		state.Radio2gChannel = types.StringNull()
+		state.Radio2gTxPower = types.Int64Null()
+		state.Radio2gTxPowerLevel = types.Int64Null()
 	}
 
 	// Radio 5GHz — nil on 2.4GHz-only APs (e.g., EAP115)

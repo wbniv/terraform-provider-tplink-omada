@@ -6,14 +6,15 @@ resource "omada_device_ap" "example" {
   name          = "Office-AP"
   wlan_group_id = omada_wlan_group.default.id
 
-  # Radio settings
+  # Set these explicitly to require enabled radios and automatic power.
+  # Omitted radio attributes preserve controller settings.
   radio_2g_enable         = true
-  radio_2g_channel_width  = "20"
+  radio_2g_channel_width  = "2" # RADIO_20
   radio_2g_channel        = "0" # Auto
   radio_2g_tx_power_level = 4
 
   radio_5g_enable         = true
-  radio_5g_channel_width  = "80"
+  radio_5g_channel_width  = "5" # RADIO_80
   radio_5g_channel        = "0" # Auto
   radio_5g_tx_power_level = 4
 

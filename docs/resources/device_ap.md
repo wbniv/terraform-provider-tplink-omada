@@ -10,6 +10,16 @@ description: |-
 
 Manages the configuration of an Omada AP device. APs must be adopted through the controller UI before they can be managed. Use 'terraform import omada_device_ap.<name> <siteID>/<mac>' to bring an adopted AP into state.
 
+## Radio configuration and upgrades
+
+Omitted radio settings preserve the current controller values. A name-only change does not send a radio update. When changing one radio field, the provider reads the current radio settings and preserves the other fields; it sends only changed bands to the radio endpoint. Explicit `false`, `0`, and string values remain intentional configuration and are subject to controller validation.
+
+The implicit defaults for `radio_2g_enable` (`true`) and `radio_2g_tx_power_level` (`4`, Auto) have been removed. To require those values, configure them explicitly as in the example below. Existing disabled radios and custom power settings now survive import and unrelated changes. Attribute names, types, state shape, and import IDs are unchanged; no re-import is required.
+
+Leave 5 GHz settings omitted on APs that do not report a 5 GHz radio. Configuring an absent radio, or attempting an update with an incomplete or malformed radio snapshot, returns an error before any AP writes. A changed radio requires the controller to report enable, channel width, channel, power, and power level. Hardware and controller versions can differ in accepted values; mock regression tests do not establish firmware compatibility.
+
+AP updates use several API calls. If a later call fails, the provider reports the failure and attempts to refresh state to reflect any earlier successful writes. If that refresh also fails, it retains prior state and reports a warning; the next successful refresh is needed to reconcile it. These calls are not an atomic transaction.
+
 ## Example Usage
 
 ```terraform
@@ -21,14 +31,15 @@ resource "omada_device_ap" "example" {
   name          = "Office-AP"
   wlan_group_id = omada_wlan_group.default.id
 
-  # Radio settings
+  # Set these explicitly to require enabled radios and automatic power.
+  # Omitted radio attributes preserve controller settings.
   radio_2g_enable         = true
-  radio_2g_channel_width  = "20"
+  radio_2g_channel_width  = "2" # RADIO_20
   radio_2g_channel        = "0" # Auto
   radio_2g_tx_power_level = 4
 
   radio_5g_enable         = true
-  radio_5g_channel_width  = "80"
+  radio_5g_channel_width  = "5" # RADIO_80
   radio_5g_channel        = "0" # Auto
   radio_5g_tx_power_level = 4
 
@@ -72,9 +83,9 @@ resource "omada_device_ap" "example" {
 - `ofdma_enable_5g` (Boolean) Enable OFDMA on 5GHz.
 - `radio_2g_channel` (String) 2.4GHz channel (0 for auto).
 - `radio_2g_channel_width` (String) 2.4GHz channel width. RADIO_20=2; RADIO_40=3; RADIO_40_20=4 (Auto).
-- `radio_2g_enable` (Boolean) Enable 2.4GHz radio.
+- `radio_2g_enable` (Boolean) Enable 2.4GHz radio. When omitted, preserve the current controller value.
 - `radio_2g_tx_power` (Number) 2.4GHz TX power in dBm (used when tx_power_level=3/Custom).
-- `radio_2g_tx_power_level` (Number) 2.4GHz TX power level: 0=Low, 1=Medium, 2=High, 3=Custom, 4=Auto.
+- `radio_2g_tx_power_level` (Number) 2.4GHz TX power level: 0=Low, 1=Medium, 2=High, 3=Custom, 4=Auto. When omitted, preserve the current controller value.
 - `radio_5g_channel` (String) 5GHz channel (0 for auto).
 - `radio_5g_channel_width` (String) 5GHz channel width. RADIO_80=5; RADIO_80_40_20=6 (Auto); RADIO_160=7.
 - `radio_5g_enable` (Boolean) Enable 5GHz radio. Null on 2.4GHz-only APs.
@@ -101,6 +112,6 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-# Import by MAC address
-terraform import omada_device_ap.example 9C-A2-F4-00-08-12
+# Import by site ID and MAC address
+terraform import omada_device_ap.example site-id/9C-A2-F4-00-08-12
 ```
