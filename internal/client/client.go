@@ -10,6 +10,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -21,10 +22,19 @@ type Client struct {
 	username   string
 	password   string
 	omadacID   string
-	token      string
 	httpClient *http.Client
-	mu         sync.Mutex
 	readOnly   bool
+
+	// mu protects token, authGeneration, and auth. It is never held during I/O.
+	mu             sync.Mutex
+	token          string
+	authGeneration uint64
+	auth           *authAttempt
+}
+
+type authAttempt struct {
+	done chan struct{}
+	err  error
 }
 
 // ErrReadOnly is returned when a write operation is attempted in read-only mode.
@@ -309,7 +319,7 @@ func NewClient(baseURL, username, password string, skipTLSVerify bool) (*Client,
 	}
 
 	// Step 2: Login
-	if err := c.login(context.Background()); err != nil {
+	if err := c.ensureAuth(context.Background()); err != nil {
 		return nil, fmt.Errorf("logging in: %w", err)
 	}
 
@@ -343,8 +353,8 @@ func (c *Client) getControllerInfo(ctx context.Context) error {
 	return nil
 }
 
-// login authenticates with the controller and stores the CSRF token.
-func (c *Client) login(ctx context.Context) error {
+// login retrieves a token without holding or modifying the session lock.
+func (c *Client) login(ctx context.Context) (string, error) {
 	url := fmt.Sprintf("%s/%s/api/v2/login", c.baseURL, c.omadacID)
 
 	body := map[string]string{
@@ -353,58 +363,106 @@ func (c *Client) login(ctx context.Context) error {
 	}
 	jsonBody, _ := json.Marshal(body)
 
-	resp, err := c.httpClient.Post(url, "application/json", bytes.NewReader(jsonBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(jsonBody))
 	if err != nil {
-		return fmt.Errorf("POST %s: %w", url, err)
+		return "", fmt.Errorf("creating login request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("POST %s: %w", url, err)
 	}
 	defer resp.Body.Close()
 
 	var apiResp APIResponse
 	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		return fmt.Errorf("decoding response: %w", err)
+		return "", fmt.Errorf("decoding response: %w", err)
 	}
 	if apiResp.ErrorCode != 0 {
-		return fmt.Errorf("login failed (code %d): %s", apiResp.ErrorCode, apiResp.Msg)
+		return "", fmt.Errorf("login failed (code %d): %s", apiResp.ErrorCode, apiResp.Msg)
 	}
 
 	var loginResult LoginResult
 	if err := json.Unmarshal(apiResp.Result, &loginResult); err != nil {
-		return fmt.Errorf("decoding login result: %w", err)
+		return "", fmt.Errorf("decoding login result: %w", err)
 	}
-
-	c.token = loginResult.Token
-	return nil
+	if loginResult.Token == "" {
+		return "", fmt.Errorf("login returned an empty session token")
+	}
+	return loginResult.Token, nil
 }
 
-// ensureAuth re-authenticates if the session has expired.
+// ensureAuth authenticates when no session is available.
 func (c *Client) ensureAuth(ctx context.Context) error {
+	return c.authenticate(ctx, 0, false)
+}
+
+// reAuth refreshes the current session, sharing an overlapping login attempt.
+func (c *Client) reAuth(ctx context.Context) error {
+	_, generation := c.session()
+	return c.authenticate(ctx, generation, true)
+}
+
+// session returns one consistent snapshot for request authentication.
+func (c *Client) session() (string, uint64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.token == "" {
-		if err := c.login(ctx); err != nil {
+	return c.token, c.authGeneration
+}
+
+// authenticate coalesces concurrent logins. A response from an older generation
+// must not invalidate a session that another request has already refreshed.
+func (c *Client) authenticate(ctx context.Context, failedGeneration uint64, refresh bool) error {
+	for {
+		if err := ctx.Err(); err != nil {
 			return err
 		}
+		c.mu.Lock()
+		if pending := c.auth; pending != nil {
+			c.mu.Unlock()
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-pending.done:
+				if pending.err != nil {
+					return pending.err
+				}
+				continue
+			}
+		}
+		if c.token != "" && (!refresh || c.authGeneration != failedGeneration) {
+			c.mu.Unlock()
+			return nil
+		}
+		pending := &authAttempt{done: make(chan struct{})}
+		c.auth = pending
+		c.mu.Unlock()
+
+		token, err := c.login(ctx)
+
+		c.mu.Lock()
+		c.token = token
+		if err == nil {
+			c.authGeneration++
+		}
+		pending.err = err
+		c.auth = nil
+		close(pending.done)
+		c.mu.Unlock()
+		return err
 	}
-	return nil
-}
-
-// reAuth forces re-authentication.
-func (c *Client) reAuth(ctx context.Context) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.token = ""
-	return c.login(ctx)
 }
 
 // globalURL builds a URL for non-site-scoped endpoints.
 func (c *Client) globalURL(path string) string {
-	return fmt.Sprintf("%s/%s/api/v2%s?token=%s", c.baseURL, c.omadacID, path, c.token)
+	token, _ := c.session()
+	return fmt.Sprintf("%s/%s/api/v2%s?token=%s", c.baseURL, c.omadacID, path, url.QueryEscape(token))
 }
 
 // siteURL builds a URL for site-scoped endpoints.
 func (c *Client) siteURL(siteID, path string) string {
-	return fmt.Sprintf("%s/%s/api/v2/sites/%s%s?token=%s", c.baseURL, c.omadacID, siteID, path, c.token)
+	token, _ := c.session()
+	return fmt.Sprintf("%s/%s/api/v2/sites/%s%s?token=%s", c.baseURL, c.omadacID, siteID, path, url.QueryEscape(token))
 }
 
 // doSiteRequest performs a site-scoped API request.
@@ -425,22 +483,37 @@ func (c *Client) doRequest(ctx context.Context, method, url string, body interfa
 }
 
 func (c *Client) doRequestWithRetry(ctx context.Context, method, url string, body interface{}, retry bool) (*APIResponse, error) {
-	var bodyReader io.Reader
+	var jsonBody []byte
 	if body != nil {
-		jsonBody, err := json.Marshal(body)
+		var err error
+		jsonBody, err = json.Marshal(body)
 		if err != nil {
 			return nil, fmt.Errorf("marshaling request body: %w", err)
 		}
-		bodyReader = bytes.NewReader(jsonBody)
 	}
+	return c.doAuthenticatedRequest(ctx, method, url, "application/json", jsonBody, retry)
+}
 
-	req, err := http.NewRequestWithContext(ctx, method, url, bodyReader)
+// doAuthenticatedRequest replays encoded JSON or multipart bytes at most once.
+// Header and query authentication always use the same session snapshot.
+func (c *Client) doAuthenticatedRequest(ctx context.Context, method, url, contentType string, body []byte, retry bool) (*APIResponse, error) {
+	if err := c.ensureAuth(ctx); err != nil {
+		return nil, err
+	}
+	token, generation := c.session()
+
+	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Csrf-Token", c.token)
+	query := req.URL.Query()
+	if query.Has("token") {
+		query.Set("token", token)
+		req.URL.RawQuery = query.Encode()
+	}
+	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("Csrf-Token", token)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -460,12 +533,10 @@ func (c *Client) doRequestWithRetry(ctx context.Context, method, url string, bod
 
 	// Session expired — re-auth and retry once
 	if apiResp.ErrorCode == -1 && retry {
-		if err := c.reAuth(ctx); err != nil {
+		if err := c.authenticate(ctx, generation, true); err != nil {
 			return nil, fmt.Errorf("re-authentication failed: %w", err)
 		}
-		// Rebuild URL with new token
-		url = strings.Replace(url, "&token="+c.token, "&token="+c.token, 1)
-		return c.doRequestWithRetry(ctx, method, url, body, false)
+		return c.doAuthenticatedRequest(ctx, method, url, contentType, body, false)
 	}
 
 	if apiResp.ErrorCode != 0 {
@@ -569,7 +640,7 @@ func (c *Client) CreateSite(ctx context.Context, req *SiteCreateRequest) (string
 
 // UpdateSite updates a site's name, region, timezone, and scenario via PATCH /sites/{id}/setting.
 func (c *Client) UpdateSite(ctx context.Context, siteID string, fields *SiteSettingFields) error {
-	url := fmt.Sprintf("%s/%s/api/v2/sites/%s/setting?token=%s", c.baseURL, c.omadacID, siteID, c.token)
+	url := c.siteURL(siteID, "/setting")
 	payload := &SiteSettingUpdate{Site: fields}
 	_, err := c.doRequest(ctx, http.MethodPatch, url, payload)
 	return err
@@ -2111,150 +2182,44 @@ type UploadCertificateResponse struct {
 }
 
 // UploadCertificate uploads a PEM-encoded certificate file to the controller.
-// The controller stores it and returns a certificate ID.
 func (c *Client) UploadCertificate(ctx context.Context, certPEM []byte, fileName string) (string, error) {
-	if c.readOnly {
-		return "", ErrReadOnly
-	}
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if err := c.ensureAuth(ctx); err != nil {
-		return "", err
-	}
-
-	url := fmt.Sprintf("%s/%s/api/v2/files/controller/certificate", c.baseURL, c.omadacID)
-
-	// Create multipart form data
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	// Add the certificate file
-	part, err := writer.CreateFormFile("file", fileName)
-	if err != nil {
-		return "", fmt.Errorf("creating form file: %w", err)
-	}
-	if _, err := part.Write(certPEM); err != nil {
-		return "", fmt.Errorf("writing cert to form: %w", err)
-	}
-
-	// Add metadata field (empty or minimal JSON)
-	if err := writer.WriteField("data", "{}"); err != nil {
-		return "", fmt.Errorf("writing form field: %w", err)
-	}
-
-	if err := writer.Close(); err != nil {
-		return "", fmt.Errorf("closing multipart writer: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
-	if err != nil {
-		return "", fmt.Errorf("creating request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("Csrf-Token", c.token)
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("uploading certificate: %w", err)
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("reading response: %w", err)
-	}
-
-	var apiResp APIResponse
-	if err := json.Unmarshal(respBody, &apiResp); err != nil {
-		return "", fmt.Errorf("parsing response: %w", err)
-	}
-
-	if apiResp.ErrorCode != 0 {
-		return "", fmt.Errorf("upload failed: errorCode=%d, msg=%s", apiResp.ErrorCode, apiResp.Msg)
-	}
-
-	var uploadResp UploadCertificateResponse
-	if err := json.Unmarshal(apiResp.Result, &uploadResp); err != nil {
-		return "", fmt.Errorf("parsing upload response: %w", err)
-	}
-
-	return uploadResp.ID, nil
+	return c.uploadControllerFile(ctx, "certificate", certPEM, fileName)
 }
 
 // UploadKey uploads a PEM-encoded private key file to the controller.
-// The controller stores it and returns a key ID.
 func (c *Client) UploadKey(ctx context.Context, keyPEM []byte, fileName string) (string, error) {
+	return c.uploadControllerFile(ctx, "key", keyPEM, fileName)
+}
+
+func (c *Client) uploadControllerFile(ctx context.Context, kind string, data []byte, fileName string) (string, error) {
 	if c.readOnly {
 		return "", ErrReadOnly
 	}
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if err := c.ensureAuth(ctx); err != nil {
-		return "", err
-	}
-
-	url := fmt.Sprintf("%s/%s/api/v2/files/controller/key", c.baseURL, c.omadacID)
-
-	// Create multipart form data
+	url := fmt.Sprintf("%s/%s/api/v2/files/controller/%s", c.baseURL, c.omadacID, kind)
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-
-	// Add the key file
 	part, err := writer.CreateFormFile("file", fileName)
 	if err != nil {
 		return "", fmt.Errorf("creating form file: %w", err)
 	}
-	if _, err := part.Write(keyPEM); err != nil {
-		return "", fmt.Errorf("writing key to form: %w", err)
+	if _, err := part.Write(data); err != nil {
+		return "", fmt.Errorf("writing file to form: %w", err)
 	}
-
-	// Add metadata field (empty or minimal JSON)
 	if err := writer.WriteField("data", "{}"); err != nil {
 		return "", fmt.Errorf("writing form field: %w", err)
 	}
-
 	if err := writer.Close(); err != nil {
 		return "", fmt.Errorf("closing multipart writer: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
+	apiResp, err := c.doAuthenticatedRequest(ctx, http.MethodPost, url, writer.FormDataContentType(), body.Bytes(), true)
 	if err != nil {
-		return "", fmt.Errorf("creating request: %w", err)
+		return "", fmt.Errorf("uploading %s: %w", kind, err)
 	}
-
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("Csrf-Token", c.token)
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("uploading key: %w", err)
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("reading response: %w", err)
-	}
-
-	var apiResp APIResponse
-	if err := json.Unmarshal(respBody, &apiResp); err != nil {
-		return "", fmt.Errorf("parsing response: %w", err)
-	}
-
-	if apiResp.ErrorCode != 0 {
-		return "", fmt.Errorf("upload failed: errorCode=%d, msg=%s", apiResp.ErrorCode, apiResp.Msg)
-	}
-
 	var uploadResp UploadCertificateResponse
 	if err := json.Unmarshal(apiResp.Result, &uploadResp); err != nil {
 		return "", fmt.Errorf("parsing upload response: %w", err)
 	}
-
 	return uploadResp.ID, nil
 }
 
@@ -2274,13 +2239,6 @@ type ControllerSettingUpdate struct {
 func (c *Client) ActivateCertificate(ctx context.Context, certID, keyID string) error {
 	if c.readOnly {
 		return ErrReadOnly
-	}
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if err := c.ensureAuth(ctx); err != nil {
-		return err
 	}
 
 	url := fmt.Sprintf("%s/%s/api/v2/controller/setting", c.baseURL, c.omadacID)
@@ -2304,13 +2262,6 @@ type ControllerSetting struct {
 
 // GetControllerCertificateSetting retrieves the currently active certificate and key IDs.
 func (c *Client) GetControllerCertificateSetting(ctx context.Context) (*ControllerSetting, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if err := c.ensureAuth(ctx); err != nil {
-		return nil, err
-	}
-
 	url := fmt.Sprintf("%s/%s/api/v2/controller/setting", c.baseURL, c.omadacID)
 	resp, err := c.doRequest(ctx, http.MethodGet, url, nil)
 	if err != nil {
