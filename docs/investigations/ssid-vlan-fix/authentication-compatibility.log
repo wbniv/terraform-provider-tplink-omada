@@ -1,0 +1,34 @@
+?   	github.com/terraform-provider-tplink-omada	[no test files]
+ok  	github.com/terraform-provider-tplink-omada/internal/client	0.612s
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	0.021s
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.421s
+=== RUN   TestAccWirelessNetworkCreate
+=== RUN   TestAccWirelessNetworkCreate/defaults
+=== RUN   TestAccWirelessNetworkCreate/explicit
+=== RUN   TestAccWirelessNetworkCreate/unknown_at_plan
+--- PASS: TestAccWirelessNetworkCreate (5.24s)
+    --- PASS: TestAccWirelessNetworkCreate/defaults (2.40s)
+    --- PASS: TestAccWirelessNetworkCreate/explicit (1.44s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_at_plan (1.40s)
+=== RUN   TestAccWirelessNetworkPreservation
+=== RUN   TestAccWirelessNetworkPreservation/plaintext
+=== RUN   TestAccWirelessNetworkPreservation/masked
+=== RUN   TestAccWirelessNetworkPreservation/absent
+=== RUN   TestAccWirelessNetworkPreservation/open
+=== RUN   TestAccWirelessNetworkPreservation/unmanaged
+--- PASS: TestAccWirelessNetworkPreservation (27.93s)
+    --- PASS: TestAccWirelessNetworkPreservation/plaintext (7.33s)
+    --- PASS: TestAccWirelessNetworkPreservation/masked (6.70s)
+    --- PASS: TestAccWirelessNetworkPreservation/absent (6.70s)
+    --- PASS: TestAccWirelessNetworkPreservation/open (5.62s)
+    --- PASS: TestAccWirelessNetworkPreservation/unmanaged (1.58s)
+=== RUN   TestAccWirelessNetworkVLANState
+=== RUN   TestAccWirelessNetworkVLANState/default_clears_fields
+=== RUN   TestAccWirelessNetworkVLANState/default_retains_stale_fields
+=== RUN   TestAccWirelessNetworkVLANState/import_default
+--- PASS: TestAccWirelessNetworkVLANState (11.93s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_clears_fields (5.14s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_retains_stale_fields (5.04s)
+    --- PASS: TestAccWirelessNetworkVLANState/import_default (1.74s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	45.142s

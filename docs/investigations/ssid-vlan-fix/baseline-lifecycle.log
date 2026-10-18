@@ -1,0 +1,256 @@
+=== RUN   TestWirelessNetworkVLANState
+=== RUN   TestWirelessNetworkVLANState/default/refresh
+    wireless_network_vlan_test.go:155: VLAN state = 20, want <null>
+=== RUN   TestWirelessNetworkVLANState/default/import
+=== RUN   TestWirelessNetworkVLANState/default/data_source
+=== RUN   TestWirelessNetworkVLANState/default_ignores_stale_fields/refresh
+    wireless_network_vlan_test.go:155: VLAN state = 20, want <null>
+=== RUN   TestWirelessNetworkVLANState/default_ignores_stale_fields/import
+    wireless_network_vlan_test.go:155: VLAN state = 20, want <null>
+=== RUN   TestWirelessNetworkVLANState/default_ignores_stale_fields/data_source
+    wireless_network_vlan_test.go:110: VLAN state = [{ID:"ssid" Name:"Observed" Band:3 Security:0 Broadcast:true VlanID:20 Enable11r:false PmfMode:2}], want <null>
+=== RUN   TestWirelessNetworkVLANState/default_ignores_invalid_stale_VLAN/refresh
+    wireless_network_vlan_test.go:155: VLAN state = 4095, want <null>
+=== RUN   TestWirelessNetworkVLANState/default_ignores_invalid_stale_VLAN/import
+    wireless_network_vlan_test.go:155: VLAN state = 4095, want <null>
+=== RUN   TestWirelessNetworkVLANState/default_ignores_invalid_stale_VLAN/data_source
+    wireless_network_vlan_test.go:110: VLAN state = [{ID:"ssid" Name:"Observed" Band:3 Security:0 Broadcast:true VlanID:4095 Enable11r:false PmfMode:2}], want <null>
+=== RUN   TestWirelessNetworkVLANState/custom_bridge/refresh
+=== RUN   TestWirelessNetworkVLANState/custom_bridge/import
+=== RUN   TestWirelessNetworkVLANState/custom_bridge/data_source
+=== RUN   TestWirelessNetworkVLANState/bridge_precedes_stale_current/refresh
+=== RUN   TestWirelessNetworkVLANState/bridge_precedes_stale_current/import
+=== RUN   TestWirelessNetworkVLANState/bridge_precedes_stale_current/data_source
+=== RUN   TestWirelessNetworkVLANState/custom_fallback/refresh
+=== RUN   TestWirelessNetworkVLANState/custom_fallback/import
+=== RUN   TestWirelessNetworkVLANState/custom_fallback/data_source
+=== RUN   TestWirelessNetworkVLANState/zero_bridge_fallback/refresh
+=== RUN   TestWirelessNetworkVLANState/zero_bridge_fallback/import
+=== RUN   TestWirelessNetworkVLANState/zero_bridge_fallback/data_source
+=== RUN   TestWirelessNetworkVLANState/matching_fallback_list/refresh
+=== RUN   TestWirelessNetworkVLANState/matching_fallback_list/import
+=== RUN   TestWirelessNetworkVLANState/matching_fallback_list/data_source
+=== RUN   TestWirelessNetworkVLANState/lowest_VLAN/refresh
+=== RUN   TestWirelessNetworkVLANState/lowest_VLAN/import
+=== RUN   TestWirelessNetworkVLANState/lowest_VLAN/data_source
+=== RUN   TestWirelessNetworkVLANState/highest_VLAN/refresh
+=== RUN   TestWirelessNetworkVLANState/highest_VLAN/import
+=== RUN   TestWirelessNetworkVLANState/highest_VLAN/data_source
+=== RUN   TestWirelessNetworkVLANState/missing_setting/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/missing_setting/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/missing_setting/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/null_setting/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/null_setting/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/null_setting/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/missing_mode/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/missing_mode/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/missing_mode/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/missing_mode_with_VLAN/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/missing_mode_with_VLAN/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/missing_mode_with_VLAN/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/null_mode/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/null_mode/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/null_mode/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/unsupported_mode/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/unsupported_mode/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/unsupported_mode/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/negative_mode/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/negative_mode/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/negative_mode/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/custom_without_VLAN/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/custom_without_VLAN/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/custom_without_VLAN/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/null_custom_without_fallback/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/null_custom_without_fallback/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/null_custom_without_fallback/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/negative_bridge/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/negative_bridge/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/negative_bridge/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/out_of_range_bridge/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/out_of_range_bridge/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/out_of_range_bridge/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/out_of_range_fallback/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/out_of_range_fallback/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/out_of_range_fallback/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/unsupported_custom_mode/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/unsupported_custom_mode/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/unsupported_custom_mode/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/multiple_fallback_VLANs/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/multiple_fallback_VLANs/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/multiple_fallback_VLANs/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/conflicting_fallback_VLAN/refresh
+    wireless_network_vlan_test.go:127: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/conflicting_fallback_VLAN/import
+    wireless_network_vlan_test.go:134: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/conflicting_fallback_VLAN/data_source
+    wireless_network_vlan_test.go:97: diagnostics: []
+=== RUN   TestWirelessNetworkVLANState/malformed_mode/refresh
+=== RUN   TestWirelessNetworkVLANState/malformed_mode/import
+=== RUN   TestWirelessNetworkVLANState/malformed_mode/data_source
+=== RUN   TestWirelessNetworkVLANState/fractional_mode/refresh
+=== RUN   TestWirelessNetworkVLANState/fractional_mode/import
+=== RUN   TestWirelessNetworkVLANState/fractional_mode/data_source
+=== RUN   TestWirelessNetworkVLANState/malformed_bridge/refresh
+=== RUN   TestWirelessNetworkVLANState/malformed_bridge/import
+=== RUN   TestWirelessNetworkVLANState/malformed_bridge/data_source
+--- FAIL: TestWirelessNetworkVLANState (0.53s)
+    --- FAIL: TestWirelessNetworkVLANState/default/refresh (0.02s)
+    --- PASS: TestWirelessNetworkVLANState/default/import (0.01s)
+    --- PASS: TestWirelessNetworkVLANState/default/data_source (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_stale_fields/refresh (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_stale_fields/import (0.04s)
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_stale_fields/data_source (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_invalid_stale_VLAN/refresh (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_invalid_stale_VLAN/import (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_invalid_stale_VLAN/data_source (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/custom_bridge/refresh (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/custom_bridge/import (0.01s)
+    --- PASS: TestWirelessNetworkVLANState/custom_bridge/data_source (0.01s)
+    --- PASS: TestWirelessNetworkVLANState/bridge_precedes_stale_current/refresh (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/bridge_precedes_stale_current/import (0.03s)
+    --- PASS: TestWirelessNetworkVLANState/bridge_precedes_stale_current/data_source (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/custom_fallback/refresh (0.01s)
+    --- PASS: TestWirelessNetworkVLANState/custom_fallback/import (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/custom_fallback/data_source (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/zero_bridge_fallback/refresh (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/zero_bridge_fallback/import (0.01s)
+    --- PASS: TestWirelessNetworkVLANState/zero_bridge_fallback/data_source (0.01s)
+    --- PASS: TestWirelessNetworkVLANState/matching_fallback_list/refresh (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/matching_fallback_list/import (0.01s)
+    --- PASS: TestWirelessNetworkVLANState/matching_fallback_list/data_source (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/lowest_VLAN/refresh (0.01s)
+    --- PASS: TestWirelessNetworkVLANState/lowest_VLAN/import (0.01s)
+    --- PASS: TestWirelessNetworkVLANState/lowest_VLAN/data_source (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/highest_VLAN/refresh (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/highest_VLAN/import (0.01s)
+    --- PASS: TestWirelessNetworkVLANState/highest_VLAN/data_source (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/missing_setting/refresh (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/missing_setting/import (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/missing_setting/data_source (0.02s)
+    --- FAIL: TestWirelessNetworkVLANState/null_setting/refresh (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/null_setting/import (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/null_setting/data_source (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/missing_mode/refresh (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/missing_mode/import (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/missing_mode/data_source (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/missing_mode_with_VLAN/refresh (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/missing_mode_with_VLAN/import (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/missing_mode_with_VLAN/data_source (0.02s)
+    --- FAIL: TestWirelessNetworkVLANState/null_mode/refresh (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/null_mode/import (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/null_mode/data_source (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/unsupported_mode/refresh (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/unsupported_mode/import (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/unsupported_mode/data_source (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/negative_mode/refresh (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/negative_mode/import (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/negative_mode/data_source (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/custom_without_VLAN/refresh (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/custom_without_VLAN/import (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/custom_without_VLAN/data_source (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/null_custom_without_fallback/refresh (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/null_custom_without_fallback/import (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/null_custom_without_fallback/data_source (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/negative_bridge/refresh (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/negative_bridge/import (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/negative_bridge/data_source (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/out_of_range_bridge/refresh (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/out_of_range_bridge/import (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/out_of_range_bridge/data_source (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/out_of_range_fallback/refresh (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/out_of_range_fallback/import (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/out_of_range_fallback/data_source (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/unsupported_custom_mode/refresh (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/unsupported_custom_mode/import (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/unsupported_custom_mode/data_source (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/multiple_fallback_VLANs/refresh (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/multiple_fallback_VLANs/import (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/multiple_fallback_VLANs/data_source (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/conflicting_fallback_VLAN/refresh (0.01s)
+    --- FAIL: TestWirelessNetworkVLANState/conflicting_fallback_VLAN/import (0.00s)
+    --- FAIL: TestWirelessNetworkVLANState/conflicting_fallback_VLAN/data_source (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/malformed_mode/refresh (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/malformed_mode/import (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/malformed_mode/data_source (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/fractional_mode/refresh (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/fractional_mode/import (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/fractional_mode/data_source (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/malformed_bridge/refresh (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/malformed_bridge/import (0.00s)
+    --- PASS: TestWirelessNetworkVLANState/malformed_bridge/data_source (0.00s)
+=== RUN   TestWirelessNetworkVLANWriteReadback
+=== RUN   TestWirelessNetworkVLANWriteReadback/create/applied
+=== RUN   TestWirelessNetworkVLANWriteReadback/create/rejected
+    wireless_network_vlan_test.go:259: diagnostics: []
+=== RUN   TestWirelessNetworkVLANWriteReadback/create/unreadable
+    wireless_network_vlan_test.go:259: diagnostics: []
+=== RUN   TestWirelessNetworkVLANWriteReadback/create/default_applied
+=== RUN   TestWirelessNetworkVLANWriteReadback/create/default_rejected
+    wireless_network_vlan_test.go:259: diagnostics: []
+=== RUN   TestWirelessNetworkVLANWriteReadback/update/applied
+=== RUN   TestWirelessNetworkVLANWriteReadback/update/rejected
+    wireless_network_vlan_test.go:252: diagnostics: []
+=== RUN   TestWirelessNetworkVLANWriteReadback/update/unreadable
+    wireless_network_vlan_test.go:252: diagnostics: []
+=== RUN   TestWirelessNetworkVLANWriteReadback/update/default_applied
+=== RUN   TestWirelessNetworkVLANWriteReadback/update/default_rejected
+    wireless_network_vlan_test.go:252: diagnostics: []
+=== RUN   TestWirelessNetworkVLANWriteReadback/update/unknown_resolves_from_readback
+    wireless_network_vlan_test.go:276: observed VLAN = <null>, want 30
+--- FAIL: TestWirelessNetworkVLANWriteReadback (0.09s)
+    --- PASS: TestWirelessNetworkVLANWriteReadback/create/applied (0.00s)
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/create/rejected (0.01s)
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/create/unreadable (0.00s)
+    --- PASS: TestWirelessNetworkVLANWriteReadback/create/default_applied (0.00s)
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/create/default_rejected (0.00s)
+    --- PASS: TestWirelessNetworkVLANWriteReadback/update/applied (0.00s)
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/update/rejected (0.02s)
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/update/unreadable (0.01s)
+    --- PASS: TestWirelessNetworkVLANWriteReadback/update/default_applied (0.01s)
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/update/default_rejected (0.00s)
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/update/unknown_resolves_from_readback (0.01s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/resources	0.643s
+FAIL

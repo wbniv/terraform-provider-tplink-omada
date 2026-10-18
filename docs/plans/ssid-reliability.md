@@ -1,6 +1,6 @@
 # D — SSID preservation, identity, and VLAN state
 
-Prepared for Will on 2026-10-19. Status: D1 implemented, locally verified, committed, and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774) in `/home/will/terraform-provider-tplink-omada-ssids`, branch `fix/ssid-update-preservation`, based on `6bc71b3`; D2 and D3 remain planned. Parent: [provider reliability tracker](provider-reliability-prs.md#d--wireless-networks).
+Prepared for Will on 2026-10-19. Status: D1 implemented, locally verified, committed, and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774) in `/home/will/terraform-provider-tplink-omada-ssids`, branch `fix/ssid-update-preservation`, based on `6bc71b3`; D2 is implemented, locally verified, committed, and pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3) on `fix/ssid-vlan-state` in `/home/will/terraform-provider-tplink-omada-ssid-vlan`, based on D1 commit `80991a5`; D3 remains planned. Parent: [provider reliability tracker](provider-reliability-prs.md#d--wireless-networks).
 
 ## D1 implementation status — 2026-10-19
 
@@ -11,9 +11,20 @@ Prepared for Will on 2026-10-19. Status: D1 implemented, locally verified, commi
 - [x] Save logs, commands, source inventory, exact versions, and tested hashes in [D1 evidence](../investigations/ssid-fix/README.md).
 - [x] Commit and push D1 as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774); committed hashes match the tested files.
 - [ ] Complete hardware/submission gates. No upstream PR has been opened.
-- [ ] Implement D2's mode-aware VLAN state mapping next, then D3's group-change lifecycle. Their shared checklist items below remain open.
+- [x] Implement and locally verify D2's mode-aware VLAN state mapping; see [D2 evidence](../investigations/ssid-vlan-fix/README.md).
+- [ ] Implement D3's group-change lifecycle next.
 
 The PATCH contract remains an inference from TP-Link's v5.9 documentation and the existing v6 client model. Unknown fields/modes fail before writes. Hardware validation remains unchecked; the evidence records the PMF/version discrepancy and secret ownership decisions explicitly.
+
+## D2 implementation status — 2026-10-19
+
+- [x] Stack D2 on D1 `80991a5` in the separate `fix/ssid-vlan-state` worktree.
+- [x] Share mode-aware VLAN mapping across refresh, import, the SSID data source, and create/update readback; distinguish missing/null mode from explicit mode 0.
+- [x] Verify 95 lifecycle cases, three D2 Terraform scenarios (21 steps), all eight D1 Terraform scenarios, full Go gates, and A + D1 + D2 compatibility in Docker.
+- [x] Record baseline failures (59 of 95 lifecycle cases and all three D2 Terraform scenarios), commands, hashes, migration notes, and limitations in [D2 evidence](../investigations/ssid-vlan-fix/README.md).
+- [x] Commit and push D2 as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3); committed hashes match the tested files.
+- [ ] Complete D2 hardware/submission gates; no upstream PR has been opened.
+- [ ] Review earlier SSID create readback failures that can lose the newly allocated ID; D2 retains identity when a decoded SSID reaches the resource, while transport/lookup/decode recovery is separate.
 
 ## Outcome and starting evidence
 
@@ -34,13 +45,14 @@ Code to inspect: [resource lifecycle/schema](https://github.com/emanuelbesliu/te
 | Order | Proposed branch | Scope | Base and dependency |
 | --- | --- | --- | --- |
 | D1 | `fix/ssid-update-preservation` | F04: preservation, defaults, secret handling, update/readback regressions, migration notes. | Baseline; check compatibility with authentication A (`52ed681`). |
-| D2 | `fix/ssid-vlan-state` | F14: mode-aware VLAN state mapping shared by Read/Import and relevant write readback. | Baseline when independent; record any deliberate dependency on D1. |
+| D2 | `fix/ssid-vlan-state` | F14: mode-aware VLAN state mapping shared by Read/Import and relevant write readback. | Stacked on D1 `80991a5` so write/readback checks use the preservation and secret-handling fixes; review D2 against that base. |
 | D3 | `fix/ssid-group-identity` | F13: group-change planning and lifecycle, import identity, migration/downtime note. | Prefer an independent patch; if replacement needs D1's create/default fixes, record and test that stack. |
 
 Suggested titles: `fix(resources): preserve SSID settings during updates`, `fix(resources): clear stale SSID VLAN state`, and `fix!: require replacement for SSID WLAN group changes` if replacement is selected. Use a breaking-change title/footer for D1 if omission/default semantics change.
 
 - [x] Create D1 from the recorded baseline; retain A–C and the documentation branch separately.
-- [ ] Create D2 and D3 worktrees from their chosen bases.
+- [x] Create D2 on D1 `80991a5`; include the matching data-source mapping and retain separate patch scope.
+- [ ] Create D3 from its chosen base.
 - [ ] Recheck upstream heads and contribution requirements before starting and before submission.
 - [x] Keep new controller evidence and patch logs under `docs/investigations/ssid-fix/`; preserve original reproductions and logs.
 
@@ -152,9 +164,11 @@ flowchart TD
 | Stability | Repeated plans, removal of configured computed fields, remote drift | No perpetual diffs or inconsistent-result errors. |
 
 - [x] Promote F04 into maintained lifecycle and Terraform tests and capture failure on the recorded base.
-- [ ] Promote F13/F14 probes for D3/D2.
+- [x] Promote F14 into maintained D2 lifecycle and Terraform tests.
+- [ ] Promote F13 for D3.
 - [x] Add real Terraform mock acceptance for D1 import/rename, creation, explicit changes, unknown values, secret handling, VLAN writes, and repeated plans.
-- [ ] Add group planning/lifecycle and VLAN drift acceptance under D3/D2.
+- [x] Add D2 VLAN drift/refresh/import acceptance with observed state, planned restoration/removal, and stable plans.
+- [ ] Add D3 group planning/lifecycle acceptance.
 - [x] Assert the allowlist excludes read-only fields and that all validation precedes writes. Separate expected fixture failures from actual passing patch validation.
 
 ## Verification and PR package
@@ -194,8 +208,12 @@ D1 is complete locally and committed/pushed to Will's fork; hardware testing and
 - [x] Begin D1 with the retained F04 reproduction and a maintained import-and-rename acceptance case.
 - [x] Resolve default/secret ownership and the writable payload contract; implement and verify D1.
 
+### 2026-10-19 — D2 implementation
+
+- [x] Implement and verify D2's mode-aware VLAN mapping; record its deliberate D1 dependency.
+
 ### Undated — Remaining implementation
-- [ ] Implement and verify D2's mode-aware VLAN mapping.
+
 - [ ] Resolve the group-change mechanism and implement/verify D3.
 
 ### Conditional — Controller access and upstream review

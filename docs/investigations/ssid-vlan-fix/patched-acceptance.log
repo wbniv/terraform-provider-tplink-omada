@@ -1,0 +1,10 @@
+=== RUN   TestAccWirelessNetworkVLANState
+=== RUN   TestAccWirelessNetworkVLANState/default_clears_fields
+=== RUN   TestAccWirelessNetworkVLANState/default_retains_stale_fields
+=== RUN   TestAccWirelessNetworkVLANState/import_default
+--- PASS: TestAccWirelessNetworkVLANState (10.88s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_clears_fields (4.69s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_retains_stale_fields (4.65s)
+    --- PASS: TestAccWirelessNetworkVLANState/import_default (1.55s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	10.897s

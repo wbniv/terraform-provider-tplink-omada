@@ -1,0 +1,14 @@
+=== RUN   TestAccWirelessNetworkVLANState
+=== RUN   TestAccWirelessNetworkVLANState/default_clears_fields
+    wireless_network_vlan_test.go:163: Check 2/2 error: omada_wireless_network.test: Attribute 'vlan_id' found when not expected
+=== RUN   TestAccWirelessNetworkVLANState/default_retains_stale_fields
+    wireless_network_vlan_test.go:163: Check 2/2 error: omada_wireless_network.test: Attribute 'vlan_id' found when not expected
+=== RUN   TestAccWirelessNetworkVLANState/import_default
+    wireless_network_vlan_test.go:163: Step 1/3 error: Check failed: Check 1/3 error: PATCH count = 1, want 0
+--- FAIL: TestAccWirelessNetworkVLANState (5.63s)
+    --- FAIL: TestAccWirelessNetworkVLANState/default_clears_fields (1.67s)
+    --- FAIL: TestAccWirelessNetworkVLANState/default_retains_stale_fields (2.76s)
+    --- FAIL: TestAccWirelessNetworkVLANState/import_default (1.20s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/provider	5.645s
+FAIL
