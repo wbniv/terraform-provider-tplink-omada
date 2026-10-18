@@ -5,10 +5,8 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -106,7 +104,6 @@ var switchPortSchema = schema.NestedAttributeObject{
 			Description: "Whether the port is administratively disabled.",
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(false),
 		},
 		"profile_id": schema.StringAttribute{
 			Description: "The port profile ID assigned to this port.",
@@ -117,7 +114,6 @@ var switchPortSchema = schema.NestedAttributeObject{
 			Description: "Whether per-port override of the profile is enabled.",
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(false),
 		},
 		"native_network_id": schema.StringAttribute{
 			Description: "The native (untagged) network ID for this port.",
@@ -150,13 +146,11 @@ var switchPortSchema = schema.NestedAttributeObject{
 			Description: "Enable voice network on this port.",
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(false),
 		},
 		"voice_dscp_enable": schema.BoolAttribute{
 			Description: "Enable voice DSCP on this port.",
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(false),
 		},
 	},
 }
@@ -296,7 +290,7 @@ func (r *DeviceSwitchResource) Schema(_ context.Context, _ resource.SchemaReques
 
 			// Ports
 			"ports": schema.ListNestedAttribute{
-				Description:  "Switch port configurations. All ports must be specified on import.",
+				Description:  "Switch port configurations. When configured, include every port. Omitted port attributes preserve controller settings; explicit empty VLAN lists clear those selections.",
 				Optional:     true,
 				Computed:     true,
 				NestedObject: switchPortSchema,
@@ -419,34 +413,6 @@ func buildSwitchServiceConfig(plan *DeviceSwitchResourceModel) *client.SwitchSer
 	return config
 }
 
-func updateSwitchPorts(ctx context.Context, c *client.Client, siteID, mac string, plan *DeviceSwitchResourceModel, diags *diag.Diagnostics) {
-	if plan.Ports.IsNull() || plan.Ports.IsUnknown() {
-		return
-	}
-	var ports []SwitchPortModel
-	diags.Append(plan.Ports.ElementsAs(ctx, &ports, false)...)
-	if diags.HasError() {
-		return
-	}
-	for _, p := range ports {
-		portConfig := map[string]interface{}{
-			"name":                  p.Name.ValueString(),
-			"profileId":             p.ProfileID.ValueString(),
-			"profileOverrideEnable": p.ProfileOverrideEnable.ValueBool(),
-			"networkTagsSetting":    p.NetworkTagsSetting.ValueInt64(),
-			"tagNetworkIds":         []string{},
-			"untagNetworkIds":       []string{},
-		}
-		if err := c.UpdateSwitchPort(ctx, siteID, mac, int(p.Port.ValueInt64()), portConfig); err != nil {
-			diags.AddError(
-				fmt.Sprintf("Error updating switch port %d", p.Port.ValueInt64()),
-				err.Error(),
-			)
-			return
-		}
-	}
-}
-
 // Create always fails — switches must be adopted through the controller UI
 // and imported into Terraform state.
 func (r *DeviceSwitchResource) Create(_ context.Context, _ resource.CreateRequest, resp *resource.CreateResponse) {
@@ -496,6 +462,11 @@ func (r *DeviceSwitchResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	portUpdates := planSwitchPortUpdates(ctx, rawConfig, &plan, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Read isES before UpdateSwitchConfig strips it
 	isES, _ := rawConfig["es"].(bool)
 
@@ -512,9 +483,11 @@ func (r *DeviceSwitchResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	updateSwitchPorts(ctx, r.client, siteID, mac, &plan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
+	for _, update := range portUpdates {
+		if err := r.client.UpdateSwitchPort(ctx, siteID, mac, update.port, update.config); err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error updating switch port %d", update.port), err.Error())
+			return
+		}
 	}
 
 	swConfig, err := r.client.GetSwitchConfig(ctx, siteID, mac)
@@ -609,8 +582,9 @@ func switchConfigToState(cfg *client.SwitchConfig, state *DeviceSwitchResourceMo
 	state.LagHashAlg = types.Int64Value(int64(cfg.LagHashAlg))
 
 	// Ports
-	portValues := make([]attr.Value, len(cfg.Ports))
-	for i, p := range cfg.Ports {
+	ports := switchPortsInStateOrder(cfg.Ports, state.Ports)
+	portValues := make([]attr.Value, len(ports))
+	for i, p := range ports {
 		tagIDs := make([]attr.Value, len(p.TagNetworkIDs))
 		for j, id := range p.TagNetworkIDs {
 			tagIDs[j] = types.StringValue(id)
