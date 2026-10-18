@@ -1,0 +1,185 @@
+package resources
+
+// Investigation probes: assert expected behavior; failures document bugs in main.
+// Copy into internal/resources/investigation_test.go in a disposable checkout.
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/terraform-provider-tplink-omada/internal/client"
+)
+
+func probeClient(t *testing.T, handler http.HandlerFunc) *client.Client {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/api/info": fmt.Fprint(w, `{"errorCode":0,"result":{"omadacId":"controller"}}`)
+		case "/controller/api/v2/login": fmt.Fprint(w, `{"errorCode":0,"result":{"token":"token"}}`)
+		default: handler(w, r)
+		}
+	}))
+	t.Cleanup(srv.Close)
+	c, err := client.NewClient(srv.URL, "test", "test", false)
+	if err != nil { t.Fatal(err) }
+	return c
+}
+
+func probeState(t *testing.T, r resource.Resource, model any) tfsdk.State {
+	t.Helper()
+	var schema resource.SchemaResponse
+	r.Schema(context.Background(), resource.SchemaRequest{}, &schema)
+	s := tfsdk.State{Schema: schema.Schema}
+	if d := s.Set(context.Background(), model); d.HasError() { t.Fatalf("test state: %v", d) }
+	return s
+}
+
+func probeResult(w http.ResponseWriter, result any) {
+	_ = json.NewEncoder(w).Encode(map[string]any{"errorCode": 0, "result": result})
+}
+
+func TestInvestigationSwitchPortPayload(t *testing.T) {
+	var sent map[string]any
+	c := probeClient(t, func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewDecoder(r.Body).Decode(&sent)
+		probeResult(w, nil)
+	})
+	var plan DeviceSwitchResourceModel
+	switchConfigToState(&client.SwitchConfig{Ports: []client.SwitchPort{{Port: 1, Name: "Uplink", ProfileID: "profile", Disable: true, NativeNetworkID: "native", TagNetworkIDs: []string{"tagged"}, UntagNetworkIDs: []string{"untagged"}, VoiceNetworkEnable: true, VoiceDscpEnable: true}}}, &plan)
+	var d diag.Diagnostics
+	updateSwitchPorts(context.Background(), c, "site", "mac", &plan, &d)
+	if d.HasError() { t.Fatal(d) }
+	for _, k := range []string{"tagNetworkIds", "untagNetworkIds"} {
+		if a, ok := sent[k].([]any); !ok || len(a) != 1 { t.Errorf("%s was replaced with %v", k, sent[k]) }
+	}
+	for _, k := range []string{"disable", "nativeNetworkId", "voiceNetworkEnable", "voiceDscpEnable"} {
+		if _, ok := sent[k]; !ok { t.Errorf("configured %s omitted from PATCH", k) }
+	}
+}
+
+func TestInvestigationPasswordRotation(t *testing.T) {
+	var sent client.SiteSettings
+	c := probeClient(t, func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewDecoder(r.Body).Decode(&sent)
+		probeResult(w, &client.SiteSettings{DeviceAccount: &client.DeviceAccount{Username: "admin", Password: "***"}})
+	})
+	r := &SiteSettingsResource{client: c}
+	old := SiteSettingsResourceModel{ID: types.StringValue("site"), SiteID: types.StringValue("site"), DeviceAccountUsername: types.StringValue("admin"), DeviceAccountPassword: types.StringValue("old-probe-password")}
+	next := old
+	next.DeviceAccountPassword = types.StringValue("new-probe-password")
+	os, ns := probeState(t, r, &old), probeState(t, r, &next)
+	resp := resource.UpdateResponse{State: os}
+	r.Update(context.Background(), resource.UpdateRequest{State: os, Plan: tfsdk.Plan{Schema: ns.Schema, Raw: ns.Raw}, Config: tfsdk.Config{Schema: ns.Schema, Raw: ns.Raw}}, &resp)
+	if resp.Diagnostics.HasError() { t.Fatal(resp.Diagnostics) }
+	var actual SiteSettingsResourceModel
+	if d := resp.State.Get(context.Background(), &actual); d.HasError() { t.Fatal(d) }
+	if sent.DeviceAccount == nil || sent.DeviceAccount.Password != "new-probe-password" { t.Fatal("rotation not sent") }
+	if !actual.DeviceAccountPassword.Equal(next.DeviceAccountPassword) { t.Fatal("API received new password but response state restored old password") }
+}
+
+func TestInvestigationNetworkAdoption(t *testing.T) {
+	writes := 0
+	c := probeClient(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet { writes++ }
+		probeResult(w, map[string]any{"data": []client.Network{{ID: "existing", Name: "LAN", Purpose: "vlan", Vlan: 10}}, "totalRows": 1})
+	})
+	r := &NetworkResource{client: c}
+	model := NetworkResourceModel{SiteID: types.StringValue("site"), Name: types.StringValue("LAN"), Purpose: types.StringValue("vlan"), VlanID: types.Int64Value(20), IGMPSnoopEnable: types.BoolValue(false)}
+	s := probeState(t, r, &model)
+	resp := resource.CreateResponse{State: tfsdk.State{Schema: s.Schema}}
+	r.Create(context.Background(), resource.CreateRequest{Plan: tfsdk.Plan{Schema: s.Schema, Raw: s.Raw}}, &resp)
+	if resp.Diagnostics.HasError() { return }
+	var actual NetworkResourceModel
+	if d := resp.State.Get(context.Background(), &actual); d.HasError() { t.Fatal(d) }
+	if writes == 0 && actual.VlanID.ValueInt64() == 20 { t.Fatal("Create claimed VLAN 20 in state; adopted controller object is VLAN 10; no write occurred") }
+}
+
+func TestInvestigationMissingNetworkRefresh(t *testing.T) {
+	c := probeClient(t, func(w http.ResponseWriter, r *http.Request) { probeResult(w, map[string]any{"data": []client.Network{}, "totalRows": 0}) })
+	r := &NetworkResource{client: c}
+	model := NetworkResourceModel{ID: types.StringValue("deleted"), SiteID: types.StringValue("site"), Name: types.StringValue("LAN"), VlanID: types.Int64Value(20)}
+	s := probeState(t, r, &model)
+	resp := resource.ReadResponse{State: s}
+	r.Read(context.Background(), resource.ReadRequest{State: s}, &resp)
+	if resp.Diagnostics.HasError() { t.Fatalf("deleted object blocks refresh: %v", resp.Diagnostics) }
+	if !resp.State.Raw.IsNull() { t.Fatal("deleted object remains in state") }
+}
+
+func TestInvestigationWirelessVLANRefresh(t *testing.T) {
+	c := probeClient(t, func(w http.ResponseWriter, r *http.Request) { probeResult(w, map[string]any{"data": []client.WirelessNetwork{{ID: "ssid", Name: "wifi", VlanSetting: &client.VlanSetting{Mode: 0}}}}) })
+	r := &WirelessNetworkResource{client: c}
+	model := WirelessNetworkResourceModel{ID: types.StringValue("ssid"), SiteID: types.StringValue("site"), WlanGroupID: types.StringValue("group"), Name: types.StringValue("wifi"), VlanID: types.Int64Value(20)}
+	s := probeState(t, r, &model)
+	resp := resource.ReadResponse{State: s}
+	r.Read(context.Background(), resource.ReadRequest{State: s}, &resp)
+	if resp.Diagnostics.HasError() { t.Fatal(resp.Diagnostics) }
+	var actual WirelessNetworkResourceModel
+	if d := resp.State.Get(context.Background(), &actual); d.HasError() { t.Fatal(d) }
+	if !actual.VlanID.IsNull() { t.Errorf("controller removed custom VLAN; refreshed state still says vlan_id=%d", actual.VlanID.ValueInt64()) }
+}
+
+func TestInvestigationWirelessGroupChange(t *testing.T) {
+	var patchPath string
+	c := probeClient(t, func(w http.ResponseWriter, r *http.Request) { patchPath = r.URL.Path; probeResult(w, client.WirelessNetwork{ID: "ssid", Name: "wifi"}) })
+	r := &WirelessNetworkResource{client: c}
+	old := WirelessNetworkResourceModel{ID: types.StringValue("ssid"), SiteID: types.StringValue("site"), WlanGroupID: types.StringValue("old-group"), Name: types.StringValue("wifi")}
+	next := old
+	next.WlanGroupID = types.StringValue("new-group")
+	os, ns := probeState(t, r, &old), probeState(t, r, &next)
+	resp := resource.UpdateResponse{State: os}
+	r.Update(context.Background(), resource.UpdateRequest{State: os, Plan: tfsdk.Plan{Schema: ns.Schema, Raw: ns.Raw}}, &resp)
+	if resp.Diagnostics.HasError() { return }
+	var actual WirelessNetworkResourceModel
+	if d := resp.State.Get(context.Background(), &actual); d.HasError() { t.Fatal(d) }
+	if !actual.WlanGroupID.Equal(next.WlanGroupID) { t.Errorf("planned new-group; patched %s and returned %s", patchPath, actual.WlanGroupID.ValueString()) }
+}
+
+func TestInvestigationSiteCredentialsUpdate(t *testing.T) {
+	var sent map[string]any
+	c := probeClient(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPatch { _ = json.NewDecoder(r.Body).Decode(&sent) }
+		probeResult(w, client.Site{ID: "site", Name: "Home", Region: "region", TimeZone: "zone", Scenario: "Home"})
+	})
+	r := &SiteResource{client: c}
+	old := SiteResourceModel{ID: types.StringValue("site"), Name: types.StringValue("Home"), Region: types.StringValue("region"), TimeZone: types.StringValue("zone"), Scenario: types.StringValue("Home"), Type: types.Int64Value(0), DeviceAccountUsername: types.StringValue("admin"), DeviceAccountPassword: types.StringValue("old-probe-password")}
+	next := old
+	next.DeviceAccountPassword = types.StringValue("new-probe-password")
+	os, ns := probeState(t, r, &old), probeState(t, r, &next)
+	resp := resource.UpdateResponse{State: os}
+	r.Update(context.Background(), resource.UpdateRequest{State: os, Plan: tfsdk.Plan{Schema: ns.Schema, Raw: ns.Raw}}, &resp)
+	if resp.Diagnostics.HasError() { t.Fatal(resp.Diagnostics) }
+	var actual SiteResourceModel
+	if d := resp.State.Get(context.Background(), &actual); d.HasError() { t.Fatal(d) }
+	b, _ := json.Marshal(sent)
+	if actual.DeviceAccountPassword.Equal(next.DeviceAccountPassword) && !strings.Contains(string(b), "new-probe-password") { t.Fatal("state claims changed device password; PATCH contains only site metadata") }
+}
+
+func TestInvestigationWirelessUpdateResetsSettings(t *testing.T) {
+	var sent client.WirelessNetwork
+	c := probeClient(t, func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewDecoder(r.Body).Decode(&sent)
+		probeResult(w, client.WirelessNetwork{ID: "ssid", Name: "renamed", Band: 3, Security: 3, Broadcast: true, PmfMode: 2})
+	})
+	r := &WirelessNetworkResource{client: c}
+	old := WirelessNetworkResourceModel{ID: types.StringValue("ssid"), SiteID: types.StringValue("site"), WlanGroupID: types.StringValue("group"), Name: types.StringValue("wifi"), Band: types.Int64Value(3), Security: types.Int64Value(3), Broadcast: types.BoolValue(true), Enable11r: types.BoolValue(false), PmfMode: types.Int64Value(2), Passphrase: types.StringValue("probe-password")}
+	next := old
+	next.Name = types.StringValue("renamed")
+	os, ns := probeState(t, r, &old), probeState(t, r, &next)
+	resp := resource.UpdateResponse{State: os}
+	r.Update(context.Background(), resource.UpdateRequest{State: os, Plan: tfsdk.Plan{Schema: ns.Schema, Raw: ns.Raw}}, &resp)
+	if resp.Diagnostics.HasError() { t.Fatal(resp.Diagnostics) }
+	// A renamed imported SSID could have these enabled in the controller.
+	// They are absent from this provider's schema, but the PATCH overrides them.
+	if !sent.GuestNetEnable && !sent.MacFilterEnable && !sent.WlanScheduleEnable && sent.PSKSetting != nil && sent.PSKSetting.VersionPsk == 2 {
+		t.Fatal("rename payload forces guestNetEnable=false, macFilterEnable=false, wlanScheduleEnable=false, versionPsk=2 without reading current settings")
+	}
+}

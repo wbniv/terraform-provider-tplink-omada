@@ -1,0 +1,497 @@
+=== RUN   TestCertificateOperations
+=== RUN   TestCertificateOperations/certificate/token=valid
+    auth_test.go:108: certificate operation did not complete before its deadline
+=== RUN   TestCertificateOperations/certificate/token=
+    auth_test.go:108: certificate operation did not complete before its deadline
+=== RUN   TestCertificateOperations/certificate/token=expired
+    auth_test.go:108: certificate operation did not complete before its deadline
+=== RUN   TestCertificateOperations/key/token=valid
+    auth_test.go:108: certificate operation did not complete before its deadline
+=== RUN   TestCertificateOperations/key/token=
+    auth_test.go:108: certificate operation did not complete before its deadline
+=== RUN   TestCertificateOperations/key/token=expired
+    auth_test.go:108: certificate operation did not complete before its deadline
+=== RUN   TestCertificateOperations/activate/token=valid
+    auth_test.go:108: certificate operation did not complete before its deadline
+=== RUN   TestCertificateOperations/activate/token=
+    auth_test.go:108: certificate operation did not complete before its deadline
+=== RUN   TestCertificateOperations/activate/token=expired
+    auth_test.go:108: certificate operation did not complete before its deadline
+=== RUN   TestCertificateOperations/read/token=valid
+    auth_test.go:108: certificate operation did not complete before its deadline
+=== RUN   TestCertificateOperations/read/token=
+    auth_test.go:108: certificate operation did not complete before its deadline
+=== RUN   TestCertificateOperations/read/token=expired
+    auth_test.go:108: certificate operation did not complete before its deadline
+--- FAIL: TestCertificateOperations (12.07s)
+    --- FAIL: TestCertificateOperations/certificate/token=valid (1.01s)
+    --- FAIL: TestCertificateOperations/certificate/token= (1.00s)
+    --- FAIL: TestCertificateOperations/certificate/token=expired (1.00s)
+    --- FAIL: TestCertificateOperations/key/token=valid (1.00s)
+    --- FAIL: TestCertificateOperations/key/token= (1.00s)
+    --- FAIL: TestCertificateOperations/key/token=expired (1.00s)
+    --- FAIL: TestCertificateOperations/activate/token=valid (1.00s)
+    --- FAIL: TestCertificateOperations/activate/token= (1.00s)
+    --- FAIL: TestCertificateOperations/activate/token=expired (1.00s)
+    --- FAIL: TestCertificateOperations/read/token=valid (1.00s)
+    --- FAIL: TestCertificateOperations/read/token= (1.00s)
+    --- FAIL: TestCertificateOperations/read/token=expired (1.00s)
+=== RUN   TestConcurrentSessionExpiry
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+==================
+WARNING: DATA RACE
+Write at 0x00c00009aac0 by goroutine 68:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).reAuth()
+      /tmp/baseline/internal/client/client.go:396 +0xb5
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequestWithRetry()
+      /tmp/baseline/internal/client/client.go:463 +0xd18
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequest()
+      /tmp/baseline/internal/client/client.go:424 +0x28e
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doSiteRequestWithParams()
+      /tmp/baseline/internal/client/client.go:419 +0x1a
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentSessionExpiry.func2()
+      /tmp/baseline/internal/client/auth_test.go:176 +0x11e
+
+Previous read at 0x00c00009aac0 by goroutine 71:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequestWithRetry()
+      /tmp/baseline/internal/client/client.go:467 +0xe32
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequest()
+      /tmp/baseline/internal/client/client.go:424 +0x28e
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doSiteRequestWithParams()
+      /tmp/baseline/internal/client/client.go:419 +0x1a
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentSessionExpiry.func2()
+      /tmp/baseline/internal/client/auth_test.go:176 +0x11e
+
+Goroutine 68 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentSessionExpiry()
+      /tmp/baseline/internal/client/auth_test.go:174 +0x59b
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+
+Goroutine 71 (finished) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentSessionExpiry()
+      /tmp/baseline/internal/client/auth_test.go:174 +0x59b
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+==================
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+==================
+WARNING: DATA RACE
+Read at 0x00c00009aac0 by goroutine 66:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequestWithRetry()
+      /tmp/baseline/internal/client/client.go:443 +0x50a
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequestWithRetry()
+      /tmp/baseline/internal/client/client.go:468 +0xf5c
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequest()
+      /tmp/baseline/internal/client/client.go:424 +0x28e
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doSiteRequestWithParams()
+      /tmp/baseline/internal/client/client.go:419 +0x1a
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentSessionExpiry.func2()
+      /tmp/baseline/internal/client/auth_test.go:176 +0x11e
+
+Previous write at 0x00c00009aac0 by goroutine 73:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).login()
+      /tmp/baseline/internal/client/client.go:375 +0x9da
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).reAuth()
+      /tmp/baseline/internal/client/client.go:397 +0xf7
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequestWithRetry()
+      /tmp/baseline/internal/client/client.go:463 +0xd18
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequest()
+      /tmp/baseline/internal/client/client.go:424 +0x28e
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doSiteRequestWithParams()
+      /tmp/baseline/internal/client/client.go:419 +0x1a
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentSessionExpiry.func2()
+      /tmp/baseline/internal/client/auth_test.go:176 +0x11e
+
+Goroutine 66 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentSessionExpiry()
+      /tmp/baseline/internal/client/auth_test.go:174 +0x59b
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+
+Goroutine 73 (finished) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentSessionExpiry()
+      /tmp/baseline/internal/client/auth_test.go:174 +0x59b
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+==================
+    auth_test.go:162: header/query token mismatch: "fresh+token&with=punctuation" / "expired"
+    auth_test.go:184: concurrent expiry caused 12 logins, want 1
+    testing.go:1617: race detected during execution of test
+--- FAIL: TestConcurrentSessionExpiry (0.16s)
+=== RUN   TestConcurrentRequestsAndRefresh
+==================
+WARNING: DATA RACE
+Write at 0x00c00009b770 by goroutine 178:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).reAuth()
+      /tmp/baseline/internal/client/client.go:396 +0xb5
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func2()
+      /tmp/baseline/internal/client/auth_test.go:209 +0x105
+
+Previous read at 0x00c00009b770 by goroutine 182:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequestWithRetry()
+      /tmp/baseline/internal/client/client.go:443 +0x50a
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequest()
+      /tmp/baseline/internal/client/client.go:424 +0x2aa
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func3()
+      /tmp/baseline/internal/client/auth_test.go:219 +0x274
+
+Goroutine 178 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:206 +0x51c
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+
+Goroutine 182 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:216 +0x53d
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+==================
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+==================
+WARNING: DATA RACE
+Read at 0x00c00009b770 by goroutine 182:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).UpdateSite()
+      /tmp/baseline/internal/client/client.go:572 +0x174
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func3()
+      /tmp/baseline/internal/client/auth_test.go:223 +0x3dc
+
+Previous write at 0x00c00009b770 by goroutine 178:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).reAuth()
+      /tmp/baseline/internal/client/client.go:396 +0xb5
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func2()
+      /tmp/baseline/internal/client/auth_test.go:209 +0x105
+
+Goroutine 182 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:216 +0x53d
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+
+Goroutine 178 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:206 +0x51c
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+==================
+    auth_test.go:196: query/header tokens disagree: "initial" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+==================
+WARNING: DATA RACE
+Write at 0x00c00009b770 by     auth_test.go:196: query/header tokens disagree: "" / ""
+goroutine 178:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).login()
+      /tmp/baseline/internal/client/client.go:375 +0x9da
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).reAuth()
+      /tmp/baseline/internal/client/client.go:397 +0xf7
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func2()
+      /tmp/baseline/internal/client/auth_test.go:209 +0x105
+
+Previous read at 0x00c00009b770 by goroutine 179:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequestWithRetry()
+      /tmp/baseline/internal/client/client.go:443 +0x50a
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequest()
+      /tmp/baseline/internal/client/client.go:424 +0x2aa
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func3()
+      /tmp/baseline/internal/client/auth_test.go:219 +0x274
+
+Goroutine 178 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:206 +0x51c
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+
+Goroutine 179 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:216 +0x53d
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+==================
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+==================
+WARNING: DATA RACE
+Write at 0x00c00009b770 by goroutine 178:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).reAuth()
+      /tmp/baseline/internal/client/client.go:396 +0xb5
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func2()
+      /tmp/baseline/internal/client/auth_test.go:209 +0x105
+
+Previous read at 0x00c00009b770 by goroutine 182:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequestWithRetry()
+      /tmp/baseline/internal/client/client.go:443 +0x50a
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequest()
+      /tmp/baseline/internal/client/client.go:424 +0x278
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).UpdateSite()
+      /tmp/baseline/internal/client/client.go:574 +0x237
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func3()
+      /tmp/baseline/internal/client/auth_test.go:223 +0x3dc
+
+Goroutine 178 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:206 +0x51c
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+
+Goroutine 182 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:216 +0x53d
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+==================
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+==================
+WARNING: DATA RACE
+Write at 0x00c00009b770 by goroutine 178:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).login()
+      /tmp/baseline/internal/client/client.go:375 +0x9da
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).reAuth()
+      /tmp/baseline/internal/client/client.go:397 +0xf7
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func2()
+      /tmp/baseline/internal/client/auth_test.go:209 +0x105
+
+Previous read at 0x00c00009b770 by goroutine 181:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequestWithRetry()
+      /tmp/baseline/internal/client/client.go:443 +0x50a
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).doRequest()
+      /tmp/baseline/internal/client/client.go:424 +0x278
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).UpdateSite()
+      /tmp/baseline/internal/client/client.go:574 +0x237
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func3()
+      /tmp/baseline/internal/client/auth_test.go:223 +0x3dc
+
+Goroutine 178 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:206 +0x51c
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+
+Goroutine 181 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:216 +0x53d
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+==================
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+==================
+WARNING: DATA RACE
+Read at 0x00c00009b770 by goroutine 180:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).globalURL()
+      /tmp/baseline/internal/client/client.go:402 +0x209
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func3()
+      /tmp/baseline/internal/client/auth_test.go:219 +0xf3
+
+Previous write at 0x00c00009b770 by goroutine 178:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).reAuth()
+      /tmp/baseline/internal/client/client.go:396 +0xb5
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh.func2()
+      /tmp/baseline/internal/client/auth_test.go:209 +0x105
+
+Goroutine 180 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:216 +0x53d
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+
+Goroutine 178 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestConcurrentRequestsAndRefresh()
+      /tmp/baseline/internal/client/auth_test.go:206 +0x51c
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+==================
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / ""
+    auth_test.go:196: query/header tokens disagree: "" / "token-30"
+    testing.go:1617: race detected during execution of test
+--- FAIL: TestConcurrentRequestsAndRefresh (0.76s)
+=== RUN   TestAuthenticationCancellation
+=== RUN   TestAuthenticationCancellation/cancelLeader=true
+    auth_test.go:279: cancellation blocked behind an active login
+=== RUN   TestAuthenticationCancellation/cancelLeader=false
+    auth_test.go:279: cancellation blocked behind an active login
+--- FAIL: TestAuthenticationCancellation (2.01s)
+    --- FAIL: TestAuthenticationCancellation/cancelLeader=true (1.00s)
+    --- FAIL: TestAuthenticationCancellation/cancelLeader=false (1.00s)
+=== RUN   TestSessionRetryFailures
+=== RUN   TestSessionRetryFailures/login_denied
+=== RUN   TestSessionRetryFailures/empty_token
+    auth_test.go:323: err=API error -1: expired logins=1 requests=2; want error, 1 login, 1 requests
+=== RUN   TestSessionRetryFailures/expired_again
+--- FAIL: TestSessionRetryFailures (0.06s)
+    --- PASS: TestSessionRetryFailures/login_denied (0.05s)
+    --- FAIL: TestSessionRetryFailures/empty_token (0.01s)
+    --- PASS: TestSessionRetryFailures/expired_again (0.01s)
+=== RUN   TestCertificateWritesReadOnly
+--- PASS: TestCertificateWritesReadOnly (0.00s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/client	15.141s
+FAIL

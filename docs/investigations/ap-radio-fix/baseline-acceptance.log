@@ -1,0 +1,43 @@
+go: downloading golang.org/x/text v0.34.0
+go: downloading google.golang.org/protobuf v1.36.11
+=== RUN   TestAccDeviceAPRadioPreservation
+=== RUN   TestAccDeviceAPRadioPreservation/dual_default
+    device_ap_radios_test.go:63: unexpected radio write: got map[string]map[string]interface {}{"radioSetting2g":map[string]interface {}{"channel":"", "channelWidth":"", "radioEnable":true, "txPower":0, "txPowerLevel":4}, "radioSetting5g":map[string]interface {}{"channel":"", "channelWidth":"", "radioEnable":false, "txPower":0, "txPowerLevel":0}}, want map[string]map[string]interface {}(nil)
+    device_ap_radios_test.go:136: Step 2/10 error: Error running apply: exit status 1
+        
+        Error: Error updating AP config
+        
+          with omada_device_ap.test,
+          on terraform_plugin_test.tf line 17, in resource "omada_device_ap" "test":
+          17: resource "omada_device_ap" "test" {
+        
+        updating AP radio config: API error -1001: unexpected radio payload
+=== RUN   TestAccDeviceAPRadioPreservation/dual_nondefault
+    device_ap_radios_test.go:63: unexpected radio write: got map[string]map[string]interface {}{"radioSetting2g":map[string]interface {}{"channel":"", "channelWidth":"", "radioEnable":true, "txPower":0, "txPowerLevel":4}, "radioSetting5g":map[string]interface {}{"channel":"", "channelWidth":"", "radioEnable":false, "txPower":0, "txPowerLevel":0}}, want map[string]map[string]interface {}(nil)
+    device_ap_radios_test.go:136: Step 1/10 error: Error running apply: exit status 1
+        
+        Error: Error updating AP config
+        
+          with omada_device_ap.test,
+          on terraform_plugin_test.tf line 17, in resource "omada_device_ap" "test":
+          17: resource "omada_device_ap" "test" {
+        
+        updating AP radio config: API error -1001: unexpected radio payload
+=== RUN   TestAccDeviceAPRadioPreservation/single_band
+    device_ap_radios_test.go:63: unexpected radio write: got map[string]map[string]interface {}{"radioSetting2g":map[string]interface {}{"channel":"", "channelWidth":"", "radioEnable":true, "txPower":0, "txPowerLevel":4}, "radioSetting5g":map[string]interface {}{"channel":"", "channelWidth":"", "radioEnable":false, "txPower":0, "txPowerLevel":0}}, want map[string]map[string]interface {}(nil)
+    device_ap_radios_test.go:136: Step 1/7 error: Error running apply: exit status 1
+        
+        Error: Error updating AP config
+        
+          with omada_device_ap.test,
+          on terraform_plugin_test.tf line 17, in resource "omada_device_ap" "test":
+          17: resource "omada_device_ap" "test" {
+        
+        updating AP radio config: API error -1001: unexpected radio payload
+--- FAIL: TestAccDeviceAPRadioPreservation (4.02s)
+    --- FAIL: TestAccDeviceAPRadioPreservation/dual_default (2.63s)
+    --- FAIL: TestAccDeviceAPRadioPreservation/dual_nondefault (0.64s)
+    --- FAIL: TestAccDeviceAPRadioPreservation/single_band (0.76s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/provider	4.038s
+FAIL

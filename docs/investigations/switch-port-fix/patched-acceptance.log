@@ -1,0 +1,8 @@
+=== RUN   TestAccDeviceSwitchPortPreservation
+=== RUN   TestAccDeviceSwitchPortPreservation/agile_series=false
+=== RUN   TestAccDeviceSwitchPortPreservation/agile_series=true
+--- PASS: TestAccDeviceSwitchPortPreservation (12.81s)
+    --- PASS: TestAccDeviceSwitchPortPreservation/agile_series=false (6.43s)
+    --- PASS: TestAccDeviceSwitchPortPreservation/agile_series=true (6.38s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	12.824s

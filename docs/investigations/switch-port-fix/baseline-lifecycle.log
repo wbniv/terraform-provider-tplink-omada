@@ -1,0 +1,54 @@
+=== RUN   TestSwitchPortUpdates
+=== RUN   TestSwitchPortUpdates/unchanged
+    device_switch_ports_test.go:167: unexpected PATCH to port 2
+    device_switch_ports_test.go:208: unchanged/invalid ports caused 2 PATCH requests
+=== RUN   TestSwitchPortUpdates/whole_list_unknown
+=== RUN   TestSwitchPortUpdates/whole_list_omitted
+=== RUN   TestSwitchPortUpdates/rename_preserves_unknown_values
+    device_switch_ports_test.go:167: unexpected PATCH to port 2
+    device_switch_ports_test.go:212: got 2 port PATCH requests, want 1
+=== RUN   TestSwitchPortUpdates/explicit_changes_including_false_zero_and_empty_list
+    device_switch_ports_test.go:167: unexpected PATCH to port 2
+    device_switch_ports_test.go:212: got 2 port PATCH requests, want 1
+=== RUN   TestSwitchPortUpdates/clear_tagged_list_preserve_omitted_untagged_list
+    device_switch_ports_test.go:167: unexpected PATCH to port 2
+    device_switch_ports_test.go:212: got 2 port PATCH requests, want 1
+=== RUN   TestSwitchPortUpdates/invalid_later_port_prevents_all_writes
+    device_switch_ports_test.go:167: unexpected PATCH to port 999
+    device_switch_ports_test.go:199: diagnostics: []; wantError=true
+=== RUN   TestSwitchPortUpdates/duplicate_port_prevents_all_writes
+    device_switch_ports_test.go:199: diagnostics: []; wantError=true
+=== RUN   TestSwitchPortUpdates/unknown_port_prevents_all_writes
+    device_switch_ports_test.go:167: unexpected PATCH to port 0
+    device_switch_ports_test.go:167: unexpected PATCH to port 2
+    device_switch_ports_test.go:199: diagnostics: []; wantError=true
+=== RUN   TestSwitchPortUpdates/incomplete_list_prevents_all_writes
+    device_switch_ports_test.go:199: diagnostics: []; wantError=true
+=== RUN   TestSwitchPortUpdates/unknown_list_element_prevents_all_writes
+    device_switch_ports_test.go:167: unexpected PATCH to port 2
+    device_switch_ports_test.go:199: diagnostics: []; wantError=true
+=== RUN   TestSwitchPortUpdates/failed_port_write_stops_subsequent_ports
+    device_switch_ports_test.go:217: payload
+         got: {"name":"Renamed","networkTagsSetting":1,"profileId":"profile","profileOverrideEnable":true,"tagNetworkIds":[],"untagNetworkIds":[]}
+        want: {"disable":true,"name":"Renamed","nativeNetworkId":"native","networkTagsSetting":1,"profileId":"profile","profileOverrideEnable":true,"tagNetworkIds":["tagged"],"untagNetworkIds":["untagged"],"voiceDscpEnable":true,"voiceNetworkEnable":true}
+=== RUN   TestSwitchPortUpdates/reordered_ports_preserve_identity
+    device_switch_ports_test.go:167: unexpected PATCH to port 2
+    device_switch_ports_test.go:208: unchanged/invalid ports caused 2 PATCH requests
+    device_switch_ports_test.go:226: readback changed the configured port order
+--- FAIL: TestSwitchPortUpdates (0.11s)
+    --- FAIL: TestSwitchPortUpdates/unchanged (0.01s)
+    --- PASS: TestSwitchPortUpdates/whole_list_unknown (0.01s)
+    --- PASS: TestSwitchPortUpdates/whole_list_omitted (0.01s)
+    --- FAIL: TestSwitchPortUpdates/rename_preserves_unknown_values (0.01s)
+    --- FAIL: TestSwitchPortUpdates/explicit_changes_including_false_zero_and_empty_list (0.01s)
+    --- FAIL: TestSwitchPortUpdates/clear_tagged_list_preserve_omitted_untagged_list (0.01s)
+    --- FAIL: TestSwitchPortUpdates/invalid_later_port_prevents_all_writes (0.01s)
+    --- FAIL: TestSwitchPortUpdates/duplicate_port_prevents_all_writes (0.01s)
+    --- FAIL: TestSwitchPortUpdates/unknown_port_prevents_all_writes (0.01s)
+    --- FAIL: TestSwitchPortUpdates/incomplete_list_prevents_all_writes (0.01s)
+    --- FAIL: TestSwitchPortUpdates/unknown_list_element_prevents_all_writes (0.01s)
+    --- FAIL: TestSwitchPortUpdates/failed_port_write_stops_subsequent_ports (0.01s)
+    --- FAIL: TestSwitchPortUpdates/reordered_ports_preserve_identity (0.01s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/resources	0.116s
+FAIL

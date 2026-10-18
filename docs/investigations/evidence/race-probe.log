@@ -1,0 +1,68 @@
+=== RUN   TestInvestigationTokenRace
+==================
+WARNING: DATA RACE
+Read at 0x00c0000e02e0 by goroutine 12:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).siteURL()
+      /tmp/review/internal/client/client.go:407 +0x1db
+  github.com/terraform-provider-tplink-omada/internal/client.TestInvestigationTokenRace.func3()
+      /tmp/review/internal/client/investigation_test.go:105 +0x1a
+
+Previous write at 0x00c0000e02e0 by goroutine 11:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).reAuth()
+      /tmp/review/internal/client/client.go:396 +0xb5
+  github.com/terraform-provider-tplink-omada/internal/client.TestInvestigationTokenRace.func2()
+      /tmp/review/internal/client/investigation_test.go:104 +0xa7
+
+Goroutine 12 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestInvestigationTokenRace()
+      /tmp/review/internal/client/investigation_test.go:105 +0x39c
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+
+Goroutine 11 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestInvestigationTokenRace()
+      /tmp/review/internal/client/investigation_test.go:104 +0x2ec
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+==================
+==================
+WARNING: DATA RACE
+Write at 0x00c0000e02e0 by goroutine 11:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).login()
+      /tmp/review/internal/client/client.go:375 +0x9da
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).reAuth()
+      /tmp/review/internal/client/client.go:397 +0xf7
+  github.com/terraform-provider-tplink-omada/internal/client.TestInvestigationTokenRace.func2()
+      /tmp/review/internal/client/investigation_test.go:104 +0xa7
+
+Previous read at 0x00c0000e02e0 by goroutine 12:
+  github.com/terraform-provider-tplink-omada/internal/client.(*Client).siteURL()
+      /tmp/review/internal/client/client.go:407 +0x1db
+  github.com/terraform-provider-tplink-omada/internal/client.TestInvestigationTokenRace.func3()
+      /tmp/review/internal/client/investigation_test.go:105 +0x1a
+
+Goroutine 11 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestInvestigationTokenRace()
+      /tmp/review/internal/client/investigation_test.go:104 +0x2ec
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+
+Goroutine 12 (running) created at:
+  github.com/terraform-provider-tplink-omada/internal/client.TestInvestigationTokenRace()
+      /tmp/review/internal/client/investigation_test.go:105 +0x39c
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:1934 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:1997 +0x44
+==================
+    testing.go:1617: race detected during execution of test
+--- FAIL: TestInvestigationTokenRace (1.03s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/client	1.062s
+FAIL

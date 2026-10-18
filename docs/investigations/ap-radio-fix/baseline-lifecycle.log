@@ -1,0 +1,77 @@
+=== RUN   TestAPRadioUpdates
+=== RUN   TestAPRadioUpdates/unchanged_radios
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:129: unexpected radio payloads: [map[radioSetting2g:map[channel:0 channelWidth:4 radioEnable:true txPower:20 txPowerLevel:3] radioSetting5g:map[channel:36 channelWidth:5 radioEnable:true txPower:18 txPowerLevel:3]]]
+=== RUN   TestAPRadioUpdates/unknown_radios_on_rename
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:129: unexpected radio payloads: [map[radioSetting2g:map[channel: channelWidth: radioEnable:false txPower:0 txPowerLevel:0] radioSetting5g:map[channel: channelWidth: radioEnable:false txPower:0 txPowerLevel:0]]]
+=== RUN   TestAPRadioUpdates/null_radios_on_rename
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:129: unexpected radio payloads: [map[]]
+=== RUN   TestAPRadioUpdates/partial_2g_change_preserves_unknowns
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:132: payloads = [map[radioSetting2g:map[channel:6 channelWidth: radioEnable:false txPower:0 txPowerLevel:0] radioSetting5g:map[channel: channelWidth: radioEnable:false txPower:0 txPowerLevel:0]]], want map[radioSetting2g:map[channel:6 channelWidth:4 radioEnable:true txPower:20 txPowerLevel:3]]
+=== RUN   TestAPRadioUpdates/explicit_false_zero_and_empty
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:132: payloads = [map[radioSetting2g:map[channel: channelWidth: radioEnable:false txPower:0 txPowerLevel:0] radioSetting5g:map[channel: channelWidth: radioEnable:false txPower:0 txPowerLevel:0]]], want map[radioSetting2g:map[channel: channelWidth:4 radioEnable:false txPower:0 txPowerLevel:0]]
+=== RUN   TestAPRadioUpdates/both_bands_change
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:132: payloads = [map[radioSetting2g:map[channel:6 channelWidth: radioEnable:false txPower:0 txPowerLevel:0] radioSetting5g:map[channel: channelWidth: radioEnable:false txPower:0 txPowerLevel:0]]], want map[radioSetting2g:map[channel:6 channelWidth:4 radioEnable:true txPower:20 txPowerLevel:3] radioSetting5g:map[channel:36 channelWidth:5 radioEnable:false txPower:18 txPowerLevel:3]]
+=== RUN   TestAPRadioUpdates/unsupported_5g_prevents_all_writes
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:125: diagnostics: []
+=== RUN   TestAPRadioUpdates/incomplete_snapshot_prevents_all_writes
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:125: diagnostics: []
+=== RUN   TestAPRadioUpdates/invalid_snapshot_prevents_all_writes
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:126: missing "invalid controller radio settings": [{decoding AP config: json: cannot unmarshal string into Go struct field APRadioSetting.radioSetting2g.radioEnable of type bool Error reading AP config after update}]
+    device_ap_radios_test.go:129: unexpected radio payloads: [map[radioSetting2g:map[channel:6 channelWidth: radioEnable:false txPower:0 txPowerLevel:0] radioSetting5g:map[channel: channelWidth: radioEnable:false txPower:0 txPowerLevel:0]]]
+    device_ap_radios_test.go:134: invalid radio config caused writes: [general radios advanced services]
+=== RUN   TestAPRadioUpdates/failed_general_update_stops_radio_writes
+=== RUN   TestAPRadioUpdates/radio_failure_records_successful_rename
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:132: payloads = [map[radioSetting2g:map[channel:6 channelWidth: radioEnable:false txPower:0 txPowerLevel:0] radioSetting5g:map[channel: channelWidth: radioEnable:false txPower:0 txPowerLevel:0]]], want map[radioSetting2g:map[channel:6 channelWidth:4 radioEnable:true txPower:20 txPowerLevel:3]]
+    device_ap_radios_test.go:142: response state does not reflect controller: {ID:"02-00-00-00-00-01" SiteID:"site" Name:"Original" WlanID:"" Radio2gEnable:true Radio2gChannelWidth:"4" Radio2gChannel:"0" Radio2gTxPower:20 Radio2gTxPowerLevel:3 Radio5gEnable:true Radio5gChannelWidth:"5" Radio5gChannel:"36" Radio5gTxPower:18 Radio5gTxPowerLevel:3 IPSettingMode:"dhcp" IPSettingFallback:false IPSettingFallbackIP:<null> IPSettingFallbackMask:<null> IPSettingFallbackGate:<null> LEDSetting:2 LLDPEnable:<null> MVlanEnable:false MVlanNetworkID:<null> OFDMAEnable2g:<null> OFDMAEnable5g:<null> LoopbackDetectEnable:<null> L3AccessEnable:<null> LB2gEnable:<null> LB2gMaxClients:<null> LB5gEnable:<null> LB5gMaxClients:<null> RSSI2gEnable:<null> RSSI2gThreshold:<null> RSSI5gEnable:<null> RSSI5gThreshold:<null> Model:"" IP:"" FirmwareVersion:""}
+=== RUN   TestAPRadioUpdates/advanced_failure_records_radio_progress
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:132: payloads = [map[radioSetting2g:map[channel:6 channelWidth: radioEnable:false txPower:0 txPowerLevel:0] radioSetting5g:map[channel: channelWidth: radioEnable:false txPower:0 txPowerLevel:0]]], want map[radioSetting2g:map[channel:6 channelWidth:4 radioEnable:true txPower:20 txPowerLevel:3]]
+    device_ap_radios_test.go:142: response state does not reflect controller: {ID:"02-00-00-00-00-01" SiteID:"site" Name:"Original" WlanID:"" Radio2gEnable:true Radio2gChannelWidth:"4" Radio2gChannel:"0" Radio2gTxPower:20 Radio2gTxPowerLevel:3 Radio5gEnable:true Radio5gChannelWidth:"5" Radio5gChannel:"36" Radio5gTxPower:18 Radio5gTxPowerLevel:3 IPSettingMode:"dhcp" IPSettingFallback:false IPSettingFallbackIP:<null> IPSettingFallbackMask:<null> IPSettingFallbackGate:<null> LEDSetting:2 LLDPEnable:<null> MVlanEnable:false MVlanNetworkID:<null> OFDMAEnable2g:<null> OFDMAEnable5g:<null> LoopbackDetectEnable:<null> L3AccessEnable:<null> LB2gEnable:<null> LB2gMaxClients:<null> LB5gEnable:<null> LB5gMaxClients:<null> RSSI2gEnable:<null> RSSI2gThreshold:<null> RSSI5gEnable:<null> RSSI5gThreshold:<null> Model:"" IP:"" FirmwareVersion:""}
+=== RUN   TestAPRadioUpdates/services_failure_records_radio_progress
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:132: payloads = [map[radioSetting2g:map[channel:6 channelWidth: radioEnable:false txPower:0 txPowerLevel:0] radioSetting5g:map[channel: channelWidth: radioEnable:false txPower:0 txPowerLevel:0]]], want map[radioSetting2g:map[channel:6 channelWidth:4 radioEnable:true txPower:20 txPowerLevel:3]]
+    device_ap_radios_test.go:142: response state does not reflect controller: {ID:"02-00-00-00-00-01" SiteID:"site" Name:"Original" WlanID:"" Radio2gEnable:true Radio2gChannelWidth:"4" Radio2gChannel:"0" Radio2gTxPower:20 Radio2gTxPowerLevel:3 Radio5gEnable:true Radio5gChannelWidth:"5" Radio5gChannel:"36" Radio5gTxPower:18 Radio5gTxPowerLevel:3 IPSettingMode:"dhcp" IPSettingFallback:false IPSettingFallbackIP:<null> IPSettingFallbackMask:<null> IPSettingFallbackGate:<null> LEDSetting:2 LLDPEnable:<null> MVlanEnable:false MVlanNetworkID:<null> OFDMAEnable2g:<null> OFDMAEnable5g:<null> LoopbackDetectEnable:<null> L3AccessEnable:<null> LB2gEnable:<null> LB2gMaxClients:<null> LB5gEnable:<null> LB5gMaxClients:<null> RSSI2gEnable:<null> RSSI2gThreshold:<null> RSSI5gEnable:<null> RSSI5gThreshold:<null> Model:"" IP:"" FirmwareVersion:""}
+=== RUN   TestAPRadioUpdates/failed_readback_retains_prior_state
+    device_ap_radios_test.go:101: radio 2g included in general PATCH
+    device_ap_radios_test.go:102: radio 5g included in general PATCH
+    device_ap_radios_test.go:132: payloads = [map[radioSetting2g:map[channel:6 channelWidth: radioEnable:false txPower:0 txPowerLevel:0] radioSetting5g:map[channel: channelWidth: radioEnable:false txPower:0 txPowerLevel:0]]], want map[radioSetting2g:map[channel:6 channelWidth:4 radioEnable:true txPower:20 txPowerLevel:3]]
+    device_ap_radios_test.go:139: missing readback warning: [{updating AP radio config: API error -1001: write rejected Error updating AP config}]
+--- FAIL: TestAPRadioUpdates (0.11s)
+    --- FAIL: TestAPRadioUpdates/unchanged_radios (0.01s)
+    --- FAIL: TestAPRadioUpdates/unknown_radios_on_rename (0.01s)
+    --- FAIL: TestAPRadioUpdates/null_radios_on_rename (0.01s)
+    --- FAIL: TestAPRadioUpdates/partial_2g_change_preserves_unknowns (0.01s)
+    --- FAIL: TestAPRadioUpdates/explicit_false_zero_and_empty (0.01s)
+    --- FAIL: TestAPRadioUpdates/both_bands_change (0.01s)
+    --- FAIL: TestAPRadioUpdates/unsupported_5g_prevents_all_writes (0.01s)
+    --- FAIL: TestAPRadioUpdates/incomplete_snapshot_prevents_all_writes (0.01s)
+    --- FAIL: TestAPRadioUpdates/invalid_snapshot_prevents_all_writes (0.01s)
+    --- PASS: TestAPRadioUpdates/failed_general_update_stops_radio_writes (0.01s)
+    --- FAIL: TestAPRadioUpdates/radio_failure_records_successful_rename (0.01s)
+    --- FAIL: TestAPRadioUpdates/advanced_failure_records_radio_progress (0.00s)
+    --- FAIL: TestAPRadioUpdates/services_failure_records_radio_progress (0.01s)
+    --- FAIL: TestAPRadioUpdates/failed_readback_retains_prior_state (0.01s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/resources	0.117s
+FAIL

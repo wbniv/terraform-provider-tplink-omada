@@ -1,0 +1,82 @@
+package provider
+
+// Exercises Terraform's real planning of omitted Optional+Computed radio fields.
+// Copy into internal/provider/investigation_test.go in a disposable checkout.
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"sync"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+)
+
+func TestAccInvestigationAPRenamePreservesRadios(t *testing.T) {
+	var mu sync.Mutex
+	name := "Original"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		var result any
+		switch {
+		case r.URL.Path == "/api/info":
+			result = map[string]any{"omadacId": "controller"}
+		case r.URL.Path == "/controller/api/v2/login":
+			result = map[string]any{"token": "token"}
+		case r.Method == http.MethodGet && r.URL.Path == "/controller/api/v2/sites/site/eaps/02-00-00-00-00-01":
+			result = map[string]any{
+				"mac": "02-00-00-00-00-01", "name": name, "wlanId": "group", "ledSetting": 2,
+				"ipSetting": map[string]any{"mode": "dhcp"},
+				"radioSetting2g": map[string]any{"radioEnable": true, "channelWidth": "4", "channel": "0", "txPower": 20, "txPowerLevel": 4},
+				"radioSetting5g": map[string]any{"radioEnable": true, "channelWidth": "5", "channel": "0", "txPower": 20, "txPowerLevel": 4},
+			}
+		case r.Method == http.MethodPatch && r.URL.Path == "/controller/api/v2/sites/site/eaps/02-00-00-00-00-01":
+			var body map[string]any
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			if n, ok := body["name"].(string); ok { name = n }
+		case r.Method == http.MethodPut && strings.HasSuffix(r.URL.Path, "/config/radios"):
+			var body map[string]map[string]any
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			for band, radio := range body {
+				if radio["radioEnable"] != true || radio["channel"] != "0" || radio["channelWidth"] == "" || radio["txPower"] != float64(20) || radio["txPowerLevel"] != float64(4) {
+					t.Errorf("renaming AP overwrote %s with %v", band, radio)
+					_ = json.NewEncoder(w).Encode(map[string]any{"errorCode": -1001, "msg": "probe rejected destructive radio payload"})
+					return
+				}
+			}
+		case r.Method == http.MethodPut && (strings.HasSuffix(r.URL.Path, "/config/advanced") || strings.HasSuffix(r.URL.Path, "/config/services")):
+		default:
+			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{"errorCode": 0, "result": result})
+	}))
+	defer server.Close()
+	config := func(name string) string {
+		return fmt.Sprintf(`
+provider "omada" {
+  url = %q
+  username = "probe"
+  password = "probe"
+}
+resource "omada_device_ap" "test" {
+  name = %q
+}
+`, server.URL, name)
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config("Original") + `
+import {
+  to = omada_device_ap.test
+  id = "site/02-00-00-00-00-01"
+}
+`},
+			{Config: config("Renamed")},
+		},
+	})
+}

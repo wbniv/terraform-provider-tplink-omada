@@ -1,0 +1,10 @@
+=== RUN   TestAccDeviceAPRadioPreservation
+=== RUN   TestAccDeviceAPRadioPreservation/dual_default
+=== RUN   TestAccDeviceAPRadioPreservation/dual_nondefault
+=== RUN   TestAccDeviceAPRadioPreservation/single_band
+--- PASS: TestAccDeviceAPRadioPreservation (18.90s)
+    --- PASS: TestAccDeviceAPRadioPreservation/dual_default (7.10s)
+    --- PASS: TestAccDeviceAPRadioPreservation/dual_nondefault (6.71s)
+    --- PASS: TestAccDeviceAPRadioPreservation/single_band (5.09s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	18.917s

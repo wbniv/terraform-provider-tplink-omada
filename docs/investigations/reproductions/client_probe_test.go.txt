@@ -1,0 +1,107 @@
+package client
+
+// Investigation probes: assert expected behavior; failures document bugs in main.
+// Copy into internal/client/investigation_test.go in a disposable checkout.
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"runtime"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+)
+
+func TestInvestigationCertificateDeadlock(t *testing.T) {
+	ops := map[string]func(*Client, context.Context){
+		"upload_certificate": func(c *Client, ctx context.Context) { _, _ = c.UploadCertificate(ctx, []byte("probe"), "probe.crt") },
+		"upload_key": func(c *Client, ctx context.Context) { _, _ = c.UploadKey(ctx, []byte("probe"), "probe.key") },
+		"activate": func(c *Client, ctx context.Context) { _ = c.ActivateCertificate(ctx, "cert", "key") },
+		"read": func(c *Client, ctx context.Context) { _, _ = c.GetControllerCertificateSetting(ctx) },
+	}
+	for name, op := range ops {
+		t.Run(name, func(t *testing.T) {
+			c := &Client{token: "probe-token", httpClient: &http.Client{Timeout: time.Millisecond * 20}}
+			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+			defer cancel()
+			done := make(chan struct{})
+			go func() { op(c, ctx); close(done) }()
+			select {
+			case <-done:
+			case <-time.After(150 * time.Millisecond):
+				buf := make([]byte, 16384)
+				n := runtime.Stack(buf, true)
+				if !strings.Contains(string(buf[:n]), ".ensureAuth") { t.Fatalf("blocked without ensureAuth stack: %s", buf[:n]) }
+				t.Error("certificate operation still blocked after context deadline: nested ensureAuth mutex lock")
+			}
+		})
+	}
+}
+
+func TestInvestigationRetryRefreshesQueryToken(t *testing.T) {
+	var seen []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if strings.HasSuffix(r.URL.Path, "/login") {
+			fmt.Fprint(w, `{"errorCode":0,"result":{"token":"new-token"}}`)
+			return
+		}
+		seen = append(seen, r.URL.Query().Get("token")+"/"+r.Header.Get("Csrf-Token"))
+		if r.URL.Query().Get("token") != "new-token" {
+			fmt.Fprint(w, `{"errorCode":-1,"msg":"expired query token"}`)
+			return
+		}
+		fmt.Fprint(w, `{"errorCode":0,"result":{}}`)
+	}))
+	defer server.Close()
+	c := &Client{baseURL: server.URL, omadacID: "controller", token: "old-token", httpClient: server.Client()}
+	_, err := c.doSiteRequest(context.Background(), "site", http.MethodGet, "/probe", nil)
+	if err != nil { t.Fatalf("retry failed: %v; query/header pairs: %v", err, seen) }
+}
+
+func TestInvestigationPagination(t *testing.T) {
+	var pages []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		pages = append(pages, r.URL.Query().Get("currentPage"))
+		items := []Network{}
+		if r.URL.Query().Get("currentPage") == "2" {
+			items = append(items, Network{ID: "network-101"})
+		} else {
+			for i := 1; i <= 100; i++ { items = append(items, Network{ID: fmt.Sprintf("network-%d", i)}) }
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{"errorCode": 0, "result": map[string]any{"totalRows": 101, "currentPage": 1, "currentSize": len(items), "data": items}})
+	}))
+	defer server.Close()
+	c := &Client{baseURL: server.URL, omadacID: "controller", token: "token", httpClient: server.Client()}
+	networks, err := c.ListNetworks(context.Background(), "site")
+	if err != nil { t.Fatal(err) }
+	if len(networks) != 101 { t.Errorf("returned %d of 101 networks; requested pages: %v", len(networks), pages) }
+	if _, err := c.GetNetwork(context.Background(), "site", "network-101"); err != nil { t.Errorf("existing network cannot be found: %v", err) }
+}
+
+func TestInvestigationHTTPError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprint(w, `{"message":"Forbidden"}`)
+	}))
+	defer server.Close()
+	c := &Client{baseURL: server.URL, omadacID: "controller", token: "token", httpClient: server.Client()}
+	if err := c.DeleteNetwork(context.Background(), "site", "network"); err == nil { t.Fatal("HTTP 403 was accepted as a successful DELETE") }
+}
+
+// Run this separately with -race: concurrent requests read token while reAuth writes it.
+func TestInvestigationTokenRace(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"errorCode":0,"result":{"token":"new-token"}}`)
+	}))
+	defer server.Close()
+	c := &Client{baseURL: server.URL, omadacID: "controller", token: "old-token", httpClient: server.Client()}
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() { defer wg.Done(); for i := 0; i < 50; i++ { _ = c.reAuth(context.Background()) } }()
+	go func() { defer wg.Done(); for i := 0; i < 100000; i++ { _ = c.siteURL("site", "/probe"); runtime.Gosched() } }()
+	wg.Wait()
+}

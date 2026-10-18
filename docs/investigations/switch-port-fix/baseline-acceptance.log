@@ -1,0 +1,67 @@
+=== RUN   TestAccDeviceSwitchPortPreservation
+=== RUN   TestAccDeviceSwitchPortPreservation/agile_series=false
+    device_switch_ports_test.go:70: unexpected write to unchanged port: /controller/api/v2/sites/site/switches/02-00-00-00-00-01/ports/2
+    device_switch_ports_test.go:153: Step 1/8 error: Error running apply: exit status 1
+        
+        Error: Provider produced inconsistent result after apply
+        
+        When applying changes to omada_device_switch.test, provider
+        "provider[\"registry.terraform.io/hashicorp/omada\"]" produced an unexpected
+        new value: .ports[0].disable: was cty.False, but now cty.True.
+        
+        This is a bug in the provider, which should be reported in the provider's own
+        issue tracker.
+        
+        Error: Provider produced inconsistent result after apply
+        
+        When applying changes to omada_device_switch.test, provider
+        "provider[\"registry.terraform.io/hashicorp/omada\"]" produced an unexpected
+        new value: .ports[0].voice_network_enable: was cty.False, but now cty.True.
+        
+        This is a bug in the provider, which should be reported in the provider's own
+        issue tracker.
+        
+        Error: Provider produced inconsistent result after apply
+        
+        When applying changes to omada_device_switch.test, provider
+        "provider[\"registry.terraform.io/hashicorp/omada\"]" produced an unexpected
+        new value: .ports[0].voice_dscp_enable: was cty.False, but now cty.True.
+        
+        This is a bug in the provider, which should be reported in the provider's own
+        issue tracker.
+=== RUN   TestAccDeviceSwitchPortPreservation/agile_series=true
+    device_switch_ports_test.go:70: unexpected write to unchanged port: /controller/api/v2/sites/site/switches/02-00-00-00-00-01/ports/2
+    device_switch_ports_test.go:153: Step 1/8 error: Error running apply: exit status 1
+        
+        Error: Provider produced inconsistent result after apply
+        
+        When applying changes to omada_device_switch.test, provider
+        "provider[\"registry.terraform.io/hashicorp/omada\"]" produced an unexpected
+        new value: .ports[0].voice_dscp_enable: was cty.False, but now cty.True.
+        
+        This is a bug in the provider, which should be reported in the provider's own
+        issue tracker.
+        
+        Error: Provider produced inconsistent result after apply
+        
+        When applying changes to omada_device_switch.test, provider
+        "provider[\"registry.terraform.io/hashicorp/omada\"]" produced an unexpected
+        new value: .ports[0].disable: was cty.False, but now cty.True.
+        
+        This is a bug in the provider, which should be reported in the provider's own
+        issue tracker.
+        
+        Error: Provider produced inconsistent result after apply
+        
+        When applying changes to omada_device_switch.test, provider
+        "provider[\"registry.terraform.io/hashicorp/omada\"]" produced an unexpected
+        new value: .ports[0].voice_network_enable: was cty.False, but now cty.True.
+        
+        This is a bug in the provider, which should be reported in the provider's own
+        issue tracker.
+--- FAIL: TestAccDeviceSwitchPortPreservation (4.70s)
+    --- FAIL: TestAccDeviceSwitchPortPreservation/agile_series=false (2.57s)
+    --- FAIL: TestAccDeviceSwitchPortPreservation/agile_series=true (2.13s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/provider	4.724s
+FAIL

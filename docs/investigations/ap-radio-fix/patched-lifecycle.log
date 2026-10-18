@@ -1,0 +1,32 @@
+=== RUN   TestAPRadioUpdates
+=== RUN   TestAPRadioUpdates/unchanged_radios
+=== RUN   TestAPRadioUpdates/unknown_radios_on_rename
+=== RUN   TestAPRadioUpdates/null_radios_on_rename
+=== RUN   TestAPRadioUpdates/partial_2g_change_preserves_unknowns
+=== RUN   TestAPRadioUpdates/explicit_false_zero_and_empty
+=== RUN   TestAPRadioUpdates/both_bands_change
+=== RUN   TestAPRadioUpdates/unsupported_5g_prevents_all_writes
+=== RUN   TestAPRadioUpdates/incomplete_snapshot_prevents_all_writes
+=== RUN   TestAPRadioUpdates/invalid_snapshot_prevents_all_writes
+=== RUN   TestAPRadioUpdates/failed_general_update_stops_radio_writes
+=== RUN   TestAPRadioUpdates/radio_failure_records_successful_rename
+=== RUN   TestAPRadioUpdates/advanced_failure_records_radio_progress
+=== RUN   TestAPRadioUpdates/services_failure_records_radio_progress
+=== RUN   TestAPRadioUpdates/failed_readback_retains_prior_state
+--- PASS: TestAPRadioUpdates (0.12s)
+    --- PASS: TestAPRadioUpdates/unchanged_radios (0.01s)
+    --- PASS: TestAPRadioUpdates/unknown_radios_on_rename (0.01s)
+    --- PASS: TestAPRadioUpdates/null_radios_on_rename (0.01s)
+    --- PASS: TestAPRadioUpdates/partial_2g_change_preserves_unknowns (0.01s)
+    --- PASS: TestAPRadioUpdates/explicit_false_zero_and_empty (0.01s)
+    --- PASS: TestAPRadioUpdates/both_bands_change (0.01s)
+    --- PASS: TestAPRadioUpdates/unsupported_5g_prevents_all_writes (0.01s)
+    --- PASS: TestAPRadioUpdates/incomplete_snapshot_prevents_all_writes (0.01s)
+    --- PASS: TestAPRadioUpdates/invalid_snapshot_prevents_all_writes (0.01s)
+    --- PASS: TestAPRadioUpdates/failed_general_update_stops_radio_writes (0.01s)
+    --- PASS: TestAPRadioUpdates/radio_failure_records_successful_rename (0.01s)
+    --- PASS: TestAPRadioUpdates/advanced_failure_records_radio_progress (0.01s)
+    --- PASS: TestAPRadioUpdates/services_failure_records_radio_progress (0.01s)
+    --- PASS: TestAPRadioUpdates/failed_readback_retains_prior_state (0.01s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.125s

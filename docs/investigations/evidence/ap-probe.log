@@ -1,0 +1,52 @@
+go: downloading github.com/hashicorp/terraform-plugin-testing v1.15.0
+go: downloading github.com/hashicorp/go-uuid v1.0.3
+go: downloading github.com/hashicorp/go-plugin v1.7.0
+go: downloading google.golang.org/grpc v1.79.2
+go: downloading github.com/hashicorp/terraform-registry-address v0.4.0
+go: downloading google.golang.org/protobuf v1.36.11
+go: downloading golang.org/x/net v0.49.0
+go: downloading github.com/hashicorp/terraform-svchost v0.1.1
+go: downloading github.com/golang/protobuf v1.5.4
+go: downloading github.com/hashicorp/yamux v0.1.2
+go: downloading github.com/oklog/run v1.1.0
+go: downloading github.com/hashicorp/go-cty v1.5.0
+go: downloading github.com/google/go-cmp v0.7.0
+go: downloading github.com/hashicorp/go-version v1.8.0
+go: downloading github.com/hashicorp/terraform-exec v0.25.0
+go: downloading github.com/hashicorp/terraform-json v0.27.2
+go: downloading github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.0
+go: downloading google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217
+go: downloading github.com/hashicorp/hcl/v2 v2.24.0
+go: downloading github.com/zclconf/go-cty v1.17.0
+go: downloading golang.org/x/text v0.34.0
+go: downloading github.com/hashicorp/hc-install v0.9.3
+go: downloading github.com/mitchellh/copystructure v1.2.0
+go: downloading github.com/mitchellh/mapstructure v1.5.0
+go: downloading github.com/hashicorp/logutils v1.0.0
+go: downloading github.com/agext/levenshtein v1.2.2
+go: downloading github.com/apparentlymart/go-textseg/v15 v15.0.0
+go: downloading github.com/mitchellh/go-wordwrap v1.0.1
+go: downloading github.com/mitchellh/reflectwalk v1.0.2
+go: downloading github.com/hashicorp/go-multierror v1.1.1
+go: downloading github.com/hashicorp/go-checkpoint v0.5.0
+go: downloading github.com/ProtonMail/go-crypto v1.3.0
+go: downloading github.com/hashicorp/go-retryablehttp v0.7.8
+go: downloading golang.org/x/mod v0.33.0
+go: downloading golang.org/x/crypto v0.48.0
+go: downloading github.com/cloudflare/circl v1.6.1
+=== RUN   TestAccInvestigationAPRenamePreservesRadios
+    investigation_test.go:46: renaming AP overwrote radioSetting2g with map[channel: channelWidth: radioEnable:true txPower:0 txPowerLevel:4]
+    investigation_test.go:70: Step 2/2 error: Error running apply: exit status 1
+        
+        Error: Error updating AP config
+        
+          with omada_device_ap.test,
+          on terraform_plugin_test.tf line 17, in resource "omada_device_ap" "test":
+          17: resource "omada_device_ap" "test" {
+        
+        updating AP radio config: API error -1001: probe rejected destructive radio
+        payload
+--- FAIL: TestAccInvestigationAPRenamePreservesRadios (6.78s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/provider	6.797s
+FAIL

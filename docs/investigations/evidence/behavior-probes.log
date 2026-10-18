@@ -1,0 +1,72 @@
+go: downloading github.com/hashicorp/terraform-plugin-framework v1.19.0
+go: downloading github.com/hashicorp/terraform-plugin-go v0.31.0
+go: downloading github.com/hashicorp/terraform-plugin-log v0.10.0
+go: downloading github.com/vmihailenco/msgpack/v5 v5.4.1
+go: downloading github.com/hashicorp/go-hclog v1.6.3
+go: downloading github.com/mitchellh/go-testing-interface v1.14.1
+go: downloading github.com/vmihailenco/msgpack v4.0.4+incompatible
+go: downloading github.com/fatih/color v1.18.0
+go: downloading github.com/mattn/go-isatty v0.0.20
+go: downloading github.com/vmihailenco/tagparser/v2 v2.0.0
+go: downloading github.com/mattn/go-colorable v0.1.14
+go: downloading golang.org/x/sys v0.41.0
+=== RUN   TestInvestigationCertificateDeadlock
+=== RUN   TestInvestigationCertificateDeadlock/activate
+    investigation_test.go:38: certificate operation still blocked after context deadline: nested ensureAuth mutex lock
+=== RUN   TestInvestigationCertificateDeadlock/read
+    investigation_test.go:38: certificate operation still blocked after context deadline: nested ensureAuth mutex lock
+=== RUN   TestInvestigationCertificateDeadlock/upload_certificate
+    investigation_test.go:38: certificate operation still blocked after context deadline: nested ensureAuth mutex lock
+=== RUN   TestInvestigationCertificateDeadlock/upload_key
+    investigation_test.go:38: certificate operation still blocked after context deadline: nested ensureAuth mutex lock
+--- FAIL: TestInvestigationCertificateDeadlock (0.60s)
+    --- FAIL: TestInvestigationCertificateDeadlock/activate (0.15s)
+    --- FAIL: TestInvestigationCertificateDeadlock/read (0.15s)
+    --- FAIL: TestInvestigationCertificateDeadlock/upload_certificate (0.15s)
+    --- FAIL: TestInvestigationCertificateDeadlock/upload_key (0.15s)
+=== RUN   TestInvestigationRetryRefreshesQueryToken
+    investigation_test.go:62: retry failed: API error -1: expired query token; query/header pairs: [old-token/old-token old-token/new-token]
+--- FAIL: TestInvestigationRetryRefreshesQueryToken (0.00s)
+=== RUN   TestInvestigationPagination
+    investigation_test.go:81: returned 100 of 101 networks; requested pages: [1]
+    investigation_test.go:82: existing network cannot be found: network "network-101" not found
+--- FAIL: TestInvestigationPagination (0.00s)
+=== RUN   TestInvestigationHTTPError
+    investigation_test.go:92: HTTP 403 was accepted as a successful DELETE
+--- FAIL: TestInvestigationHTTPError (0.00s)
+=== RUN   TestInvestigationTokenRace
+--- PASS: TestInvestigationTokenRace (0.16s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/client	0.774s
+=== RUN   TestInvestigationSwitchPortPayload
+    investigation_test.go:62: tagNetworkIds was replaced with []
+    investigation_test.go:62: untagNetworkIds was replaced with []
+    investigation_test.go:65: configured disable omitted from PATCH
+    investigation_test.go:65: configured nativeNetworkId omitted from PATCH
+    investigation_test.go:65: configured voiceNetworkEnable omitted from PATCH
+    investigation_test.go:65: configured voiceDscpEnable omitted from PATCH
+--- FAIL: TestInvestigationSwitchPortPayload (0.00s)
+=== RUN   TestInvestigationPasswordRotation
+    investigation_test.go:86: API received new password but response state restored old password
+--- FAIL: TestInvestigationPasswordRotation (0.01s)
+=== RUN   TestInvestigationNetworkAdoption
+    investigation_test.go:103: Create claimed VLAN 20 in state; adopted controller object is VLAN 10; no write occurred
+--- FAIL: TestInvestigationNetworkAdoption (0.00s)
+=== RUN   TestInvestigationMissingNetworkRefresh
+    investigation_test.go:113: deleted object blocks refresh: [{network "deleted" not found Error reading network}]
+--- FAIL: TestInvestigationMissingNetworkRefresh (0.00s)
+=== RUN   TestInvestigationWirelessVLANRefresh
+    investigation_test.go:127: controller removed custom VLAN; refreshed state still says vlan_id=20
+--- FAIL: TestInvestigationWirelessVLANRefresh (0.00s)
+=== RUN   TestInvestigationWirelessGroupChange
+    investigation_test.go:143: planned new-group; patched /controller/api/v2/sites/site/setting/wlans/old-group/ssids/ssid and returned old-group
+--- FAIL: TestInvestigationWirelessGroupChange (0.00s)
+=== RUN   TestInvestigationSiteCredentialsUpdate
+    investigation_test.go:163: state claims changed device password; PATCH contains only site metadata
+--- FAIL: TestInvestigationSiteCredentialsUpdate (0.00s)
+=== RUN   TestInvestigationWirelessUpdateResetsSettings
+    investigation_test.go:183: rename payload forces guestNetEnable=false, macFilterEnable=false, wlanScheduleEnable=false, versionPsk=2 without reading current settings
+--- FAIL: TestInvestigationWirelessUpdateResetsSettings (0.00s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/resources	0.033s
+FAIL

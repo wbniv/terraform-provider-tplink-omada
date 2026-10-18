@@ -1,0 +1,155 @@
+=== RUN   TestAccDeviceSwitchPortPreservation
+=== RUN   TestAccDeviceSwitchPortPreservation/agile_series=false
+    device_switch_ports_test.go:153: Step 1/8 error: After applying this test step, the non-refresh plan was not empty.
+        stdout:
+        
+        
+        Terraform used the selected providers to generate the following execution
+        plan. Resource actions are indicated with the following symbols:
+          ~ update in-place
+        
+        Terraform will perform the following actions:
+        
+          # omada_device_switch.test will be updated in-place
+          ~ resource "omada_device_switch" "test" {
+              ~ firmware_version           = null -> (known after apply)
+                id                         = "02-00-00-00-00-01"
+              ~ ip                         = null -> (known after apply)
+              ~ ip_setting_fallback        = false -> (known after apply)
+              + ip_setting_fallback_gate   = (known after apply)
+              + ip_setting_fallback_ip     = (known after apply)
+              + ip_setting_fallback_mask   = (known after apply)
+              ~ ip_setting_mode            = "dhcp" -> (known after apply)
+              ~ jumbo                      = 0 -> (known after apply)
+              ~ lag_hash_alg               = 0 -> (known after apply)
+              ~ loopback_detect_enable     = false -> (known after apply)
+              ~ management_vlan_network_id = null -> (known after apply)
+              ~ model                      = null -> (known after apply)
+                name                       = "Original"
+              ~ ports                      = [
+                  - {
+                      - disable                 = true -> null
+                      - name                    = "Uplink" -> null
+                      - native_network_id       = "native" -> null
+                      - network_tags_setting    = 1 -> null
+                      - port                    = 1 -> null
+                      - profile_id              = "profile" -> null
+                      - profile_override_enable = true -> null
+                      - speed                   = 3 -> null
+                      - tag_network_ids         = [
+                          - "tagged",
+                        ] -> null
+                      - untag_network_ids       = [
+                          - "untagged",
+                        ] -> null
+                      - voice_dscp_enable       = true -> null
+                      - voice_network_enable    = true -> null
+                    },
+                  - {
+                      - disable                 = false -> null
+                      - name                    = "Other" -> null
+                      - native_network_id       = "other-native" -> null
+                      - network_tags_setting    = 0 -> null
+                      - port                    = 2 -> null
+                      - profile_id              = "other-profile" -> null
+                      - profile_override_enable = false -> null
+                      - speed                   = 2 -> null
+                      - tag_network_ids         = [] -> null
+                      - untag_network_ids       = [] -> null
+                      - voice_dscp_enable       = false -> null
+                      - voice_network_enable    = false -> null
+                    },
+                ] -> (known after apply)
+              ~ snmp_contact               = null -> (known after apply)
+              ~ snmp_location              = null -> (known after apply)
+              ~ stp                        = 0 -> (known after apply)
+              ~ stp_forward_delay          = 0 -> (known after apply)
+              ~ stp_hello_time             = 0 -> (known after apply)
+              ~ stp_max_age                = 0 -> (known after apply)
+              ~ stp_max_hops               = 0 -> (known after apply)
+              ~ stp_priority               = 0 -> (known after apply)
+              ~ stp_tx_hold_count          = 0 -> (known after apply)
+                # (2 unchanged attributes hidden)
+            }
+        
+        Plan: 0 to add, 1 to change, 0 to destroy.
+=== RUN   TestAccDeviceSwitchPortPreservation/agile_series=true
+    device_switch_ports_test.go:153: Step 1/8 error: After applying this test step, the non-refresh plan was not empty.
+        stdout:
+        
+        
+        Terraform used the selected providers to generate the following execution
+        plan. Resource actions are indicated with the following symbols:
+          ~ update in-place
+        
+        Terraform will perform the following actions:
+        
+          # omada_device_switch.test will be updated in-place
+          ~ resource "omada_device_switch" "test" {
+              ~ firmware_version           = null -> (known after apply)
+                id                         = "02-00-00-00-00-01"
+              ~ ip                         = null -> (known after apply)
+              ~ ip_setting_fallback        = false -> (known after apply)
+              + ip_setting_fallback_gate   = (known after apply)
+              + ip_setting_fallback_ip     = (known after apply)
+              + ip_setting_fallback_mask   = (known after apply)
+              ~ ip_setting_mode            = "dhcp" -> (known after apply)
+              ~ jumbo                      = 0 -> (known after apply)
+              ~ lag_hash_alg               = 0 -> (known after apply)
+              ~ loopback_detect_enable     = false -> (known after apply)
+              ~ management_vlan_network_id = null -> (known after apply)
+              ~ model                      = null -> (known after apply)
+                name                       = "Original"
+              ~ ports                      = [
+                  - {
+                      - disable                 = true -> null
+                      - name                    = "Uplink" -> null
+                      - native_network_id       = "native" -> null
+                      - network_tags_setting    = 1 -> null
+                      - port                    = 1 -> null
+                      - profile_id              = "profile" -> null
+                      - profile_override_enable = true -> null
+                      - speed                   = 3 -> null
+                      - tag_network_ids         = [
+                          - "tagged",
+                        ] -> null
+                      - untag_network_ids       = [
+                          - "untagged",
+                        ] -> null
+                      - voice_dscp_enable       = true -> null
+                      - voice_network_enable    = true -> null
+                    },
+                  - {
+                      - disable                 = false -> null
+                      - name                    = "Other" -> null
+                      - native_network_id       = "other-native" -> null
+                      - network_tags_setting    = 0 -> null
+                      - port                    = 2 -> null
+                      - profile_id              = "other-profile" -> null
+                      - profile_override_enable = false -> null
+                      - speed                   = 2 -> null
+                      - tag_network_ids         = [] -> null
+                      - untag_network_ids       = [] -> null
+                      - voice_dscp_enable       = false -> null
+                      - voice_network_enable    = false -> null
+                    },
+                ] -> (known after apply)
+              ~ snmp_contact               = null -> (known after apply)
+              ~ snmp_location              = null -> (known after apply)
+              ~ stp                        = 0 -> (known after apply)
+              ~ stp_forward_delay          = 0 -> (known after apply)
+              ~ stp_hello_time             = 0 -> (known after apply)
+              ~ stp_max_age                = 0 -> (known after apply)
+              ~ stp_max_hops               = 0 -> (known after apply)
+              ~ stp_priority               = 0 -> (known after apply)
+              ~ stp_tx_hold_count          = 0 -> (known after apply)
+                # (2 unchanged attributes hidden)
+            }
+        
+        Plan: 0 to add, 1 to change, 0 to destroy.
+--- FAIL: TestAccDeviceSwitchPortPreservation (8.13s)
+    --- FAIL: TestAccDeviceSwitchPortPreservation/agile_series=false (7.07s)
+    --- FAIL: TestAccDeviceSwitchPortPreservation/agile_series=true (1.06s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/provider	8.143s
+FAIL

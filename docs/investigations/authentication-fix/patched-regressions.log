@@ -1,0 +1,48 @@
+=== RUN   TestCertificateOperations
+=== RUN   TestCertificateOperations/certificate/token=valid
+=== RUN   TestCertificateOperations/certificate/token=
+=== RUN   TestCertificateOperations/certificate/token=expired
+=== RUN   TestCertificateOperations/key/token=valid
+=== RUN   TestCertificateOperations/key/token=
+=== RUN   TestCertificateOperations/key/token=expired
+=== RUN   TestCertificateOperations/activate/token=valid
+=== RUN   TestCertificateOperations/activate/token=
+=== RUN   TestCertificateOperations/activate/token=expired
+=== RUN   TestCertificateOperations/read/token=valid
+=== RUN   TestCertificateOperations/read/token=
+=== RUN   TestCertificateOperations/read/token=expired
+--- PASS: TestCertificateOperations (0.04s)
+    --- PASS: TestCertificateOperations/certificate/token=valid (0.00s)
+    --- PASS: TestCertificateOperations/certificate/token= (0.00s)
+    --- PASS: TestCertificateOperations/certificate/token=expired (0.00s)
+    --- PASS: TestCertificateOperations/key/token=valid (0.00s)
+    --- PASS: TestCertificateOperations/key/token= (0.00s)
+    --- PASS: TestCertificateOperations/key/token=expired (0.00s)
+    --- PASS: TestCertificateOperations/activate/token=valid (0.00s)
+    --- PASS: TestCertificateOperations/activate/token= (0.00s)
+    --- PASS: TestCertificateOperations/activate/token=expired (0.00s)
+    --- PASS: TestCertificateOperations/read/token=valid (0.00s)
+    --- PASS: TestCertificateOperations/read/token= (0.00s)
+    --- PASS: TestCertificateOperations/read/token=expired (0.00s)
+=== RUN   TestConcurrentSessionExpiry
+--- PASS: TestConcurrentSessionExpiry (0.01s)
+=== RUN   TestConcurrentRequestsAndRefresh
+--- PASS: TestConcurrentRequestsAndRefresh (0.10s)
+=== RUN   TestAuthenticationCancellation
+=== RUN   TestAuthenticationCancellation/cancelLeader=true
+=== RUN   TestAuthenticationCancellation/cancelLeader=false
+--- PASS: TestAuthenticationCancellation (0.05s)
+    --- PASS: TestAuthenticationCancellation/cancelLeader=true (0.00s)
+    --- PASS: TestAuthenticationCancellation/cancelLeader=false (0.05s)
+=== RUN   TestSessionRetryFailures
+=== RUN   TestSessionRetryFailures/login_denied
+=== RUN   TestSessionRetryFailures/empty_token
+=== RUN   TestSessionRetryFailures/expired_again
+--- PASS: TestSessionRetryFailures (0.01s)
+    --- PASS: TestSessionRetryFailures/login_denied (0.00s)
+    --- PASS: TestSessionRetryFailures/empty_token (0.00s)
+    --- PASS: TestSessionRetryFailures/expired_again (0.00s)
+=== RUN   TestCertificateWritesReadOnly
+--- PASS: TestCertificateWritesReadOnly (0.00s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/client	1.248s

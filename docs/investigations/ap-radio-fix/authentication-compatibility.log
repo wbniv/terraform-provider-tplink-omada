@@ -1,0 +1,14 @@
+?   	github.com/terraform-provider-tplink-omada	[no test files]
+ok  	github.com/terraform-provider-tplink-omada/internal/client	0.225s
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	0.014s
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.091s
+=== RUN   TestAccDeviceAPRadioPreservation
+=== RUN   TestAccDeviceAPRadioPreservation/dual_default
+=== RUN   TestAccDeviceAPRadioPreservation/dual_nondefault
+=== RUN   TestAccDeviceAPRadioPreservation/single_band
+--- PASS: TestAccDeviceAPRadioPreservation (17.45s)
+    --- PASS: TestAccDeviceAPRadioPreservation/dual_default (6.45s)
+    --- PASS: TestAccDeviceAPRadioPreservation/dual_nondefault (6.41s)
+    --- PASS: TestAccDeviceAPRadioPreservation/single_band (4.59s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	17.466s

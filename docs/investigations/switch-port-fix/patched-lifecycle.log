@@ -1,0 +1,30 @@
+=== RUN   TestSwitchPortUpdates
+=== RUN   TestSwitchPortUpdates/unchanged
+=== RUN   TestSwitchPortUpdates/whole_list_unknown
+=== RUN   TestSwitchPortUpdates/whole_list_omitted
+=== RUN   TestSwitchPortUpdates/rename_preserves_unknown_values
+=== RUN   TestSwitchPortUpdates/explicit_changes_including_false_zero_and_empty_list
+=== RUN   TestSwitchPortUpdates/clear_tagged_list_preserve_omitted_untagged_list
+=== RUN   TestSwitchPortUpdates/invalid_later_port_prevents_all_writes
+=== RUN   TestSwitchPortUpdates/duplicate_port_prevents_all_writes
+=== RUN   TestSwitchPortUpdates/unknown_port_prevents_all_writes
+=== RUN   TestSwitchPortUpdates/incomplete_list_prevents_all_writes
+=== RUN   TestSwitchPortUpdates/unknown_list_element_prevents_all_writes
+=== RUN   TestSwitchPortUpdates/failed_port_write_stops_subsequent_ports
+=== RUN   TestSwitchPortUpdates/reordered_ports_preserve_identity
+--- PASS: TestSwitchPortUpdates (0.09s)
+    --- PASS: TestSwitchPortUpdates/unchanged (0.01s)
+    --- PASS: TestSwitchPortUpdates/whole_list_unknown (0.01s)
+    --- PASS: TestSwitchPortUpdates/whole_list_omitted (0.01s)
+    --- PASS: TestSwitchPortUpdates/rename_preserves_unknown_values (0.01s)
+    --- PASS: TestSwitchPortUpdates/explicit_changes_including_false_zero_and_empty_list (0.01s)
+    --- PASS: TestSwitchPortUpdates/clear_tagged_list_preserve_omitted_untagged_list (0.01s)
+    --- PASS: TestSwitchPortUpdates/invalid_later_port_prevents_all_writes (0.01s)
+    --- PASS: TestSwitchPortUpdates/duplicate_port_prevents_all_writes (0.00s)
+    --- PASS: TestSwitchPortUpdates/unknown_port_prevents_all_writes (0.01s)
+    --- PASS: TestSwitchPortUpdates/incomplete_list_prevents_all_writes (0.00s)
+    --- PASS: TestSwitchPortUpdates/unknown_list_element_prevents_all_writes (0.01s)
+    --- PASS: TestSwitchPortUpdates/failed_port_write_stops_subsequent_ports (0.01s)
+    --- PASS: TestSwitchPortUpdates/reordered_ports_preserve_identity (0.01s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.097s
