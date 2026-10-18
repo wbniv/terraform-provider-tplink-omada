@@ -186,7 +186,8 @@ type PSKSetting struct {
 
 // VlanSetting holds VLAN configuration for an SSID.
 type VlanSetting struct {
-	Mode           int           `json:"mode"`
+	// A pointer distinguishes an explicit default mode (0) from missing/null data.
+	Mode           *int          `json:"mode"`
 	CustomConfig   *CustomConfig `json:"customConfig,omitempty"`
 	CurrentVlanId  int           `json:"currentVlanId,omitempty"`
 	CurrentVlanIds string        `json:"currentVlanIds,omitempty"`

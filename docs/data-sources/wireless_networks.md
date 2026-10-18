@@ -55,4 +55,4 @@ Read-Only:
 - `name` (String) The SSID name.
 - `pmf_mode` (Number) Protected Management Frames mode.
 - `security` (Number) Security mode: 0=Open, 3=WPA2/WPA3.
-- `vlan_id` (Number) The VLAN ID assigned to this SSID.
+- `vlan_id` (Number) The custom VLAN ID assigned to this SSID; null when the controller selects default VLAN mode.

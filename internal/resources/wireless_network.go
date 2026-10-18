@@ -196,6 +196,15 @@ func (r *WirelessNetworkResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	vlanID, vlanErr := wirelessNetworkVLAN(created.VlanSetting)
+	if vlanErr != nil {
+		resp.Diagnostics.AddError("Cannot read created wireless network VLAN", vlanErr.Error())
+	} else if !plan.VlanID.Equal(vlanID) {
+		resp.Diagnostics.AddError("Wireless network VLAN was not applied", "The controller returned a VLAN setting different from the requested value. Refresh and review the controller configuration before retrying.")
+	}
+	// Preserve the created object's ID so Terraform can clean up after an error.
+	plan.VlanID = vlanID
+
 	plan.ID = types.StringValue(created.ID)
 	plan.WlanGroupID = types.StringValue(wlanGroupID)
 	plan.Band = types.Int64Value(int64(created.Band))
@@ -237,12 +246,12 @@ func (r *WirelessNetworkResource) Read(ctx context.Context, req resource.ReadReq
 	state.Enable11r = types.BoolValue(ssid.Enable11r)
 	state.PmfMode = types.Int64Value(int64(ssid.PmfMode))
 
-	// Read vlan_id from VlanSetting
-	if ssid.VlanSetting != nil && ssid.VlanSetting.CustomConfig != nil && ssid.VlanSetting.CustomConfig.BridgeVlan != 0 {
-		state.VlanID = types.Int64Value(int64(ssid.VlanSetting.CustomConfig.BridgeVlan))
-	} else if ssid.VlanSetting != nil && ssid.VlanSetting.CurrentVlanId != 0 {
-		state.VlanID = types.Int64Value(int64(ssid.VlanSetting.CurrentVlanId))
+	vlanID, err := wirelessNetworkVLAN(ssid.VlanSetting)
+	if err != nil {
+		resp.Diagnostics.AddError("Cannot read wireless network VLAN", err.Error())
+		return
 	}
+	state.VlanID = vlanID
 
 	// Keep only the key supplied through Terraform. Controller responses may be
 	// masked, omitted, or plaintext with no reliable discriminator.
@@ -297,6 +306,16 @@ func (r *WirelessNetworkResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	vlanID, vlanErr := wirelessNetworkVLAN(updated.VlanSetting)
+	if vlanErr != nil {
+		resp.Diagnostics.AddError("Cannot read updated wireless network VLAN", vlanErr.Error())
+		return
+	}
+	if !plan.VlanID.IsUnknown() && !plan.VlanID.Equal(vlanID) {
+		resp.Diagnostics.AddError("Wireless network VLAN was not applied", "The controller returned a VLAN setting different from the requested value. Observed state has been saved; refresh and review the controller configuration before retrying.")
+	}
+	plan.VlanID = vlanID
+
 	plan.Name = types.StringValue(updated.Name)
 	plan.ID = state.ID
 	plan.SiteID = state.SiteID
@@ -307,9 +326,6 @@ func (r *WirelessNetworkResource) Update(ctx context.Context, req resource.Updat
 	plan.Enable11r = types.BoolValue(updated.Enable11r)
 	plan.PmfMode = types.Int64Value(int64(updated.PmfMode))
 
-	if plan.VlanID.IsUnknown() {
-		plan.VlanID = state.VlanID
-	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	if !resp.Diagnostics.HasError() && resp.Private != nil {
 		marker := []byte("false")
@@ -363,14 +379,12 @@ func (r *WirelessNetworkResource) ImportState(ctx context.Context, req resource.
 		PmfMode:     types.Int64Value(int64(ssid.PmfMode)),
 	}
 
-	// Read vlan_id from VlanSetting
-	if ssid.VlanSetting != nil && ssid.VlanSetting.CustomConfig != nil && ssid.VlanSetting.CustomConfig.BridgeVlan != 0 {
-		state.VlanID = types.Int64Value(int64(ssid.VlanSetting.CustomConfig.BridgeVlan))
-	} else if ssid.VlanSetting != nil && ssid.VlanSetting.CurrentVlanId != 0 {
-		state.VlanID = types.Int64Value(int64(ssid.VlanSetting.CurrentVlanId))
-	} else {
-		state.VlanID = types.Int64Null()
+	vlanID, err := wirelessNetworkVLAN(ssid.VlanSetting)
+	if err != nil {
+		resp.Diagnostics.AddError("Cannot import wireless network VLAN", err.Error())
+		return
 	}
+	state.VlanID = vlanID
 
 	// Import never turns an API-returned key or mask into a trusted secret.
 	state.Passphrase = types.StringNull()

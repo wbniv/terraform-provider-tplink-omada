@@ -167,7 +167,7 @@ func (d *WirelessNetworksDataSource) Schema(_ context.Context, _ datasource.Sche
 						"band":       schema.Int64Attribute{Description: "Radio band: 1=2.4GHz, 2=5GHz, 3=both.", Computed: true},
 						"security":   schema.Int64Attribute{Description: "Security mode: 0=Open, 3=WPA2/WPA3.", Computed: true},
 						"broadcast":  schema.BoolAttribute{Description: "Whether the SSID is broadcast (visible).", Computed: true},
-						"vlan_id":    schema.Int64Attribute{Description: "The VLAN ID assigned to this SSID.", Computed: true},
+						"vlan_id":    schema.Int64Attribute{Description: "The custom VLAN ID assigned to this SSID; null when the controller selects default VLAN mode.", Computed: true},
 						"enable_11r": schema.BoolAttribute{Description: "Whether 802.11r Fast Roaming is enabled.", Computed: true},
 						"pmf_mode":   schema.Int64Attribute{Description: "Protected Management Frames mode.", Computed: true},
 					},
@@ -231,14 +231,12 @@ func (d *WirelessNetworksDataSource) Read(ctx context.Context, req datasource.Re
 			Enable11r: types.BoolValue(s.Enable11r),
 			PmfMode:   types.Int64Value(int64(s.PmfMode)),
 		}
-		// Extract VLAN ID from vlanSetting
-		if s.VlanSetting != nil && s.VlanSetting.CustomConfig != nil && s.VlanSetting.CustomConfig.BridgeVlan > 0 {
-			dm.VlanID = types.Int64Value(int64(s.VlanSetting.CustomConfig.BridgeVlan))
-		} else if s.VlanSetting != nil && s.VlanSetting.CurrentVlanId > 0 {
-			dm.VlanID = types.Int64Value(int64(s.VlanSetting.CurrentVlanId))
-		} else {
-			dm.VlanID = types.Int64Null()
+		vlanID, err := wirelessNetworkVLAN(s.VlanSetting)
+		if err != nil {
+			resp.Diagnostics.AddError("Cannot read wireless network VLAN", err.Error())
+			return
 		}
+		dm.VlanID = vlanID
 		state.WirelessNetworks = append(state.WirelessNetworks, dm)
 	}
 

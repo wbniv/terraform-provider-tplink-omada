@@ -22,6 +22,16 @@ Updates preserve supported writable controller settings outside the configured c
 
 `vlan_id` is different: omission selects the default VLAN. Keep a custom VLAN explicitly configured after import. Changing a custom VLAN requires one matching controller network; failed, missing, or ambiguous lookups stop the operation.
 
+### VLAN refresh and readback
+
+The controller's selected VLAN mode determines `vlan_id`: default mode (`0`) reads as null, even if the response still contains a previous custom VLAN or an effective VLAN number. Custom mode (`1`) uses the bridge VLAN, falling back to a single valid `currentVlanId` when no bridge VLAN is supplied. VLAN IDs must be 1–4094.
+
+A missing/null VLAN setting or mode, unsupported mode, invalid VLAN, or ambiguous fallback produces an error and preserves prior resource state. Such responses are not interpreted as a switch to the default VLAN. The `omada_wireless_networks` data source uses the same rules.
+
+If the controller changes a managed SSID to the default VLAN, refresh clears the old custom value from state. A normal plan will then propose restoring an explicitly configured `vlan_id`; removing that configuration accepts the default VLAN and settles without another write. No re-import is needed.
+
+Create and update validate VLAN readback. A different observed VLAN is saved with an error instead of reporting the requested value as applied. If an update returns uninterpretable VLAN data, prior state is retained. When readback returns a decoded SSID with an ID, that identity is retained on a VLAN mapping error so Terraform can clean it up. Transport, lookup, and JSON decoding failures before the resource receives that object retain the client's existing behavior. These behaviors are verified with synthetic controllers; hardware validation remains pending.
+
 ### Password ownership
 
 Keep `passphrase` configured for secured creation and updates. Import and refresh never copy a controller-returned password into state: responses can contain plaintext, an omitted value, or an indistinguishable mask. Consequently, remote password drift is not detected. Supplying a password after import may write that password while preserving the other settings.
