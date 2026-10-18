@@ -1,6 +1,7 @@
 # Omitted radio/security settings use defaults only on creation.
 # After import, omit them to preserve the observed settings.
 # Keep passphrase configured for later secured updates.
+# Changing wlan_group_id replaces the SSID; review connectivity and recreation settings.
 resource "omada_wireless_network" "example" {
   site_id       = omada_site.example.id
   name          = "HomeWiFi"

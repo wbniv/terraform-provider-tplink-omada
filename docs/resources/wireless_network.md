@@ -16,6 +16,7 @@ Manages a wireless network (SSID) on the Omada Controller.
 # Omitted radio/security settings use defaults only on creation.
 # After import, omit them to preserve the observed settings.
 # Keep passphrase configured for later secured updates.
+# Changing wlan_group_id replaces the SSID; review connectivity and recreation settings.
 resource "omada_wireless_network" "example" {
   site_id       = omada_site.example.id
   name          = "HomeWiFi"
@@ -42,6 +43,16 @@ Creation defaults remain `band = 3`, `security = 3`, `broadcast = true`, `enable
 Updates preserve supported writable controller settings outside the configured changes, including guest controls, schedule/filter associations, rate limits, multicast, PSK mode/encryption/rekey, MLO, and Wi-Fi sharing. The provider reads a fresh snapshot and stops before writing if required settings are incomplete or an unrecognized field could be lost. It currently supports updates to open (`0`) and WPA-Personal (`3`) SSIDs with default or bridge VLAN settings. Other security/VLAN modes require an expanded, verified API contract.
 
 `vlan_id` is different: omission selects the default VLAN. Keep a custom VLAN explicitly configured after import. Changing a custom VLAN requires one matching controller network; failed, missing, or ambiguous lookups stop the operation.
+
+### WLAN-group changes and replacement
+
+Changing `wlan_group_id` replaces the SSID. The provider cannot move an existing SSID between groups. Terraform deletes using the old site/group/SSID identity and creates in the requested group, recording the new controller-returned ID. Changing `site_id` also continues to require replacement. Import IDs remain `site_id/wlan_group_id/ssid_id`; existing state needs no migration or re-import.
+
+Omitting `wlan_group_id` on an existing or imported SSID retains its group, including during unrelated updates. Omission on initial creation uses the provider's existing default-group discovery. An explicitly configured group that is unknown during planning remains unknown and can conservatively require replacement even if it later resolves to the old group. Review the plan; resolve the group reference before applying if that replacement is unwanted.
+
+Replacement can interrupt connectivity and discards unmanaged settings from the old SSID, including guest controls, schedules, filters, and rate limits. Preservation during ordinary updates does not carry those settings into a new object. Configure the desired radio/security/VLAN values and `passphrase` for secured recreation; omitted settings use creation defaults. Record controller-only settings before replacement and restore them separately as needed. Known invalid security/password combinations, including a secured replacement without `passphrase`, fail during planning before deletion. Values still unknown at plan time are checked when resolved during apply; resolve those dependencies first if a later error would leave an unacceptable interruption.
+
+Terraform normally destroys before creating. If the new creation fails, the old SSID has already been removed; correct the error and apply again. `lifecycle { create_before_destroy = true }` reverses the order, but requires the controller to permit both SSIDs to exist simultaneously. Duplicate-name, capacity, or group restrictions may prevent it; it does not guarantee uninterrupted connectivity. A rejected create leaves the old SSID managed. A rejected delete retains the old identity for retry. These failure cases are covered by synthetic controllers, with hardware behavior still to be verified.
 
 ### VLAN refresh and readback
 
@@ -82,7 +93,7 @@ The writable-field inventory combines TP-Link's [v5.9.9 Web API reference](https
 - `pmf_mode` (Number) Protected Management Frames mode: 1=disabled, 2=optional, 3=required. Defaults to 2 on creation; omission preserves existing settings. Verify mode meanings for your controller version.
 - `security` (Number) Security mode: 0=Open, 3=WPA2/WPA3-Personal. Defaults to 3 on creation; omission preserves existing settings. Other modes are unsupported.
 - `vlan_id` (Number) Custom VLAN ID to assign to this SSID. If not set, uses the default VLAN.
-- `wlan_group_id` (String) The WLAN group ID. If not set, the default WLAN group is used.
+- `wlan_group_id` (String) The WLAN group ID. Omission uses the default group on creation and retains the current group on updates. Changing the group requires replacement.
 
 ### Read-Only
 

@@ -22,6 +22,16 @@ Updates preserve supported writable controller settings outside the configured c
 
 `vlan_id` is different: omission selects the default VLAN. Keep a custom VLAN explicitly configured after import. Changing a custom VLAN requires one matching controller network; failed, missing, or ambiguous lookups stop the operation.
 
+### WLAN-group changes and replacement
+
+Changing `wlan_group_id` replaces the SSID. The provider cannot move an existing SSID between groups. Terraform deletes using the old site/group/SSID identity and creates in the requested group, recording the new controller-returned ID. Changing `site_id` also continues to require replacement. Import IDs remain `site_id/wlan_group_id/ssid_id`; existing state needs no migration or re-import.
+
+Omitting `wlan_group_id` on an existing or imported SSID retains its group, including during unrelated updates. Omission on initial creation uses the provider's existing default-group discovery. An explicitly configured group that is unknown during planning remains unknown and can conservatively require replacement even if it later resolves to the old group. Review the plan; resolve the group reference before applying if that replacement is unwanted.
+
+Replacement can interrupt connectivity and discards unmanaged settings from the old SSID, including guest controls, schedules, filters, and rate limits. Preservation during ordinary updates does not carry those settings into a new object. Configure the desired radio/security/VLAN values and `passphrase` for secured recreation; omitted settings use creation defaults. Record controller-only settings before replacement and restore them separately as needed. Known invalid security/password combinations, including a secured replacement without `passphrase`, fail during planning before deletion. Values still unknown at plan time are checked when resolved during apply; resolve those dependencies first if a later error would leave an unacceptable interruption.
+
+Terraform normally destroys before creating. If the new creation fails, the old SSID has already been removed; correct the error and apply again. `lifecycle { create_before_destroy = true }` reverses the order, but requires the controller to permit both SSIDs to exist simultaneously. Duplicate-name, capacity, or group restrictions may prevent it; it does not guarantee uninterrupted connectivity. A rejected create leaves the old SSID managed. A rejected delete retains the old identity for retry. These failure cases are covered by synthetic controllers, with hardware behavior still to be verified.
+
 ### VLAN refresh and readback
 
 The controller's selected VLAN mode determines `vlan_id`: default mode (`0`) reads as null, even if the response still contains a previous custom VLAN or an effective VLAN number. Custom mode (`1`) uses the bridge VLAN, falling back to a single valid `currentVlanId` when no bridge VLAN is supplied. VLAN IDs must be 1–4094.

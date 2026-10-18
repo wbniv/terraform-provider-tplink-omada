@@ -34,6 +34,16 @@ func (r *WirelessNetworkResource) ModifyPlan(ctx context.Context, req resource.M
 			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(name), types.BoolValue(value))...)
 		}
 	}
+	// Terraform replans replacements with null prior state. Reject known
+	// invalid creation settings here, before it can destroy the old SSID.
+	var plan WirelessNetworkResourceModel
+	resp.Diagnostics.Append(resp.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if err := validateSSIDCreateSecurity(plan); err != nil {
+		resp.Diagnostics.AddError("Invalid wireless network creation configuration", err.Error())
+	}
 }
 
 func validateSSIDCreate(plan WirelessNetworkResourceModel) error {
@@ -42,8 +52,20 @@ func validateSSIDCreate(plan WirelessNetworkResourceModel) error {
 		plan.PmfMode.IsNull() || plan.PmfMode.IsUnknown() || plan.VlanID.IsUnknown() || plan.Passphrase.IsUnknown() {
 		return fmt.Errorf("SSID settings must be known before creation")
 	}
+	return validateSSIDCreateSecurity(plan)
+}
+
+func validateSSIDCreateSecurity(plan WirelessNetworkResourceModel) error {
+	// Unknown configuration is resolved during apply; validateSSIDCreate also
+	// requires known settings before the controller can be contacted.
+	if plan.Security.IsUnknown() {
+		return nil
+	}
 	if plan.Security.ValueInt64() != 0 && plan.Security.ValueInt64() != 3 {
 		return fmt.Errorf("only open (0) and WPA-Personal (3) security modes are supported")
+	}
+	if plan.Passphrase.IsUnknown() {
+		return nil
 	}
 	if plan.Security.ValueInt64() == 3 && plan.Passphrase.ValueString() == "" {
 		return fmt.Errorf("configure passphrase before creating a secured SSID")

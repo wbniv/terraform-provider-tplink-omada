@@ -58,11 +58,12 @@ func (r *WirelessNetworkResource) Schema(_ context.Context, _ resource.SchemaReq
 			},
 			"site_id": siteIDResourceSchema(),
 			"wlan_group_id": schema.StringAttribute{
-				Description: "The WLAN group ID. If not set, the default WLAN group is used.",
+				Description: "The WLAN group ID. Omission uses the default group on creation and retains the current group on updates. Changing the group requires replacement.",
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"name": schema.StringAttribute{
@@ -272,6 +273,13 @@ func (r *WirelessNetworkResource) Update(ctx context.Context, req resource.Updat
 	var state WirelessNetworkResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Group membership is part of the API path, not an editable SSID field.
+	// Reject stale/invalid update plans before contacting the controller.
+	if !plan.WlanGroupID.Equal(state.WlanGroupID) {
+		resp.Diagnostics.AddError("Wireless network group change requires replacement", "The planned WLAN group must match the existing group for an update. Create a new Terraform plan to replace the SSID in the requested group.")
 		return
 	}
 
