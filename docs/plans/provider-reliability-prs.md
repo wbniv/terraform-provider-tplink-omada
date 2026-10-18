@@ -6,7 +6,7 @@ This is the working record for fixing the [code-review findings](../investigatio
 
 ## Current work
 
-- [ ] Next implementation: D, SSID preservation, WLAN-group identity, and VLAN drift (F04/F13/F14). Begin with the retained reproductions and keep each behavior change reviewable.
+- [ ] Next implementation: D, SSID preservation, WLAN-group identity, and VLAN drift (F04/F13/F14). Follow the [SSID repair plan](ssid-reliability.md), beginning with D1's retained reproduction and Terraform import-and-rename test.
 - [x] Implement and locally verify C, AP radio preservation (F03), in `/home/will/terraform-provider-tplink-omada-ap-radios` on `fix/ap-radio-updates`, based on `6bc71b3`. [C evidence and review notes](../investigations/ap-radio-fix/README.md).
 - [ ] Finish C's controlled-AP validation and PR-submission review. A, B, and C are committed and pushed to Will's fork; no upstream PR has been opened.
 - [x] Implement and locally verify PR B in worktree `/home/will/terraform-provider-tplink-omada-switch-ports`, branch `fix/switch-port-updates`, based directly on `6bc71b3`. A remains isolated on `fix/client-authentication`. [B evidence and review notes](../investigations/switch-port-fix/README.md).
@@ -112,6 +112,8 @@ Starting evidence: [F03](../investigations/2026-10-18-code-review.md#f03--an-ap-
 Verification and remaining submission gates: [C evidence](../investigations/ap-radio-fix/README.md), completed locally on 2026-10-19.
 
 ### D — Wireless networks
+
+Detailed plan: [SSID preservation, identity, and VLAN state](ssid-reliability.md), prepared 2026-10-19. It defines D1 preservation, D2 VLAN readback, and D3 group identity, with ownership/API decisions, review screens, regression cases, and PR gates. Implementation has not started.
 
 - [ ] Preserve guest controls, MAC filtering, schedules, rate limits, multicast, and PSK mode during unrelated changes.
 - [ ] Determine which fields the controller requires on PATCH and whitelist writable fields; do not echo raw read-only fields.
