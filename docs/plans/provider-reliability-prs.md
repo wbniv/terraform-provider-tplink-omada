@@ -22,10 +22,12 @@ This is the working record for fixing the [code-review findings](../investigatio
 - [x] Inspect repository contribution standards: `.github/PULL_REQUEST_TEMPLATE.md` requires conventional commits, formatting/vet/tests, documentation where applicable, and a real-controller test declaration.
 - [x] Check project AI attribution policy: no explicit policy found in tracked contribution files at the reviewed baseline. Will's attribution preference still applies if attribution is included or required later; verify tool/model/reasoning metadata before writing it.
 - [x] Run the first real-controller round on Software Controller 6.1.0.19 with zero adopted devices; see the [lab report](../investigations/software-controller-lab/README.md). Network/profile CRUD, site credential rotation, and a 102-network inventory pass.
-- [ ] Complete the remaining [controller compatibility follow-ups](controller-compatibility.md): certificate protocol, session recovery, IP groups, empty lists, and open-network PMF behavior. L7 secured SSID fields, all 24 mock scenarios, and both live scenarios pass locally; [evidence](../investigations/ssid-controller-fields/README.md). Physical provisioning, radios, and switch ports remain separate gates.
+- [ ] Complete the remaining [controller compatibility follow-ups](controller-compatibility.md): certificate protocol, session recovery, IP groups, and empty lists. L7 is pushed as `ce80af6`; its secured SSID fields, 24 mock scenarios, and both live scenarios pass; [evidence](../investigations/ssid-controller-fields/README.md). Physical provisioning, radios, and switch ports remain separate gates.
 - [x] Complete the lab/README/plan updates and local commits: Go vendoring `5555332`, lab/Omada LFS manifest `0d26e72`. Go vet/unit/build pass without external network access. Live failures remain visible.
 - [x] Publish the lab/vendoring commits to the recreated standalone repository and verify the Omada LFS object with a fresh download/checksum. All original branches/tags are preserved; Actions are enabled again.
 - [ ] Publish PRs after the local changes and review packages are ready and publication is authorized. No GitHub review/comment/PR has been posted by this work.
+
+- [x] Locally verify L6 on `fix/ssid-pmf-handling`: 26 mock scenarios, three live scenarios, Go gates, and client discovery pass. [L6 evidence](../investigations/ssid-pmf-fix/README.md). Committed as `a046a36`, with lab coverage in `c026124`; upstream publication remains pending.
 
 ## Commits and fork branches — 2026-10-19
 
@@ -180,7 +182,7 @@ Detailed plan: [HTTP response validation](http-responses.md), including status/e
 
 ### G — Pagination and disappearance
 
-Detailed plan: [G1 complete pagination and G2 confirmed disappearance](pagination-and-disappearance.md). G1 is pushed. The WLAN-group collection correction is implemented and passes real discovery and the 102-network regression on `fix/wlan-group-collection`; [L1 evidence](../investigations/wlan-collection-fix/README.md) records the original SSID gates; [L7 evidence](../investigations/ssid-controller-fields/README.md) now verifies secured updates, while L6 remains open.
+Detailed plan: [G1 complete pagination and G2 confirmed disappearance](pagination-and-disappearance.md). G1 is pushed. The WLAN-group collection correction is implemented and passes real discovery and the 102-network regression on `fix/wlan-group-collection`; [L1 evidence](../investigations/wlan-collection-fix/README.md) records the original SSID gates; [L7 evidence](../investigations/ssid-controller-fields/README.md) now verifies secured updates, and [L6 evidence](../investigations/ssid-pmf-fix/README.md) verifies open/secured PMF handling.
 
 - [x] Iterate all pages for every affected collection; retain direct-array compatibility.
 - [x] Test more than 100 objects, empty collections, later-page errors, duplicate/stalled pages, and metadata variations.

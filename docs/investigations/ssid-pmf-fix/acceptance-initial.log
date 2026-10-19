@@ -1,0 +1,95 @@
+=== RUN   TestControllerLabWirelessLifecycle
+--- PASS: TestControllerLabWirelessLifecycle (8.58s)
+=== RUN   TestControllerLabSSIDUpdateVariants
+--- PASS: TestControllerLabSSIDUpdateVariants (13.52s)
+=== RUN   TestControllerLabPMF
+    controller_lab_test.go:278: Step 3/9 error: Error running apply: exit status 1
+        
+        Error: Cannot safely update wireless network
+        
+          with omada_wireless_network.lab,
+          on terraform_plugin_test.tf line 12, in resource "omada_wireless_network" "lab":
+          12: resource "omada_wireless_network" "lab" {
+        
+        incomplete SSID snapshot: missing SSID.pmfMode
+--- FAIL: TestControllerLabPMF (2.73s)
+=== RUN   TestAccWirelessNetworkCreate
+=== RUN   TestAccWirelessNetworkCreate/defaults
+=== RUN   TestAccWirelessNetworkCreate/explicit
+=== RUN   TestAccWirelessNetworkCreate/unknown_at_plan
+=== RUN   TestAccWirelessNetworkCreate/open_default
+=== RUN   TestAccWirelessNetworkCreate/unknown_security
+--- PASS: TestAccWirelessNetworkCreate (6.91s)
+    --- PASS: TestAccWirelessNetworkCreate/defaults (1.28s)
+    --- PASS: TestAccWirelessNetworkCreate/explicit (1.36s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_at_plan (1.60s)
+    --- PASS: TestAccWirelessNetworkCreate/open_default (1.33s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_security (1.33s)
+=== RUN   TestAccWirelessNetworkGroupIdentity
+=== RUN   TestAccWirelessNetworkGroupIdentity/import_retains_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_defaults
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_before_destroy
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_changed_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_same_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/site_replacement
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/delete_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/duplicate_name_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_omitted_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_unknown_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password
+--- PASS: TestAccWirelessNetworkGroupIdentity (30.00s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/import_retains_group (3.75s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_defaults (2.23s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings (2.04s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_before_destroy (2.07s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_changed_group (2.05s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_same_group (2.05s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/site_replacement (2.02s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_failure_retry (2.38s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/delete_failure_retry (2.66s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/duplicate_name_retry (2.73s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_omitted_group (1.47s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_unknown_group (1.46s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password (3.08s)
+=== RUN   TestAccWirelessNetworkPreservation
+=== RUN   TestAccWirelessNetworkPreservation/plaintext
+=== RUN   TestAccWirelessNetworkPreservation/masked
+=== RUN   TestAccWirelessNetworkPreservation/absent
+=== RUN   TestAccWirelessNetworkPreservation/open
+    wireless_network_preservation_test.go:199: Step 1/10 error: Check failed: Check 5/6 error: omada_wireless_network.test: Attribute 'pmf_mode' expected "3", got "0"
+=== RUN   TestAccWirelessNetworkPreservation/unmanaged
+--- FAIL: TestAccWirelessNetworkPreservation (22.72s)
+    --- PASS: TestAccWirelessNetworkPreservation/plaintext (7.07s)
+    --- PASS: TestAccWirelessNetworkPreservation/masked (6.84s)
+    --- PASS: TestAccWirelessNetworkPreservation/absent (6.58s)
+    --- FAIL: TestAccWirelessNetworkPreservation/open (0.67s)
+    --- PASS: TestAccWirelessNetworkPreservation/unmanaged (1.55s)
+=== RUN   TestAccWirelessNetworkVLANState
+=== RUN   TestAccWirelessNetworkVLANState/default_clears_fields
+    wireless_network_vlan_test.go:164: Step 8/9 error: Error running apply: exit status 1
+        
+        Error: Cannot safely update wireless network
+        
+          with omada_wireless_network.test,
+          on terraform_plugin_test.tf line 17, in resource "omada_wireless_network" "test":
+          17: resource "omada_wireless_network" "test" {
+        
+        incomplete SSID snapshot: missing SSID.pmfMode
+=== RUN   TestAccWirelessNetworkVLANState/default_retains_stale_fields
+    wireless_network_vlan_test.go:164: Step 8/9 error: Error running apply: exit status 1
+        
+        Error: Cannot safely update wireless network
+        
+          with omada_wireless_network.test,
+          on terraform_plugin_test.tf line 17, in resource "omada_wireless_network" "test":
+          17: resource "omada_wireless_network" "test" {
+        
+        incomplete SSID snapshot: missing SSID.pmfMode
+=== RUN   TestAccWirelessNetworkVLANState/import_default
+--- FAIL: TestAccWirelessNetworkVLANState (10.21s)
+    --- FAIL: TestAccWirelessNetworkVLANState/default_clears_fields (4.40s)
+    --- FAIL: TestAccWirelessNetworkVLANState/default_retains_stale_fields (4.20s)
+    --- PASS: TestAccWirelessNetworkVLANState/import_default (1.61s)
+FAIL

@@ -15,7 +15,7 @@ Collection correction implemented; live SSID follow-ups remain: [L1 evidence](..
 - [x] Add an envelope fixture and verify default/custom lookup; rerun D mock scenarios and real SSID probes.
 - [x] Verify real secured SSID create, import, group replacement, and stable plan.
 - [x] Verify live secured SSID rename, password rotation, and custom/default VLAN transitions with L7.
-- [ ] Finish open-network PMF compatibility under L6.
+- [x] Verify L6 open PMF omission and open↔secured transitions on 6.1.0.19.
 - [x] Rerun G1 malformed-page/failure gates and the real 102-network test.
 - [x] Commit the focused L1 correction as `0730101` on `fix/wlan-group-collection`.
 
@@ -50,12 +50,15 @@ Collection correction implemented; live SSID follow-ups remain: [L1 evidence](..
 
 ### L6 — Open SSID PMF defaults disagree with the controller
 
-- [x] After L1 unblocked discovery, reproduce an inconsistent apply: `security = 0` with the provider default `pmf_mode = 2` is read back as `0` by 6.1.0.19.
-- [ ] Verify PMF/security combinations against controller UI and API, including secured SSIDs; do not infer enum meanings from mocks.
-- [ ] Define compatible defaults and validation, preserving explicit user intent and documenting any migration.
-- [ ] Add mock and live create/update/import/stable-plan gates for the supported combinations.
+Implementation and validation: [L6 investigation](../investigations/ssid-pmf-fix/README.md).
 
-An explicit `pmf_mode = 0` create was rejected with API `-1001`. The final L1 lifecycle uses a secured SSID with mode 2; the open-network mismatch remains unresolved.
+- [x] After L1 unblocked discovery, reproduce an inconsistent apply: `security = 0` with the provider default `pmf_mode = 2` is read back as `0` by 6.1.0.19.
+- [x] Inspect pinned 6.1 UI: open requests omit PMF; secured values are 1 required, 2 capable/optional, 3 disabled. Real open creation returns PMF 0 in Terraform; the raw response may omit the field.
+- [x] Pass the nine-step live PMF matrix: open create/rename/stable plan, open→secured, secured modes 1/2/3, secured→open, final stable plan.
+- [x] Define open mode 0 and omission on the wire, secured default 2 on create/transition, preservation on other secured updates, unknown-security deferral, and diagnostics for incompatible explicit values. Document the corrected enum descriptions without remapping stored numbers.
+- [x] Add PMF validation and unknown-security creation coverage; retain import/replacement and preservation gates. Live PMF and existing secured lifecycle scenarios pass.
+
+An explicit `pmf_mode = 0` create was rejected with API `-1001`. The L1 lifecycle used a secured SSID with mode 2. L6 now omits PMF for open requests and accepts absent open-response metadata; the complete live matrix passes.
 
 ### L7 — Real SSID fields exceed the D1 writable contract
 
@@ -65,7 +68,7 @@ Implementation and validation: [L7 investigation](../investigations/ssid-control
 - [x] Capture default/custom VLAN response fixtures and compare the bundled controller UI serializers.
 - [x] Exclude response summaries `vlanEnable`/top-level `vlanId` and create-only `deviceType` from PATCH; keep `vlanSetting` and existing unknown-field rejection.
 - [x] Add default/custom real-response fixtures and pass secured rename, password rotation, VLAN assignment/clearing, import, replacement, and stable-plan checks on 6.1.0.19.
-- [ ] Open/secured transitions remain gated by L6; physical-device validation remains separate.
+- [x] Verify open/secured transitions with L6. Physical-device validation remains separate.
 
 ## Review screens and flow
 

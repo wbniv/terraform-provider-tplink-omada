@@ -58,3 +58,7 @@ The new custom-VLAN fixture initially compared response-only nested `currentVlan
 Both test binaries returned zero. The outer shell returned 2 after the tests because its file was edited while running; this is recorded in `wrapper-status.txt`, not hidden as an all-zero harness run. The final script passes `bash -n`; its cleanup command is verified separately. No test binary or production source was changed during the final test run.
 
 L7 is verified for the recorded secured-SSID contract on 6.1.0.19. L6 open-network PMF handling, L2–L5, G2, physical-device validation and upstream publication remain separate work. No new schema or state migration is required by these three exclusions.
+
+## L6 follow-up
+
+The [PMF correction](../ssid-pmf-fix/README.md) verifies open creation/rename and open↔secured transitions, along with secured values 1–3. It also identifies the wizard's adjacent-repeat password restriction, superseding the earlier password-length hypothesis above.

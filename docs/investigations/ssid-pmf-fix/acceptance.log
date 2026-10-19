@@ -1,0 +1,67 @@
+=== RUN   TestControllerLabWirelessLifecycle
+--- PASS: TestControllerLabWirelessLifecycle (5.70s)
+=== RUN   TestControllerLabSSIDUpdateVariants
+--- PASS: TestControllerLabSSIDUpdateVariants (7.45s)
+=== RUN   TestControllerLabPMF
+--- PASS: TestControllerLabPMF (9.45s)
+=== RUN   TestAccWirelessNetworkCreate
+=== RUN   TestAccWirelessNetworkCreate/defaults
+=== RUN   TestAccWirelessNetworkCreate/explicit
+=== RUN   TestAccWirelessNetworkCreate/unknown_at_plan
+=== RUN   TestAccWirelessNetworkCreate/open_default
+=== RUN   TestAccWirelessNetworkCreate/unknown_security
+--- PASS: TestAccWirelessNetworkCreate (7.22s)
+    --- PASS: TestAccWirelessNetworkCreate/defaults (1.41s)
+    --- PASS: TestAccWirelessNetworkCreate/explicit (1.51s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_at_plan (1.46s)
+    --- PASS: TestAccWirelessNetworkCreate/open_default (1.37s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_security (1.47s)
+=== RUN   TestAccWirelessNetworkGroupIdentity
+=== RUN   TestAccWirelessNetworkGroupIdentity/import_retains_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_defaults
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_before_destroy
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_changed_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_same_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/site_replacement
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/delete_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/duplicate_name_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_omitted_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_unknown_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password
+--- PASS: TestAccWirelessNetworkGroupIdentity (31.31s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/import_retains_group (3.64s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_defaults (2.08s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings (2.04s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_before_destroy (2.28s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_changed_group (2.26s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_same_group (2.17s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/site_replacement (2.12s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_failure_retry (2.60s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/delete_failure_retry (2.72s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/duplicate_name_retry (3.01s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_omitted_group (1.72s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_unknown_group (1.58s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password (3.08s)
+=== RUN   TestAccWirelessNetworkPreservation
+=== RUN   TestAccWirelessNetworkPreservation/plaintext
+=== RUN   TestAccWirelessNetworkPreservation/masked
+=== RUN   TestAccWirelessNetworkPreservation/absent
+=== RUN   TestAccWirelessNetworkPreservation/open
+=== RUN   TestAccWirelessNetworkPreservation/unmanaged
+--- PASS: TestAccWirelessNetworkPreservation (30.45s)
+    --- PASS: TestAccWirelessNetworkPreservation/plaintext (6.64s)
+    --- PASS: TestAccWirelessNetworkPreservation/masked (6.58s)
+    --- PASS: TestAccWirelessNetworkPreservation/absent (7.48s)
+    --- PASS: TestAccWirelessNetworkPreservation/open (7.52s)
+    --- PASS: TestAccWirelessNetworkPreservation/unmanaged (2.23s)
+=== RUN   TestAccWirelessNetworkVLANState
+=== RUN   TestAccWirelessNetworkVLANState/default_clears_fields
+=== RUN   TestAccWirelessNetworkVLANState/default_retains_stale_fields
+=== RUN   TestAccWirelessNetworkVLANState/import_default
+--- PASS: TestAccWirelessNetworkVLANState (16.00s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_clears_fields (7.13s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_retains_stale_fields (6.48s)
+    --- PASS: TestAccWirelessNetworkVLANState/import_default (2.40s)
+PASS
