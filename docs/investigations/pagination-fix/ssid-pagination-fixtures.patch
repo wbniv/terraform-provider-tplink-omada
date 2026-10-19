@@ -1,0 +1,76 @@
+--- a/internal/resources/wireless_network_update_test.go
++++ b/internal/resources/wireless_network_update_test.go
+@@ -144,7 +144,7 @@
+ 					failure = tc.fail == "read" || (tc.fail == "readback" && writes > 0)
+ 					items := []any{current}
+ 					if tc.fail == "missing" {
+-						items = nil
++						items = []any{}
+ 					}
+ 					result = map[string]any{"data": items, "totalRows": len(items)}
+ 					if tc.array {
+@@ -156,7 +156,7 @@
+ 					if tc.fail == "duplicate" {
+ 						items = append(items, map[string]any{"id": "duplicate", "vlan": 30})
+ 					}
+-					result = map[string]any{"data": items}
++					result = map[string]any{"data": items, "totalRows": len(items)}
+ 				case req.Method == http.MethodPatch && req.URL.Path == collection+"/ssid":
+ 					writes++
+ 					if err := json.NewDecoder(req.Body).Decode(&sent); err != nil {
+--- a/internal/resources/wireless_network_vlan_test.go
++++ b/internal/resources/wireless_network_vlan_test.go
+@@ -67,7 +67,7 @@
+ 					case req.URL.Path == "/controller/api/v2/login":
+ 						result = map[string]any{"token": "token"}
+ 					case req.Method == http.MethodGet && req.URL.Path == "/controller/api/v2/sites/site/setting/wlans/group/ssids":
+-						result = map[string]any{"data": []any{ssid}}
++						result = map[string]any{"data": []any{ssid}, "totalRows": 1}
+ 					default:
+ 						t.Errorf("unexpected request %s %s", req.Method, req.URL.Path)
+ 					}
+@@ -196,9 +196,9 @@
+ 					case req.URL.Path == "/controller/api/v2/login":
+ 						result = map[string]any{"token": "token"}
+ 					case req.Method == http.MethodGet && req.URL.Path == collection:
+-						result = map[string]any{"data": []any{current}}
++						result = map[string]any{"data": []any{current}, "totalRows": 1}
+ 					case req.Method == http.MethodGet && req.URL.Path == "/controller/api/v2/sites/site/setting/lan/networks":
+-						result = map[string]any{"data": []any{map[string]any{"id": "network-20", "vlan": 20}}}
++						result = map[string]any{"data": []any{map[string]any{"id": "network-20", "vlan": 20}}, "totalRows": 1}
+ 					case (req.Method == http.MethodPost && req.URL.Path == collection) || (req.Method == http.MethodPatch && req.URL.Path == collection+"/ssid"):
+ 						writes.Add(1)
+ 						var raw map[string]any
+--- a/internal/provider/wireless_network_create_test.go
++++ b/internal/provider/wireless_network_create_test.go
+@@ -56,7 +56,7 @@
+ 					if current != nil {
+ 						items = append(items, current)
+ 					}
+-					result = map[string]any{"data": items}
++					result = map[string]any{"data": items, "totalRows": len(items)}
+ 				case r.Method == http.MethodDelete && r.URL.Path == collection+"/ssid":
+ 					current = nil
+ 				default:
+--- a/internal/provider/wireless_network_vlan_test.go
++++ b/internal/provider/wireless_network_vlan_test.go
+@@ -77,7 +77,7 @@
+ 				case r.Method == http.MethodGet && r.URL.Path == collection:
+ 					result = map[string]any{"data": []any{current}, "totalRows": 1}
+ 				case r.Method == http.MethodGet && r.URL.Path == "/controller/api/v2/sites/site/setting/lan/networks":
+-					result = map[string]any{"data": []any{map[string]any{"id": "network-20", "vlan": 20}}}
++					result = map[string]any{"data": []any{map[string]any{"id": "network-20", "vlan": 20}}, "totalRows": 1}
+ 				case r.Method == http.MethodPatch && r.URL.Path == collection+"/ssid":
+ 					writes++
+ 					var next map[string]any
+--- a/internal/provider/wireless_network_preservation_test.go
++++ b/internal/provider/wireless_network_preservation_test.go
+@@ -68,7 +68,7 @@
+ 				case r.Method == http.MethodGet && r.URL.Path == collection:
+ 					result = map[string]any{"data": []any{snapshot()}, "totalRows": 1}
+ 				case r.Method == http.MethodGet && r.URL.Path == "/controller/api/v2/sites/site/setting/lan/networks":
+-					result = map[string]any{"data": []any{map[string]any{"id": "network-30", "vlan": 30}}}
++					result = map[string]any{"data": []any{map[string]any{"id": "network-30", "vlan": 30}}, "totalRows": 1}
+ 				case r.Method == http.MethodPatch && r.URL.Path == collection+"/ssid":
+ 					var body map[string]any
+ 					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {

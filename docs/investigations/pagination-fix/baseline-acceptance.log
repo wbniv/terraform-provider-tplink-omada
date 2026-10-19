@@ -1,0 +1,55 @@
+go: downloading github.com/hashicorp/terraform-plugin-framework v1.19.0
+go: downloading github.com/hashicorp/terraform-plugin-go v0.31.0
+go: downloading github.com/hashicorp/terraform-plugin-testing v1.15.0
+go: downloading github.com/google/go-cmp v0.7.0
+go: downloading github.com/hashicorp/go-hclog v1.6.3
+go: downloading github.com/hashicorp/go-version v1.8.0
+go: downloading github.com/hashicorp/terraform-json v0.27.2
+go: downloading github.com/hashicorp/terraform-exec v0.25.0
+go: downloading github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.0
+go: downloading github.com/mitchellh/go-testing-interface v1.14.1
+go: downloading github.com/hashicorp/go-cty v1.5.0
+go: downloading github.com/hashicorp/go-uuid v1.0.3
+go: downloading github.com/vmihailenco/msgpack v4.0.4+incompatible
+go: downloading github.com/hashicorp/hcl/v2 v2.24.0
+go: downloading github.com/hashicorp/hc-install v0.9.3
+go: downloading github.com/hashicorp/go-plugin v1.7.0
+go: downloading google.golang.org/grpc v1.79.2
+go: downloading github.com/vmihailenco/tagparser/v2 v2.0.0
+go: downloading github.com/mitchellh/copystructure v1.2.0
+go: downloading github.com/mitchellh/mapstructure v1.5.0
+go: downloading golang.org/x/text v0.34.0
+go: downloading github.com/agext/levenshtein v1.2.2
+go: downloading github.com/apparentlymart/go-textseg/v15 v15.0.0
+go: downloading github.com/mitchellh/go-wordwrap v1.0.1
+go: downloading golang.org/x/sys v0.41.0
+go: downloading github.com/hashicorp/terraform-registry-address v0.4.0
+go: downloading google.golang.org/protobuf v1.36.11
+go: downloading github.com/golang/protobuf v1.5.4
+go: downloading github.com/hashicorp/yamux v0.1.2
+go: downloading github.com/oklog/run v1.1.0
+go: downloading google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217
+go: downloading golang.org/x/net v0.49.0
+go: downloading golang.org/x/crypto v0.48.0
+go: downloading github.com/cloudflare/circl v1.6.1
+=== RUN   TestAccPagination
+=== RUN   TestAccPagination/import_last_page
+    pagination_test.go:83: Step 1/5 error: Error running pre-apply plan: exit status 1
+        
+        Error: Error importing network
+        
+        network "network-200" not found
+=== RUN   TestAccPagination/first_page_failure_recovery
+    pagination_test.go:83: Step 3/5, expected an error but got none
+=== RUN   TestAccPagination/data_source
+    pagination_test.go:67: Step 1/1 error: Check failed: Check 1/2 error: data.omada_networks.test: Attribute 'networks.#' expected "201", got "100"
+        Check 2/2 error: Error in test check: data.omada_networks.test: Attribute 'networks.200.id' not found
+        Test check address "networks.200.id" likely indexes into TypeSet
+        This is currently not possible in the SDK
+--- FAIL: TestAccPagination (8.48s)
+    --- FAIL: TestAccPagination/import_last_page (4.10s)
+    --- FAIL: TestAccPagination/first_page_failure_recovery (3.50s)
+    --- FAIL: TestAccPagination/data_source (0.89s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/provider	8.501s
+FAIL

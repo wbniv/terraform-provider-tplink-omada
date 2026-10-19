@@ -61,7 +61,7 @@ flowchart TD
 - [x] Run all E credential scenarios and combined D1–D3 acceptance. If older test assertions require arbitrary server messages, retain an explicit compatibility-test adjustment rather than weakening redaction or silently claiming unchanged tests passed.
 - [x] Finish evidence/tracker updates, final link/hash checks, and cleanup. All nine source hashes match the tested container; prior code worktrees remain clean. The disposable container and host archives/patches are removed.
 
-### Conditional — Submission and hardware
+### Conditional — Submission and controller validation
 
 - [x] Commit/push F as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31); all nine committed hashes match the tested sources and the fork ref is verified.
 - [ ] Verify accepted envelopes, actual expiry status/codes, reverse-proxy behavior, response sizes, and empty responses on a controlled controller. Mock tests do not establish firmware compatibility.
@@ -80,4 +80,4 @@ No general API not-found code mapping or empty-body success contract has been es
 - [x] Formatting/vet/build/full unit and full client race checks pass in Docker.
 - [x] Complete combined 41-scenario/205-step verification with the explicit six-assertion SSID diagnostic compatibility patch; see [F evidence](../investigations/http-response-fix/README.md).
 
-Next implementation is G: complete pagination (F09), then confirmed disappearance (F10). F is committed and pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31); hardware and upstream gates remain open. The six-assertion SSID test adjustment must accompany integration of D1–D3 with F.
+G1 complete pagination is now locally verified and pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6); see the [G1/G2 plan](pagination-and-disappearance.md). Next is software-controller validation, then G2 confirmed disappearance (F10). F is committed and pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31); controller validation and upstream gates remain open. The six-assertion SSID test adjustment must accompany integration of D1–D3 with F.

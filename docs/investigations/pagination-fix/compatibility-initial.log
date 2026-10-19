@@ -1,0 +1,100 @@
+?   	github.com/terraform-provider-tplink-omada	[no test files]
+ok  	github.com/terraform-provider-tplink-omada/internal/client	10.725s
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	0.092s
+--- FAIL: TestWirelessNetworkPreservation (0.18s)
+    --- FAIL: TestWirelessNetworkPreservation/VLAN_change (0.01s)
+        wireless_network_update_test.go:205: diagnostics: [{looking up VLAN network: invalid API response: collection has missing, invalid or duplicate identities Cannot safely update wireless network}]
+    --- FAIL: TestWirelessNetworkPreservation/VLAN_network_missing (0.00s)
+        wireless_network_update_test.go:208: missing diagnostic "no network found": [{looking up VLAN network: invalid API response: collection has missing, invalid or duplicate identities Cannot safely update wireless network}]
+    --- FAIL: TestWirelessNetworkPreservation/VLAN_network_ambiguous (0.00s)
+        wireless_network_update_test.go:208: missing diagnostic "multiple networks": [{looking up VLAN network: invalid API response: collection has missing, invalid or duplicate identities Cannot safely update wireless network}]
+    --- FAIL: TestWirelessNetworkPreservation/missing_SSID (0.00s)
+        wireless_network_update_test.go:208: missing diagnostic "not found": [{invalid API response: collection data must be an array Error reading wireless network before update}]
+--- FAIL: TestWirelessNetworkVLANState (0.17s)
+    --- FAIL: TestWirelessNetworkVLANState/default/refresh (0.00s)
+        wireless_network_vlan_test.go:127: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/default/import (0.00s)
+        wireless_network_vlan_test.go:134: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error importing wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/default/data_source (0.00s)
+        wireless_network_vlan_test.go:97: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error listing wireless networks}]
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_stale_fields/refresh (0.00s)
+        wireless_network_vlan_test.go:127: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_stale_fields/import (0.00s)
+        wireless_network_vlan_test.go:134: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error importing wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_stale_fields/data_source (0.00s)
+        wireless_network_vlan_test.go:97: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error listing wireless networks}]
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_invalid_stale_VLAN/refresh (0.00s)
+        wireless_network_vlan_test.go:127: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_invalid_stale_VLAN/import (0.00s)
+        wireless_network_vlan_test.go:134: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error importing wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/default_ignores_invalid_stale_VLAN/data_source (0.00s)
+        wireless_network_vlan_test.go:97: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error listing wireless networks}]
+    --- FAIL: TestWirelessNetworkVLANState/custom_bridge/refresh (0.00s)
+        wireless_network_vlan_test.go:127: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/custom_bridge/import (0.00s)
+        wireless_network_vlan_test.go:134: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error importing wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/custom_bridge/data_source (0.00s)
+        wireless_network_vlan_test.go:97: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error listing wireless networks}]
+    --- FAIL: TestWirelessNetworkVLANState/bridge_precedes_stale_current/refresh (0.00s)
+        wireless_network_vlan_test.go:127: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/bridge_precedes_stale_current/import (0.00s)
+        wireless_network_vlan_test.go:134: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error importing wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/bridge_precedes_stale_current/data_source (0.00s)
+        wireless_network_vlan_test.go:97: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error listing wireless networks}]
+    --- FAIL: TestWirelessNetworkVLANState/custom_fallback/refresh (0.00s)
+        wireless_network_vlan_test.go:127: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/custom_fallback/import (0.00s)
+        wireless_network_vlan_test.go:134: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error importing wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/custom_fallback/data_source (0.00s)
+        wireless_network_vlan_test.go:97: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error listing wireless networks}]
+    --- FAIL: TestWirelessNetworkVLANState/zero_bridge_fallback/refresh (0.00s)
+        wireless_network_vlan_test.go:127: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/zero_bridge_fallback/import (0.00s)
+        wireless_network_vlan_test.go:134: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error importing wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/zero_bridge_fallback/data_source (0.00s)
+        wireless_network_vlan_test.go:97: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error listing wireless networks}]
+    --- FAIL: TestWirelessNetworkVLANState/matching_fallback_list/refresh (0.00s)
+        wireless_network_vlan_test.go:127: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/matching_fallback_list/import (0.00s)
+        wireless_network_vlan_test.go:134: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error importing wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/matching_fallback_list/data_source (0.00s)
+        wireless_network_vlan_test.go:97: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error listing wireless networks}]
+    --- FAIL: TestWirelessNetworkVLANState/lowest_VLAN/refresh (0.00s)
+        wireless_network_vlan_test.go:127: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/lowest_VLAN/import (0.00s)
+        wireless_network_vlan_test.go:134: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error importing wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/lowest_VLAN/data_source (0.00s)
+        wireless_network_vlan_test.go:97: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error listing wireless networks}]
+    --- FAIL: TestWirelessNetworkVLANState/highest_VLAN/refresh (0.00s)
+        wireless_network_vlan_test.go:127: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/highest_VLAN/import (0.00s)
+        wireless_network_vlan_test.go:134: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error importing wireless network}]
+    --- FAIL: TestWirelessNetworkVLANState/highest_VLAN/data_source (0.00s)
+        wireless_network_vlan_test.go:97: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error listing wireless networks}]
+--- FAIL: TestWirelessNetworkVLANWriteReadback (0.03s)
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/create/applied (0.00s)
+        wireless_network_vlan_test.go:259: diagnostics: [{looking up VLAN network: invalid API response: collection has missing, invalid or duplicate identities Cannot configure wireless network VLAN}]
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/create/rejected (0.00s)
+        wireless_network_vlan_test.go:264: writes = 0, want 1
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/create/unreadable (0.00s)
+        wireless_network_vlan_test.go:264: writes = 0, want 1
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/create/default_applied (0.00s)
+        wireless_network_vlan_test.go:259: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error creating wireless network}]
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/create/default_rejected (0.00s)
+        wireless_network_vlan_test.go:276: observed VLAN = <null>, want 20
+        wireless_network_vlan_test.go:283: readback error lost the created object's identity
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/update/applied (0.00s)
+        wireless_network_vlan_test.go:252: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network before update}]
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/update/rejected (0.00s)
+        wireless_network_vlan_test.go:264: writes = 0, want 1
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/update/unreadable (0.00s)
+        wireless_network_vlan_test.go:264: writes = 0, want 1
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/update/default_applied (0.00s)
+        wireless_network_vlan_test.go:252: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network before update}]
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/update/default_rejected (0.00s)
+        wireless_network_vlan_test.go:264: writes = 0, want 1
+    --- FAIL: TestWirelessNetworkVLANWriteReadback/update/unknown_resolves_from_readback (0.00s)
+        wireless_network_vlan_test.go:252: diagnostics: [{invalid API response: collection has missing, invalid or duplicate identities Error reading wireless network before update}]
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/resources	1.005s
+FAIL

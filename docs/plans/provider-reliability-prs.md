@@ -11,7 +11,7 @@ This is the working record for fixing the [code-review findings](../investigatio
 - [x] Implement and locally verify D3/F13, WLAN-group replacement, on `fix/ssid-group-identity` in `/home/will/terraform-provider-tplink-omada-ssid-group`, stacked on D2 `0bbd076`. Committed and pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e); [D3 evidence and PR notes](../investigations/ssid-group-fix/README.md).
 - [x] Implement and locally verify E, credential rotation/state and settings preservation (F05/F06/F16), on `fix/site-credentials` in `/home/will/terraform-provider-tplink-omada-credentials`, based on A `52ed681`. E is committed and pushed as [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5); [plan](site-credentials.md) and [evidence/PR notes](../investigations/site-credentials-fix/README.md) record 48 direct cases, 12 Terraform scenarios, and combined A + D1–D3 + E verification.
 - [x] Implement and locally verify F/F12 on `fix/http-responses` in `/home/will/terraform-provider-tplink-omada-http-responses`, based on E `8f24c37` (including A). F is committed and pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31); [plan](http-responses.md) and [evidence](../investigations/http-response-fix/README.md) record 223 client cases, full Go/race gates, and 41 combined Terraform scenarios/205 steps.
-- [ ] Next implementation: G/F09 complete pagination, followed by F10 confirmed resource disappearance. Hardware/submission gates remain open for A–F.
+- [x] G1/F09 complete pagination is implemented and locally verified on `fix/complete-pagination`, based on F `c210dec`; pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6). [Evidence](../investigations/pagination-fix/README.md): 94 client cases, full Go/race gates, three new Terraform scenarios, and 44 combined scenarios/216 steps pass. See the [G1/G2 plan](pagination-and-disappearance.md). Next: software-controller lab validation, then G2/F10 confirmed disappearance separately. Software-controller and physical-device validation are tracked separately.
 - [x] Implement and locally verify C, AP radio preservation (F03), in `/home/will/terraform-provider-tplink-omada-ap-radios` on `fix/ap-radio-updates`, based on `6bc71b3`. [C evidence and review notes](../investigations/ap-radio-fix/README.md).
 - [ ] Finish C's controlled-AP validation and PR-submission review. A, B, and C are committed and pushed to Will's fork; no upstream PR has been opened.
 - [x] Implement and locally verify PR B in worktree `/home/will/terraform-provider-tplink-omada-switch-ports`, branch `fix/switch-port-updates`, based directly on `6bc71b3`. A remains isolated on `fix/client-authentication`. [B evidence and review notes](../investigations/switch-port-fix/README.md).
@@ -26,7 +26,7 @@ This is the working record for fixing the [code-review findings](../investigatio
 
 ## Commits and fork branches — 2026-10-19
 
-Will authorized commit and push. Upstream does not grant this account push access, so the branches are published to [Will's fork](https://github.com/wbniv/terraform-provider-tplink-omada). All eight code commits retain the validated file hashes. A–D1 are based directly on `6bc71b3`; D2 stacks on D1, D3 stacks on D2, E stacks on A, and F stacks on E.
+Will authorized commit and push. Upstream does not grant this account push access, so the branches are published to [Will's fork](https://github.com/wbniv/terraform-provider-tplink-omada). All nine code commits retain the validated file hashes. A–D1 are based directly on `6bc71b3`; D2 stacks on D1, D3 stacks on D2, E stacks on A, F stacks on E, and G1 stacks on F.
 
 | Work | Branch | Commit | Scope |
 | --- | --- | --- | --- |
@@ -38,6 +38,7 @@ Will authorized commit and push. Upstream does not grant this account push acces
 | D3 | `fix/ssid-group-identity` | [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e) | Seven group-identity source/test/documentation/template/example files; based on D2 |
 | E | `fix/site-credentials` | [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5) | Fifteen credential/settings source/test/fixture/documentation/template/example files; based on A |
 | F | `fix/http-responses` | [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31) | Nine HTTP source/test/guide files plus generated README history; based on E |
+| G1 | `fix/complete-pagination` | [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6) | Seven pagination source/test/guide files plus generated README history; based on F |
 
 D2 is committed and pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3) on `fork/fix/ssid-vlan-state`, based on D1 `80991a5`. Its nine committed file hashes match the recorded tested sources.
 
@@ -61,10 +62,11 @@ These are local work labels, not GitHub issue or PR numbers. Keep each patch rev
 | A | F01, F07, F08 | Certificate deadlock, consistent session tokens, concurrent refresh, cancellation, multipart retry | None | Implemented and locally verified; controller test pending |
 | B | F02 | Preserve switch-port VLAN lists and honor supported writable fields | Stored #23 compatibility verified | Implemented and locally verified; controller test pending |
 | C | F03 | Preserve omitted/unknown AP radio settings through Terraform updates | A compatibility verified | Implemented and locally verified; controller test pending |
-| D | F04, F13, F14 | SSID update preservation, WLAN-group identity, VLAN drift | D1 → D2 → D3; A + D1 + D2 + D3 verified; hardware pending | D1, D2, and D3 pushed |
-| E | F05, F06, F16 | Site and site-settings credential ownership/state; preserve unrelated settings | Stacked on A; A + D1–D3 + E verified | Implemented, locally verified, and pushed; hardware pending |
-| F | F12 | HTTP status/envelope validation, typed errors, bounded diagnostics, redirect protection | Stacked on E, includes A; D compatibility verified with recorded test adjustment | Implemented and locally verified; pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31); hardware pending |
-| G | F09, F10 | Complete pagination and trustworthy missing-resource handling | F before missing-object classification | Open |
+| D | F04, F13, F14 | SSID update preservation, WLAN-group identity, VLAN drift | D1 → D2 → D3; A + D1 + D2 + D3 verified; controller/device validation pending | D1, D2, and D3 pushed |
+| E | F05, F06, F16 | Site and site-settings credential ownership/state; preserve unrelated settings | Stacked on A; A + D1–D3 + E verified | Implemented, locally verified, and pushed; controller/device validation pending |
+| F | F12 | HTTP status/envelope validation, typed errors, bounded diagnostics, redirect protection | Stacked on E, includes A; D compatibility verified with recorded test adjustment | Implemented and locally verified; pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31); controller validation pending |
+| G1 | F09 | Complete pagination across ten collections and raw SSID lookup | Stacked on F; D integration recorded | Implemented and locally verified; pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6) |
+| G2 | F10 | Trustworthy missing-resource handling and state removal | G1 complete discovery; F response classification | Planned; not started |
 | H | F11 | Explicit handling of same-name network adoption and actual state | G for complete discovery | Open |
 | I | F15, found during B | Persistent switch update plan when the entire ports attribute is omitted after import | Investigate schema/planning interaction | Open; reproduced on baseline and B |
 
@@ -173,9 +175,11 @@ Detailed plan: [HTTP response validation](http-responses.md), including status/e
 
 ### G — Pagination and disappearance
 
-- [ ] Iterate all pages for every affected collection; retain direct-array compatibility.
-- [ ] Test more than 100 objects, empty collections, later-page errors, duplicate/stalled pages, and metadata variations.
-- [ ] Never treat a partial or failed list as proof that a resource is absent.
+Detailed plan: [G1 complete pagination and G2 confirmed disappearance](pagination-and-disappearance.md). G1 is the current patch; G2 follows after complete discovery is verified.
+
+- [x] Iterate all pages for every affected collection; retain direct-array compatibility.
+- [x] Test more than 100 objects, empty collections, later-page errors, duplicate/stalled pages, and metadata variations.
+- [x] Never treat a partial or failed list as proof that a resource is absent.
 - [ ] Remove confirmed absent resources from state during Read; keep state on transient/authentication errors.
 - [ ] Audit all resources and make already-absent deletes idempotent where supported.
 - [ ] Add Terraform refresh/recreation acceptance coverage for a remotely deleted object.
@@ -260,5 +264,6 @@ Preserve the earlier [open-PR plan](open-pull-requests.md) and its recorded chec
 | D3 | Base D2 `0bbd076`; `fix/ssid-group-identity`, `ec2d949`, pushed to fork | Go 1.25.6 full gates; 21 direct cases; 13 D3 Terraform scenarios plus all 11 D1/D2 scenarios; A + D1 + D2 + D3 unit/acceptance checks | Pass on 2026-10-19; seven host/container hashes match; D2 baseline has 10 direct-case and nine new Terraform failures; no hardware; [evidence](../investigations/ssid-group-fix/README.md) |
 | E | Base A `52ed681`; `fix/site-credentials`, `8f24c37`, pushed to fork | Go 1.25.6 full gates; 48 direct cases; 12 Terraform 1.15.8 scenarios/65 steps; A + D1–D3 + E full unit/36 scenarios/185 steps | Pass on 2026-10-19; 15 host/container hashes match; A baseline has 44 direct-case and all 12 Terraform-scenario failures; no hardware; [evidence](../investigations/site-credentials-fix/README.md) |
 | F | Base E `8f24c37`; `fix/http-responses`, `c210dec`, pushed to fork | Go 1.25.6 full/race gates; 214 behavior + nine typed/read-bound cases; Terraform 1.15.8 five F + 12 E + 24 D scenarios/205 steps | Pass on 2026-10-19; nine host/container hashes match; baseline has 149/214 behavioral failures and all five Terraform failures; combined D tests need the recorded six diagnostic assertion changes; no hardware; [evidence](../investigations/http-response-fix/README.md) |
+| G1 | Base F `c210dec`; `fix/complete-pagination`, pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6) | Go 1.25.6 full/race gates; 94 client cases; three Terraform scenarios/11 steps; combined 44 scenarios/216 steps | Pass on 2026-10-19; seven host/container hashes match; baseline 69 client failures and all three Terraform failures; recorded D client integration and fixture patches; no real controller; [evidence](../investigations/pagination-fix/README.md) |
 
 Keep the baseline evidence unchanged. Add patch evidence separately, and distinguish implemented, locally verified, controller-verified, submitted, and merged states.

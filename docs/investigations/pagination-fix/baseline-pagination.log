@@ -1,0 +1,268 @@
+=== RUN   TestPaginationCollections
+=== RUN   TestPaginationCollections/sites/201_rows
+    pagination_test.go:114: n=100 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/sites/capped_pages
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/sites/no_metadata
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 4 requests
+=== RUN   TestPaginationCollections/sites/direct_array
+=== RUN   TestPaginationCollections/sites/empty
+=== RUN   TestPaginationCollections/sites/late_failure
+    pagination_test.go:99: partial success: n=100 err=<nil>
+=== RUN   TestPaginationCollections/networks/201_rows
+    pagination_test.go:114: n=100 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/networks/capped_pages
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/networks/no_metadata
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 4 requests
+=== RUN   TestPaginationCollections/networks/direct_array
+=== RUN   TestPaginationCollections/networks/empty
+=== RUN   TestPaginationCollections/networks/late_failure
+    pagination_test.go:99: partial success: n=100 err=<nil>
+=== RUN   TestPaginationCollections/groups/201_rows
+    pagination_test.go:114: n=100 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/groups/capped_pages
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/groups/no_metadata
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 4 requests
+=== RUN   TestPaginationCollections/groups/direct_array
+=== RUN   TestPaginationCollections/groups/empty
+=== RUN   TestPaginationCollections/groups/late_failure
+    pagination_test.go:99: partial success: n=100 err=<nil>
+=== RUN   TestPaginationCollections/SSIDs/201_rows
+    pagination_test.go:114: n=100 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/SSIDs/capped_pages
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/SSIDs/no_metadata
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 4 requests
+=== RUN   TestPaginationCollections/SSIDs/direct_array
+=== RUN   TestPaginationCollections/SSIDs/empty
+=== RUN   TestPaginationCollections/SSIDs/late_failure
+    pagination_test.go:99: partial success: n=100 err=<nil>
+=== RUN   TestPaginationCollections/profiles/201_rows
+    pagination_test.go:114: n=100 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/profiles/capped_pages
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/profiles/no_metadata
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 4 requests
+=== RUN   TestPaginationCollections/profiles/direct_array
+=== RUN   TestPaginationCollections/profiles/empty
+=== RUN   TestPaginationCollections/profiles/late_failure
+    pagination_test.go:99: partial success: n=100 err=<nil>
+=== RUN   TestPaginationCollections/ACLs/201_rows
+    pagination_test.go:114: n=100 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/ACLs/capped_pages
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/ACLs/no_metadata
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 4 requests
+=== RUN   TestPaginationCollections/ACLs/direct_array
+    pagination_test.go:114: n=0 calls=1 err=decoding ACL list: json: cannot unmarshal array into Go value of type client.ACLListResult; want 201 rows, 1 requests
+=== RUN   TestPaginationCollections/ACLs/empty
+=== RUN   TestPaginationCollections/ACLs/late_failure
+    pagination_test.go:99: partial success: n=100 err=<nil>
+=== RUN   TestPaginationCollections/IP_groups/201_rows
+    pagination_test.go:114: n=100 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/IP_groups/capped_pages
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/IP_groups/no_metadata
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 4 requests
+=== RUN   TestPaginationCollections/IP_groups/direct_array
+=== RUN   TestPaginationCollections/IP_groups/empty
+=== RUN   TestPaginationCollections/IP_groups/late_failure
+    pagination_test.go:99: partial success: n=100 err=<nil>
+=== RUN   TestPaginationCollections/mDNS/201_rows
+    pagination_test.go:114: n=100 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/mDNS/capped_pages
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/mDNS/no_metadata
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 4 requests
+=== RUN   TestPaginationCollections/mDNS/direct_array
+    pagination_test.go:114: n=0 calls=1 err=decoding mDNS list: json: cannot unmarshal array into Go value of type client.MDNSListResult; want 201 rows, 1 requests
+=== RUN   TestPaginationCollections/mDNS/empty
+=== RUN   TestPaginationCollections/mDNS/late_failure
+    pagination_test.go:99: partial success: n=100 err=<nil>
+=== RUN   TestPaginationCollections/IdPs/201_rows
+    pagination_test.go:114: n=100 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/IdPs/capped_pages
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/IdPs/no_metadata
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 4 requests
+=== RUN   TestPaginationCollections/IdPs/direct_array
+=== RUN   TestPaginationCollections/IdPs/empty
+=== RUN   TestPaginationCollections/IdPs/late_failure
+    pagination_test.go:99: partial success: n=100 err=<nil>
+=== RUN   TestPaginationCollections/roles/201_rows
+    pagination_test.go:114: n=100 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/roles/capped_pages
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 3 requests
+=== RUN   TestPaginationCollections/roles/no_metadata
+    pagination_test.go:114: n=73 calls=1 err=<nil>; want 201 rows, 4 requests
+=== RUN   TestPaginationCollections/roles/direct_array
+=== RUN   TestPaginationCollections/roles/empty
+=== RUN   TestPaginationCollections/roles/late_failure
+    pagination_test.go:99: partial success: n=100 err=<nil>
+--- FAIL: TestPaginationCollections (0.28s)
+    --- FAIL: TestPaginationCollections/sites/201_rows (0.00s)
+    --- FAIL: TestPaginationCollections/sites/capped_pages (0.00s)
+    --- FAIL: TestPaginationCollections/sites/no_metadata (0.00s)
+    --- PASS: TestPaginationCollections/sites/direct_array (0.00s)
+    --- PASS: TestPaginationCollections/sites/empty (0.00s)
+    --- FAIL: TestPaginationCollections/sites/late_failure (0.00s)
+    --- FAIL: TestPaginationCollections/networks/201_rows (0.00s)
+    --- FAIL: TestPaginationCollections/networks/capped_pages (0.00s)
+    --- FAIL: TestPaginationCollections/networks/no_metadata (0.00s)
+    --- PASS: TestPaginationCollections/networks/direct_array (0.00s)
+    --- PASS: TestPaginationCollections/networks/empty (0.00s)
+    --- FAIL: TestPaginationCollections/networks/late_failure (0.01s)
+    --- FAIL: TestPaginationCollections/groups/201_rows (0.00s)
+    --- FAIL: TestPaginationCollections/groups/capped_pages (0.00s)
+    --- FAIL: TestPaginationCollections/groups/no_metadata (0.00s)
+    --- PASS: TestPaginationCollections/groups/direct_array (0.00s)
+    --- PASS: TestPaginationCollections/groups/empty (0.02s)
+    --- FAIL: TestPaginationCollections/groups/late_failure (0.01s)
+    --- FAIL: TestPaginationCollections/SSIDs/201_rows (0.00s)
+    --- FAIL: TestPaginationCollections/SSIDs/capped_pages (0.00s)
+    --- FAIL: TestPaginationCollections/SSIDs/no_metadata (0.01s)
+    --- PASS: TestPaginationCollections/SSIDs/direct_array (0.00s)
+    --- PASS: TestPaginationCollections/SSIDs/empty (0.00s)
+    --- FAIL: TestPaginationCollections/SSIDs/late_failure (0.01s)
+    --- FAIL: TestPaginationCollections/profiles/201_rows (0.01s)
+    --- FAIL: TestPaginationCollections/profiles/capped_pages (0.01s)
+    --- FAIL: TestPaginationCollections/profiles/no_metadata (0.01s)
+    --- PASS: TestPaginationCollections/profiles/direct_array (0.01s)
+    --- PASS: TestPaginationCollections/profiles/empty (0.00s)
+    --- FAIL: TestPaginationCollections/profiles/late_failure (0.00s)
+    --- FAIL: TestPaginationCollections/ACLs/201_rows (0.00s)
+    --- FAIL: TestPaginationCollections/ACLs/capped_pages (0.00s)
+    --- FAIL: TestPaginationCollections/ACLs/no_metadata (0.00s)
+    --- FAIL: TestPaginationCollections/ACLs/direct_array (0.01s)
+    --- PASS: TestPaginationCollections/ACLs/empty (0.00s)
+    --- FAIL: TestPaginationCollections/ACLs/late_failure (0.01s)
+    --- FAIL: TestPaginationCollections/IP_groups/201_rows (0.00s)
+    --- FAIL: TestPaginationCollections/IP_groups/capped_pages (0.00s)
+    --- FAIL: TestPaginationCollections/IP_groups/no_metadata (0.00s)
+    --- PASS: TestPaginationCollections/IP_groups/direct_array (0.00s)
+    --- PASS: TestPaginationCollections/IP_groups/empty (0.00s)
+    --- FAIL: TestPaginationCollections/IP_groups/late_failure (0.00s)
+    --- FAIL: TestPaginationCollections/mDNS/201_rows (0.00s)
+    --- FAIL: TestPaginationCollections/mDNS/capped_pages (0.00s)
+    --- FAIL: TestPaginationCollections/mDNS/no_metadata (0.00s)
+    --- FAIL: TestPaginationCollections/mDNS/direct_array (0.00s)
+    --- PASS: TestPaginationCollections/mDNS/empty (0.00s)
+    --- FAIL: TestPaginationCollections/mDNS/late_failure (0.01s)
+    --- FAIL: TestPaginationCollections/IdPs/201_rows (0.00s)
+    --- FAIL: TestPaginationCollections/IdPs/capped_pages (0.00s)
+    --- FAIL: TestPaginationCollections/IdPs/no_metadata (0.00s)
+    --- PASS: TestPaginationCollections/IdPs/direct_array (0.00s)
+    --- PASS: TestPaginationCollections/IdPs/empty (0.00s)
+    --- FAIL: TestPaginationCollections/IdPs/late_failure (0.00s)
+    --- FAIL: TestPaginationCollections/roles/201_rows (0.01s)
+    --- FAIL: TestPaginationCollections/roles/capped_pages (0.01s)
+    --- FAIL: TestPaginationCollections/roles/no_metadata (0.01s)
+    --- PASS: TestPaginationCollections/roles/direct_array (0.00s)
+    --- PASS: TestPaginationCollections/roles/empty (0.01s)
+    --- FAIL: TestPaginationCollections/roles/late_failure (0.00s)
+=== RUN   TestPaginationInvalid
+=== RUN   TestPaginationInvalid/null_result
+    pagination_test.go:169: unsafe success/partial collection: rows=[] err=<nil>
+=== RUN   TestPaginationInvalid/missing_data
+=== RUN   TestPaginationInvalid/null_data
+    pagination_test.go:169: unsafe success/partial collection: rows=[] err=<nil>
+=== RUN   TestPaginationInvalid/object_data
+=== RUN   TestPaginationInvalid/null_total
+    pagination_test.go:169: unsafe success/partial collection: rows=[] err=<nil>
+=== RUN   TestPaginationInvalid/negative_total
+    pagination_test.go:169: unsafe success/partial collection: rows=[] err=<nil>
+=== RUN   TestPaginationInvalid/fractional_total
+=== RUN   TestPaginationInvalid/string_total
+=== RUN   TestPaginationInvalid/empty_before_total
+    pagination_test.go:169: unsafe success/partial collection: rows=[] err=<nil>
+=== RUN   TestPaginationInvalid/over_total
+    pagination_test.go:169: unsafe success/partial collection: rows=[{one   0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/wrong_page
+    pagination_test.go:169: unsafe success/partial collection: rows=[{one   0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/null_page
+    pagination_test.go:169: unsafe success/partial collection: rows=[] err=<nil>
+=== RUN   TestPaginationInvalid/negative_size
+    pagination_test.go:169: unsafe success/partial collection: rows=[] err=<nil>
+=== RUN   TestPaginationInvalid/null_size
+    pagination_test.go:169: unsafe success/partial collection: rows=[] err=<nil>
+=== RUN   TestPaginationInvalid/duplicate_metadata
+    pagination_test.go:169: unsafe success/partial collection: rows=[{one   0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/null_row
+    pagination_test.go:169: unsafe success/partial collection: rows=[{   0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/missing_identity
+    pagination_test.go:169: unsafe success/partial collection: rows=[{ private-secret  0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/invalid_identity
+=== RUN   TestPaginationInvalid/invalid_typed_field
+=== RUN   TestPaginationInvalid/duplicate_within_page
+    pagination_test.go:169: unsafe success/partial collection: rows=[{one   0  <nil> false false} {one   0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/duplicate_array
+    pagination_test.go:169: unsafe success/partial collection: rows=[{one   0  <nil> false false} {one   0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/repeated_page
+    pagination_test.go:169: unsafe success/partial collection: rows=[{one   0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/changed_total
+    pagination_test.go:169: unsafe success/partial collection: rows=[{one   0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/missing_total_later
+    pagination_test.go:169: unsafe success/partial collection: rows=[{one   0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/new_total_later
+    pagination_test.go:169: unsafe success/partial collection: rows=[{one   0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/empty_later
+    pagination_test.go:169: unsafe success/partial collection: rows=[{one   0  <nil> false false}] err=<nil>
+=== RUN   TestPaginationInvalid/array_later
+    pagination_test.go:169: unsafe success/partial collection: rows=[{one   0  <nil> false false}] err=<nil>
+--- FAIL: TestPaginationInvalid (0.07s)
+    --- FAIL: TestPaginationInvalid/null_result (0.00s)
+    --- PASS: TestPaginationInvalid/missing_data (0.00s)
+    --- FAIL: TestPaginationInvalid/null_data (0.00s)
+    --- PASS: TestPaginationInvalid/object_data (0.00s)
+    --- FAIL: TestPaginationInvalid/null_total (0.00s)
+    --- FAIL: TestPaginationInvalid/negative_total (0.00s)
+    --- PASS: TestPaginationInvalid/fractional_total (0.00s)
+    --- PASS: TestPaginationInvalid/string_total (0.00s)
+    --- FAIL: TestPaginationInvalid/empty_before_total (0.00s)
+    --- FAIL: TestPaginationInvalid/over_total (0.01s)
+    --- FAIL: TestPaginationInvalid/wrong_page (0.00s)
+    --- FAIL: TestPaginationInvalid/null_page (0.00s)
+    --- FAIL: TestPaginationInvalid/negative_size (0.00s)
+    --- FAIL: TestPaginationInvalid/null_size (0.00s)
+    --- FAIL: TestPaginationInvalid/duplicate_metadata (0.00s)
+    --- FAIL: TestPaginationInvalid/null_row (0.00s)
+    --- FAIL: TestPaginationInvalid/missing_identity (0.00s)
+    --- PASS: TestPaginationInvalid/invalid_identity (0.00s)
+    --- PASS: TestPaginationInvalid/invalid_typed_field (0.00s)
+    --- FAIL: TestPaginationInvalid/duplicate_within_page (0.00s)
+    --- FAIL: TestPaginationInvalid/duplicate_array (0.00s)
+    --- FAIL: TestPaginationInvalid/repeated_page (0.00s)
+    --- FAIL: TestPaginationInvalid/changed_total (0.00s)
+    --- FAIL: TestPaginationInvalid/missing_total_later (0.00s)
+    --- FAIL: TestPaginationInvalid/new_total_later (0.00s)
+    --- FAIL: TestPaginationInvalid/empty_later (0.00s)
+    --- FAIL: TestPaginationInvalid/array_later (0.00s)
+=== RUN   TestPaginationLookupAndRaw
+=== RUN   TestPaginationLookupAndRaw/typed_network
+    pagination_test.go:211: lookup: <nil> network "row-100" not found
+=== RUN   TestPaginationLookupAndRaw/raw_SSID
+    pagination_test.go:221: SSID "row-100" not found
+=== RUN   TestPaginationLookupAndRaw/raw_direct_array
+    pagination_test.go:221: json: cannot unmarshal array into Go value of type client.PaginatedResult
+=== RUN   TestPaginationLookupAndRaw/site_resolution
+    pagination_test.go:216: resolve:  site "name-100" not found
+--- FAIL: TestPaginationLookupAndRaw (0.02s)
+    --- FAIL: TestPaginationLookupAndRaw/typed_network (0.00s)
+    --- FAIL: TestPaginationLookupAndRaw/raw_SSID (0.01s)
+    --- FAIL: TestPaginationLookupAndRaw/raw_direct_array (0.01s)
+    --- FAIL: TestPaginationLookupAndRaw/site_resolution (0.00s)
+=== RUN   TestPaginationCancellation
+--- PASS: TestPaginationCancellation (0.00s)
+=== RUN   TestPaginationBounds
+=== RUN   TestPaginationBounds/pages
+    pagination_test.go:263: expected bounded failure: rows=1 err=<nil>
+=== RUN   TestPaginationBounds/bytes
+    pagination_test.go:263: expected bounded failure: rows=1 err=<nil>
+--- FAIL: TestPaginationBounds (0.21s)
+    --- FAIL: TestPaginationBounds/pages (0.00s)
+    --- FAIL: TestPaginationBounds/bytes (0.21s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/client	0.621s
+FAIL

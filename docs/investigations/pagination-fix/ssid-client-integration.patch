@@ -1,0 +1,37 @@
+diff --git a/internal/client/client.go b/internal/client/client.go
+index c9b2c29..723f51d 100644
+--- a/internal/client/client.go
++++ b/internal/client/client.go
+@@ -186,7 +186,8 @@ type PSKSetting struct {
+ 
+ // VlanSetting holds VLAN configuration for an SSID.
+ type VlanSetting struct {
+-	Mode           int           `json:"mode"`
++	// A pointer distinguishes an explicit default mode (0) from missing/null data.
++	Mode           *int          `json:"mode"`
+ 	CustomConfig   *CustomConfig `json:"customConfig,omitempty"`
+ 	CurrentVlanId  int           `json:"currentVlanId,omitempty"`
+ 	CurrentVlanIds string        `json:"currentVlanIds,omitempty"`
+@@ -826,18 +822,13 @@ func (c *Client) UpdateWirelessNetwork(ctx context.Context, siteID, wlanGroupID,
+ 		delete(ssid, f)
+ 	}
+ 
+-	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPatch, fmt.Sprintf("/setting/wlans/%s/ssids/%s", wlanGroupID, ssidID), ssid)
++	_, err := c.doSiteRequest(ctx, siteID, http.MethodPatch, fmt.Sprintf("/setting/wlans/%s/ssids/%s", wlanGroupID, ssidID), ssid)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+-	if isEmptyResult(resp.Result) {
+-		return c.GetWirelessNetwork(ctx, siteID, wlanGroupID, ssidID)
+-	}
+-	var updated WirelessNetwork
+-	if err := json.Unmarshal(resp.Result, &updated); err != nil {
+-		return nil, fmt.Errorf("decoding updated SSID: %w", err)
+-	}
+-	return &updated, nil
++	// Some versions return an empty or partial PATCH result. Read the actual
++	// configuration rather than treating missing fields as false or zero.
++	return c.GetWirelessNetwork(ctx, siteID, wlanGroupID, ssidID)
+ }
+ 
+ // DeleteWirelessNetwork deletes an SSID.
