@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
@@ -330,25 +329,23 @@ func NewClient(baseURL, username, password string, skipTLSVerify bool) (*Client,
 func (c *Client) getControllerInfo(ctx context.Context) error {
 	url := fmt.Sprintf("%s/api/info", c.baseURL)
 
-	resp, err := c.httpClient.Get(url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return fmt.Errorf("GET %s: %w", url, err)
+		return &TransportError{operation: "creating discovery request", cause: err}
 	}
-	defer resp.Body.Close()
-
-	var apiResp APIResponse
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		return fmt.Errorf("decoding response: %w", err)
-	}
-	if apiResp.ErrorCode != 0 {
-		return fmt.Errorf("API error %d: %s", apiResp.ErrorCode, apiResp.Msg)
+	apiResp, err := c.doAPIRequest(req)
+	if err != nil {
+		return err
 	}
 
 	var info ControllerInfo
 	if err := json.Unmarshal(apiResp.Result, &info); err != nil {
-		return fmt.Errorf("decoding controller info: %w", err)
+		return &ProtocolError{reason: "invalid controller info result"}
 	}
 
+	if info.OmadacID == "" {
+		return &ProtocolError{reason: "missing controller ID"}
+	}
 	c.omadacID = info.OmadacID
 	return nil
 }
@@ -365,29 +362,20 @@ func (c *Client) login(ctx context.Context) (string, error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(jsonBody))
 	if err != nil {
-		return "", fmt.Errorf("creating login request: %w", err)
+		return "", &TransportError{operation: "creating login request", cause: err}
 	}
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.httpClient.Do(req)
+	apiResp, err := c.doAPIRequest(req)
 	if err != nil {
-		return "", fmt.Errorf("POST %s: %w", url, err)
-	}
-	defer resp.Body.Close()
-
-	var apiResp APIResponse
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		return "", fmt.Errorf("decoding response: %w", err)
-	}
-	if apiResp.ErrorCode != 0 {
-		return "", fmt.Errorf("login failed (code %d): %s", apiResp.ErrorCode, apiResp.Msg)
+		return "", err
 	}
 
 	var loginResult LoginResult
 	if err := json.Unmarshal(apiResp.Result, &loginResult); err != nil {
-		return "", fmt.Errorf("decoding login result: %w", err)
+		return "", &ProtocolError{reason: "invalid login result"}
 	}
 	if loginResult.Token == "" {
-		return "", fmt.Errorf("login returned an empty session token")
+		return "", &ProtocolError{reason: "login returned an empty session token"}
 	}
 	return loginResult.Token, nil
 }
@@ -504,7 +492,7 @@ func (c *Client) doAuthenticatedRequest(ctx context.Context, method, url, conten
 
 	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewReader(body))
 	if err != nil {
-		return nil, fmt.Errorf("creating request: %w", err)
+		return nil, &TransportError{operation: "creating API request", cause: err}
 	}
 
 	query := req.URL.Query()
@@ -515,35 +503,15 @@ func (c *Client) doAuthenticatedRequest(ctx context.Context, method, url, conten
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Csrf-Token", token)
 
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("%s %s: %w", method, url, err)
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("reading response body: %w", err)
-	}
-
-	var apiResp APIResponse
-	if err := json.Unmarshal(respBody, &apiResp); err != nil {
-		return nil, fmt.Errorf("decoding response (status %d, body: %s): %w", resp.StatusCode, string(respBody), err)
-	}
-
-	// Session expired — re-auth and retry once
-	if apiResp.ErrorCode == -1 && retry {
+	apiResp, err := c.doAPIRequest(req)
+	// Only a valid HTTP 2xx Omada expiry response can trigger one replay.
+	if isAPIError(err, -1) && retry {
 		if err := c.authenticate(ctx, generation, true); err != nil {
 			return nil, fmt.Errorf("re-authentication failed: %w", err)
 		}
 		return c.doAuthenticatedRequest(ctx, method, url, contentType, body, false)
 	}
-
-	if apiResp.ErrorCode != 0 {
-		return &apiResp, fmt.Errorf("API error %d: %s", apiResp.ErrorCode, apiResp.Msg)
-	}
-
-	return &apiResp, nil
+	return apiResp, err
 }
 
 // decodePaginatedData decodes paginated list data from an API response.
@@ -573,7 +541,7 @@ func isEmptyResult(result json.RawMessage) bool {
 // isAgileSeriesError returns true if the API error indicates the switch requires
 // the Agile Series (/es/) path (error code -39742).
 func isAgileSeriesError(err error) bool {
-	return err != nil && strings.Contains(err.Error(), "-39742")
+	return isAPIError(err, -39742)
 }
 
 // GetOmadacID returns the controller ID.

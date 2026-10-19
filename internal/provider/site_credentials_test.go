@@ -186,10 +186,9 @@ func TestAccSiteCredentials(t *testing.T) {
 				config := settings("", "", "device_account_username = terraform_data.credentials.output.username\ndevice_account_password = terraform_data.credentials.output.password") + fmt.Sprintf("resource \"terraform_data\" \"credentials\" {\n input = { username = \"admin\", password = %q }\n}\n", newPassword)
 				steps = []resource.TestStep{{Config: config, Check: check(1, 1, newPassword)}, {Config: config, PlanOnly: true}}
 			case "rejected PATCH retry", "accepted PATCH read failure":
-				failure := regexp.MustCompile("fixture rejected write")
+				failure := regexp.MustCompile("API error -1001")
 				count := 3
 				if scenario == "accepted PATCH read failure" {
-					failure = regexp.MustCompile("fixture\\s+readback failure")
 					count = 2
 				}
 				steps = []resource.TestStep{{Config: configured, Check: check(1, 1, oldPassword)},

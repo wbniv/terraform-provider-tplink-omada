@@ -480,8 +480,8 @@ func TestIsAgileSeriesError(t *testing.T) {
 	}{
 		{"nil error", nil, false},
 		{"unrelated error", fmt.Errorf("network timeout"), false},
-		{"agile series error", fmt.Errorf("API error -39742: switch requires ES path"), true},
-		{"agile in message", fmt.Errorf("code -39742 not supported"), true},
+		{"agile series error", &APIError{Code: -39742}, true},
+		{"agile in message", fmt.Errorf("code -39742 not supported"), false},
 	}
 
 	for _, tt := range tests {
