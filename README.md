@@ -72,7 +72,7 @@ dev/controller-lab/run.sh test
 dev/controller-lab/run.sh down
 ```
 
-The first real-controller run passed network/profile CRUD, site credential rotation, and discovery of **102 networks**. It also exposed open compatibility failures: G1 treats the unpaginated WLAN-group response as paginated; certificate uploads use incorrect metadata/identity fields; a lost session can return HTTP 302; the IP-group route is rejected; and an empty device inventory becomes Terraform `null`. These are retained as failing probes. This branch is a development/review branch, and the real-controller suite is not yet all green.
+The first real-controller run passed network/profile CRUD, site credential rotation, and discovery of **102 networks**. It also exposed open compatibility failures: G1 treats the unpaginated WLAN-group response as paginated; certificate uploads use incorrect metadata/identity fields; a lost session can return HTTP 302; the IP-group route is rejected; and an empty device inventory becomes Terraform `null`. This branch now corrects WLAN-group discovery with an endpoint-specific collection policy; live WLAN discovery and the 102-network regression pass. Subsequent SSID probes exposed an open-network PMF default/readback mismatch and a fail-closed update rejection for controller fields absent from the writable contract. The remaining failures are retained as probes. This branch is a development/review branch, and the real-controller suite is not yet all green.
 
 ## Provider Configuration
 

@@ -65,11 +65,11 @@ case "${1:-}" in
     # Vendored modules: compilation and tests both run on the internal network.
     set +e
     docker exec --env-file "$runtime/runner.env" -w /tmp/provider/internal/provider "$runner" \
-      /tmp/provider-tests -test.run '^TestAcc(DataSource.*|ResourceNetwork_CRUD|ResourcePortProfile_CRUD)$|^TestControllerLab' \
+      /tmp/provider-tests -test.run "${LAB_ACCEPTANCE_RUN:-^TestAcc(DataSource.*|ResourceNetwork_CRUD|ResourcePortProfile_CRUD|WirelessNetwork.*)$|^TestControllerLab}" \
       -test.v -test.timeout=300s > "$runtime/acceptance.log" 2>&1
     acceptance_status=$?
     docker exec --env-file "$runtime/runner.env" -w /tmp/provider/internal/client "$runner" \
-      /tmp/client-tests -test.run '^TestControllerLab' -test.v -test.timeout=600s > "$runtime/client-probes.log" 2>&1
+      /tmp/client-tests -test.run "${LAB_CLIENT_RUN:-^TestControllerLab}" -test.v -test.timeout=600s > "$runtime/client-probes.log" 2>&1
     client_status=$?
     set -e
     printf 'acceptance_exit=%s\nclient_exit=%s\n' "$acceptance_status" "$client_status" | tee "$runtime/test-status.txt"

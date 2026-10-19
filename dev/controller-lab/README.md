@@ -36,7 +36,7 @@ LAB_EVIDENCE_DIR=/home/will/terraform-provider-tplink-omada/docs/investigations 
 dev/controller-lab/run.sh test
 ```
 
-This adds the exact D1–D3 stack and the three recorded integration patches to the disposable build copy. The checkout needs those Git commits; `LAB_EVIDENCE_DIR` needs the pagination/HTTP evidence patches. Without this option, the runner tests its current checkout alone.
+This adds the exact D1–D3 stack and the three recorded integration patches to the disposable build copy. The checkout needs those Git commits; `LAB_EVIDENCE_DIR` needs the pagination/HTTP evidence patches. Without this option, the runner tests its current checkout alone. The acceptance selection includes D1–D3 mock SSID scenarios when integrated, and a real secured-SSID lifecycle. Open-network PMF defaults and real SSID update-field compatibility are tracked separately. Set `LAB_ACCEPTANCE_RUN` and `LAB_CLIENT_RUN` to Go test regular expressions for focused reruns; defaults run the full lab selection.
 
 **Known failures are reported as failures.** The initial G1-based run discovered WLAN pagination, certificate upload, session recovery, and IP-group compatibility issues. Do not interpret a completed test command as a passing compatibility declaration.
 

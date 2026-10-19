@@ -103,3 +103,38 @@ resource "omada_site_settings" "lab" {
 		},
 	})
 }
+
+func TestControllerLabWirelessLifecycle(t *testing.T) {
+ if os.Getenv("OMADA_CONTROLLER_LAB") != "1" { t.Skip("disposable controller lab only") }
+ if os.Getenv("OMADA_URL") != "https://controller:8043" { t.Fatal("refusing a target outside the isolated lab") }
+ config := func(name, group string) string {
+  return fmt.Sprintf(`
+resource "omada_wlan_group" "lab" {
+ site_id = %q
+ name = "L1 Custom"
+}
+resource "omada_wireless_network" "lab" {
+ site_id = %q
+ name = %q
+ security = 3
+ passphrase = "L1-synthetic-test-password"
+ pmf_mode = 2
+ %s
+}
+`, os.Getenv("OMADA_TEST_SITE_ID"), os.Getenv("OMADA_TEST_SITE_ID"), name, group)
+ }
+ custom := "wlan_group_id = omada_wlan_group.lab.id"
+ resource.Test(t, resource.TestCase{
+  PreCheck: func() { testAccPreCheck(t) }, ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+  Steps: []resource.TestStep{
+   {Config: config("L1 Initial", ""), Check: resource.TestCheckResourceAttrSet("omada_wireless_network.lab", "id")},
+   {ResourceName: "omada_wireless_network.lab", ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"passphrase"}, ImportStateIdFunc: func(state *terraform.State) (string, error) {
+    attrs := state.RootModule().Resources["omada_wireless_network.lab"].Primary.Attributes
+    return attrs["site_id"] + "/" + attrs["wlan_group_id"] + "/" + attrs["id"], nil
+   }},
+   {Config: config("L1 Custom", custom), Check: resource.TestCheckResourceAttrPair("omada_wireless_network.lab", "wlan_group_id", "omada_wlan_group.lab", "id")},
+   {Config: config("L1 Custom", custom), PlanOnly: true},
+   {Config: config("L1 Updated", custom), Check: resource.TestCheckResourceAttr("omada_wireless_network.lab", "name", "L1 Updated")},
+  },
+ })
+}

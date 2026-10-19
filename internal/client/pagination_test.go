@@ -76,7 +76,7 @@ func TestPaginationCollections(t *testing.T) {
 					if mode == "capped pages" || mode == "no metadata" {
 						size = 73
 					}
-					if mode == "direct array" {
+					if mode == "direct array" || (endpoint.name == "groups" && mode == "no metadata") {
 						size = total
 					}
 					rows := []map[string]any{}
@@ -107,7 +107,7 @@ func TestPaginationCollections(t *testing.T) {
 				if mode == "empty" {
 					want, requests = 0, 1
 				}
-				if mode == "direct array" {
+				if mode == "direct array" || (endpoint.name == "groups" && mode == "no metadata") {
 					requests = 1
 				}
 				if err != nil || n != want || calls != requests {
@@ -268,6 +268,41 @@ func TestPaginationBounds(t *testing.T) {
 			}
 			if calls != wantCalls || !strings.Contains(err.Error(), diagnostic) {
 				t.Fatalf("calls=%d err=%v", calls, err)
+			}
+		})
+	}
+}
+
+func TestWlanGroupUnpaginatedEnvelope(t *testing.T) {
+	for _, body := range []string{
+		`{"data":[{"id":"default","name":"Default"},{"id":"custom","name":"Custom"}],"maxWlanCount":8}`,
+		`{"data":[]}`,
+		`{"data":[{"id":"same"},{"id":"same"}]}`,
+		`{"data":[{"name":"missing"}]}`,
+		`{"data":null}`,
+	} {
+		t.Run(body, func(t *testing.T) {
+			calls := 0
+			server := mockOmadaServer(t, map[string]http.HandlerFunc{"/sites/site/setting/wlans": func(w http.ResponseWriter, r *http.Request) {
+				calls++
+				fmt.Fprintf(w, `{"errorCode":0,"result":%s}`, body)
+			}})
+			defer server.Close()
+			c := newTestClient(t, server)
+			rows, err := c.ListWlanGroups(context.Background(), "site")
+			valid := strings.Contains(body, `"maxWlanCount"`) || body == `{"data":[]}`
+			if (err == nil) != valid || calls != 1 || (!valid && rows != nil) {
+				t.Fatalf("rows=%v calls=%d err=%v", rows, calls, err)
+			}
+			if len(rows) == 2 {
+				id, err := c.GetDefaultWlanGroupID(context.Background(), "site")
+				if err != nil || id != "default" {
+					t.Fatalf("default: %q %v", id, err)
+				}
+				group, err := c.GetWlanGroup(context.Background(), "site", "custom")
+				if err != nil || group.Name != "Custom" {
+					t.Fatalf("custom: %v %v", group, err)
+				}
 			}
 		})
 	}

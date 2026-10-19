@@ -9,12 +9,24 @@ import (
 	"strconv"
 )
 
+type collectionPolicy int
+
+const (
+	pagedCollection collectionPolicy = iota
+	// WLAN groups on 6.1 return a complete data envelope without page metadata.
+	wlanGroupCollection
+)
+
 const maxCollectionPages = 10000
 const maxCollectionBytes = 64 << 20
 
 // listAll returns a complete collection or no rows and an error. A short page
 // does not prove completion: controllers may cap the requested page size.
 func listAll[T any](ctx context.Context, c *Client, requestURL, identityKey string) ([]T, error) {
+	return listCollection[T](ctx, c, requestURL, identityKey, pagedCollection)
+}
+
+func listCollection[T any](ctx context.Context, c *Client, requestURL, identityKey string, policy collectionPolicy) ([]T, error) {
 	u, err := url.Parse(requestURL)
 	if err != nil {
 		return nil, &TransportError{operation: "creating collection request", cause: err}
@@ -42,6 +54,17 @@ func listAll[T any](ctx context.Context, c *Client, requestURL, identityKey stri
 		rows, count, direct, err := decodeCollectionPage(resp.Result, page)
 		if err != nil {
 			return nil, err
+		}
+		if policy == wlanGroupCollection && !direct {
+			fields, err := collectionObject(resp.Result)
+			if err != nil {
+				return nil, err
+			}
+			_, hasTotal := fields["totalRows"]
+			_, hasPage := fields["currentPage"]
+			_, hasSize := fields["currentSize"]
+			// Metadata, when present, retains the normal strict paged contract.
+			direct = !hasTotal && !hasPage && !hasSize
 		}
 		if page == 1 {
 			total = count

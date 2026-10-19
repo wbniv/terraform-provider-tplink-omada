@@ -1,11 +1,16 @@
 | Date | Change |
 |------|--------|
+| [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/0d26e72) | test: add vendored Omada controller lab |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/9343503) | fix(client)!: read complete paginated collections |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/c210dec) | fix(client)!: validate HTTP responses and protect error diagnostics |
 | [2026-04-09](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/2f3f5c7) | feat: add omada_controller_certificate resource for TLS certificate management |
 | [2026-03-30](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/ace2169) | feat: add CI workflow, release-please, dependabot, issue/PR templates, Makefile, and README |
 
 <!--history-meta v1
+0d26e72	author	Will Norris
+0d26e72	added	20
+0d26e72	deleted	2
+0d26e72	files	1
 9343503	author	Will Norris
 9343503	added	4
 9343503	deleted	0

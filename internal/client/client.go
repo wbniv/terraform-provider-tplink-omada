@@ -685,7 +685,7 @@ func (c *Client) DeleteNetwork(ctx context.Context, siteID, networkID string) er
 
 // ListWlanGroups returns all WLAN groups.
 func (c *Client) ListWlanGroups(ctx context.Context, siteID string) ([]WlanGroup, error) {
-	return listAll[WlanGroup](ctx, c, c.siteURL(siteID, "/setting/wlans"), "id")
+	return listCollection[WlanGroup](ctx, c, c.siteURL(siteID, "/setting/wlans"), "id", wlanGroupCollection)
 }
 
 // GetDefaultWlanGroupID returns the first WLAN group's ID (usually "Default").
