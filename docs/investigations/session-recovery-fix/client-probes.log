@@ -1,0 +1,15 @@
+=== RUN   TestControllerLabReauthentication
+=== RUN   TestControllerLabReauthentication/missing-cookie
+=== RUN   TestControllerLabReauthentication/missing-cookie-invalid-token
+=== RUN   TestControllerLabReauthentication/invalid-token
+=== RUN   TestControllerLabReauthentication/logout
+=== RUN   TestControllerLabReauthentication/multipart
+=== RUN   TestControllerLabReauthentication/concurrent
+--- PASS: TestControllerLabReauthentication (1.51s)
+    --- PASS: TestControllerLabReauthentication/missing-cookie (0.13s)
+    --- PASS: TestControllerLabReauthentication/missing-cookie-invalid-token (0.14s)
+    --- PASS: TestControllerLabReauthentication/invalid-token (0.16s)
+    --- PASS: TestControllerLabReauthentication/logout (0.16s)
+    --- PASS: TestControllerLabReauthentication/multipart (0.35s)
+    --- PASS: TestControllerLabReauthentication/concurrent (0.57s)
+PASS

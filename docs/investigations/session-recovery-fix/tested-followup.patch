@@ -1,0 +1,625 @@
+diff --git a/dev/controller-lab/README.md b/dev/controller-lab/README.md
+index 49c5f67..db59e16 100644
+--- a/dev/controller-lab/README.md
++++ b/dev/controller-lab/README.md
+@@ -73,3 +73,13 @@ python3 dev/controller-lab/verify-certificate.py
+ ```
+ 
+ The Terraform scenario covers create, a stable plan, rotation, another stable plan, and import. The client probe records only a public certificate fingerprint. The restart verifier compares that fingerprint with a fresh TLS handshake and checks stored identity persistence. Software Controller 6.1.0.19 converts PEM uploads to JKS identities and requires a restart to serve the certificate; the production provider reports this requirement and leaves restart scheduling to the operator. Run this sequence before `down`.
++
++## Session recovery check (L3)
++
++```sh
++python3 dev/controller-lab/session-probe.py
++LAB_ACCEPTANCE_RUN='^TestControllerLabCertificateResource$' \
++LAB_CLIENT_RUN='^TestControllerLabReauthentication$' dev/controller-lab/run.sh test
++```
++
++The raw probe disables redirect following for every opener and records only sanitized response shapes. Live cases cover missing cookies, invalid tokens, logout, multipart replay, and eight concurrent reads. The client now also runs under Go's race detector during the normal lab build gates. The new HTTP 302 recovery rule is limited to controller 6.1.0.19 and the exact same-origin login destination, with one shared reauthentication attempt and at most one replay per request. No redirected API request is followed. Natural timeout and other controller versions need separate verification.
+diff --git a/dev/controller-lab/client_test.go.txt b/dev/controller-lab/client_test.go.txt
+index a485b00..d3008a1 100644
+--- a/dev/controller-lab/client_test.go.txt
++++ b/dev/controller-lab/client_test.go.txt
+@@ -13,6 +13,7 @@ import (
+ 	"crypto/x509/pkix"
+ 	"encoding/json"
+ 	"encoding/pem"
++"sync"
+ 	"fmt"
+ 	"math/big"
+ 	"mime/multipart"
+@@ -70,18 +71,31 @@ func TestControllerLabCollections(t *testing.T) {
+ }
+ 
+ func TestControllerLabReauthentication(t *testing.T) {
+-	c, ctx, _ := labClient(t)
+-	generation := c.authGeneration
+-	// Invalidate our local session. This tests real rejection and automatic
+-	// relogin, without claiming to have waited for the controller's timeout.
+-	c.token = "deliberately-invalid-lab-token"
+-	c.httpClient.Jar, _ = cookiejar.New(nil)
+-	if _, err := c.ListSites(ctx); err != nil {
+-		t.Fatal(err)
+-	}
+-	if c.authGeneration <= generation {
+-		t.Fatal("request did not reauthenticate")
+-	}
++ for _,mode:=range []string{"missing-cookie", "missing-cookie-invalid-token", "invalid-token", "logout", "multipart", "concurrent"} {
++  t.Run(mode,func(t *testing.T){
++   c,ctx,_:=labClient(t)
++   _,generation:=c.session()
++   if mode=="logout" {
++    if _,err:=c.doRequest(ctx,http.MethodPost,c.globalURL("/logout"),nil);err!=nil {t.Fatal(err)}
++   } else if mode=="invalid-token" {c.token="deliberately-invalid-lab-token"} else {
++    c.httpClient.Jar,_=cookiejar.New(nil)
++    if mode=="missing-cookie-invalid-token" {c.token="deliberately-invalid-lab-token"}
++   }
++   if mode=="multipart" {
++    cert,_,_:=labCertificate(t)
++    id,err:=c.UploadCertificate(ctx,cert,"recovery.pem")
++    if err!=nil || id=="" {t.Fatalf("multipart recovery failed: %v",err)}
++   } else if mode=="concurrent" {
++    var wg sync.WaitGroup
++    for i:=0;i<8;i++ {wg.Add(1);go func(){defer wg.Done();if _,err:=c.ListSites(ctx);err!=nil {t.Error(err)}}()}
++    wg.Wait()
++   } else {
++    _,err:=c.ListSites(ctx)
++    if err!=nil {t.Fatal(err)}
++   }
++   _,after:=c.session();if after!=generation+1 {t.Fatalf("expected exactly one shared refresh; generations advanced by %d",after-generation)}
++  })
++ }
+ }
+ 
+ func TestControllerLabNetworkPagination(t *testing.T) {
+diff --git a/dev/controller-lab/run.sh b/dev/controller-lab/run.sh
+index d5df501..24967f7 100755
+--- a/dev/controller-lab/run.sh
++++ b/dev/controller-lab/run.sh
+@@ -67,6 +67,7 @@ case "${1:-}" in
+       export GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local
+       go vet -mod=vendor ./...
+       go test -mod=vendor ./...
++      go test -race -mod=vendor ./internal/client
+       go build -mod=vendor -o /tmp/bin/terraform-provider-tplink-omada .
+       go test -mod=vendor -c -o /tmp/client-tests ./internal/client
+       go test -mod=vendor -c -o /tmp/provider-tests ./internal/provider
+diff --git a/internal/client/auth_test.go b/internal/client/auth_test.go
+index c412234..d8b7c4f 100644
+--- a/internal/client/auth_test.go
++++ b/internal/client/auth_test.go
+@@ -15,177 +15,187 @@ import (
+ )
+ 
+ func TestCertificateOperations(t *testing.T) {
+-	operations := []struct {
+-		name, path, method, want string
+-		call                     func(context.Context, *Client) (string, error)
+-	}{
+-		{"certificate", "/files/controller/certificate", http.MethodPost, "uploaded", func(ctx context.Context, c *Client) (string, error) {
+-			return c.UploadCertificate(ctx, []byte("test PEM\n"), "test.pem")
+-		}},
+-		{"key", "/files/controller/key", http.MethodPost, "uploaded", func(ctx context.Context, c *Client) (string, error) {
+-			return c.UploadKey(ctx, []byte("test PEM\n"), "test.pem")
+-		}},
+-		{"activate", "/controller/setting", http.MethodPatch, "", func(ctx context.Context, c *Client) (string, error) {
+-			return "", c.ActivateCertificate(ctx, "cert", "key", "cert.pem", "key.pem")
+-		}},
+-		{"read", "/controller/setting", http.MethodGet, "cert/key", func(ctx context.Context, c *Client) (string, error) {
+-			setting, err := c.GetControllerCertificateSetting(ctx)
+-			if err != nil {
+-				return "", err
+-			}
+-			return setting.CertID + "/" + setting.KeyID, nil
+-		}},
+-	}
+-	for _, op := range operations {
+-		for _, initialToken := range []string{"valid", "", "expired"} {
+-			t.Run(op.name+"/token="+initialToken, func(t *testing.T) {
+-				var logins, requests atomic.Int32
+-				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+-					if strings.HasSuffix(r.URL.Path, "/login") {
+-						logins.Add(1)
+-						fmt.Fprint(w, `{"errorCode":0,"result":{"token":"fresh"}}`)
+-						return
+-					}
+-					requests.Add(1)
+-					if r.URL.Path != "/controller/api/v2"+op.path || r.Method != op.method {
+-						t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+-					}
+-					// Certificate endpoints use header authentication, without a token query.
+-					if r.URL.Query().Has("token") {
+-						t.Error("added a token query to a header-authenticated certificate endpoint")
++	for _, redirect := range []bool{false, true} {
++		t.Run(fmt.Sprintf("redirect=%v", redirect), func(t *testing.T) {
++			operations := []struct {
++				name, path, method, want string
++				call                     func(context.Context, *Client) (string, error)
++			}{
++				{"certificate", "/files/controller/certificate", http.MethodPost, "uploaded", func(ctx context.Context, c *Client) (string, error) {
++					return c.UploadCertificate(ctx, []byte("test PEM\n"), "test.pem")
++				}},
++				{"key", "/files/controller/key", http.MethodPost, "uploaded", func(ctx context.Context, c *Client) (string, error) {
++					return c.UploadKey(ctx, []byte("test PEM\n"), "test.pem")
++				}},
++				{"activate", "/controller/setting", http.MethodPatch, "", func(ctx context.Context, c *Client) (string, error) {
++					return "", c.ActivateCertificate(ctx, "cert", "key", "cert.pem", "key.pem")
++				}},
++				{"read", "/controller/setting", http.MethodGet, "cert/key", func(ctx context.Context, c *Client) (string, error) {
++					setting, err := c.GetControllerCertificateSetting(ctx)
++					if err != nil {
++						return "", err
+ 					}
+-					if op.method == http.MethodPost {
+-						file, header, err := r.FormFile("file")
+-						if err != nil {
+-							t.Error(err)
+-							return
++					return setting.CertID + "/" + setting.KeyID, nil
++				}},
++			}
++			for _, op := range operations {
++				for _, initialToken := range []string{"valid", "", "expired"} {
++					t.Run(op.name+"/token="+initialToken, func(t *testing.T) {
++						var logins, requests atomic.Int32
++						server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++							if strings.HasSuffix(r.URL.Path, "/login") {
++								logins.Add(1)
++								fmt.Fprint(w, `{"errorCode":0,"result":{"token":"fresh"}}`)
++								return
++							}
++							requests.Add(1)
++							if r.URL.Path != "/controller/api/v2"+op.path || r.Method != op.method {
++								t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
++							}
++							// Certificate endpoints use header authentication, without a token query.
++							if r.URL.Query().Has("token") {
++								t.Error("added a token query to a header-authenticated certificate endpoint")
++							}
++							if op.method == http.MethodPost {
++								file, header, err := r.FormFile("file")
++								if err != nil {
++									t.Error(err)
++									return
++								}
++								defer file.Close()
++								defer r.MultipartForm.RemoveAll()
++								data, err := io.ReadAll(file)
++								if err != nil || string(data) != "test PEM\n" || header.Filename != "test.pem" || r.FormValue("data") != map[string]string{"certificate": `{"cerName":"test.pem"}`, "key": `{"keyName":"test.pem"}`}[op.name] {
++									t.Errorf("multipart file or metadata changed: filename=%q data=%q err=%v", header.Filename, data, err)
++								}
++							}
++							if op.method == http.MethodPatch {
++								data, err := io.ReadAll(r.Body)
++								if err != nil || string(data) != `{"certificate":{"cerName":"cert.pem","keyName":"key.pem","enable":true,"cerType":"PEM","cerId":"cert","keyId":"key"}}` {
++									t.Errorf("activation body = %s, err=%v", data, err)
++								}
++							}
++							if r.Header.Get("Csrf-Token") == "expired" {
++								writeExpiryResponse(w, redirect)
++								return
++							}
++							expectedToken := "valid"
++							if initialToken != "valid" {
++								expectedToken = "fresh"
++							}
++							if got := r.Header.Get("Csrf-Token"); got != expectedToken {
++								t.Errorf("token = %q, want %q", got, expectedToken)
++							}
++							if op.method == http.MethodPost {
++								fmt.Fprint(w, `{"errorCode":0,"result":{"cerId":"uploaded","keyId":"uploaded"}}`)
++							} else {
++								fmt.Fprint(w, `{"errorCode":0,"result":{"certificate":{"cerId":"cert","keyId":"key"}}}`)
++							}
++						}))
++						defer server.Close()
++						c := &Client{controllerVersion: "6.1.0.19", baseURL: server.URL, omadacID: "controller", token: initialToken, httpClient: server.Client()}
++						ctx, cancel := context.WithTimeout(context.Background(), time.Second)
++						defer cancel()
++						type result struct {
++							value string
++							err   error
+ 						}
+-						defer file.Close()
+-						defer r.MultipartForm.RemoveAll()
+-						data, err := io.ReadAll(file)
+-						if err != nil || string(data) != "test PEM\n" || header.Filename != "test.pem" || r.FormValue("data") != map[string]string{"certificate": `{"cerName":"test.pem"}`, "key": `{"keyName":"test.pem"}`}[op.name] {
+-							t.Errorf("multipart file or metadata changed: filename=%q data=%q err=%v", header.Filename, data, err)
++						done := make(chan result, 1)
++						go func() {
++							value, err := op.call(ctx, c)
++							done <- result{value, err}
++						}()
++						select {
++						case got := <-done:
++							if got.err != nil || got.value != op.want {
++								t.Fatalf("operation = %q, %v; want %q, nil", got.value, got.err, op.want)
++							}
++						case <-ctx.Done():
++							t.Fatal("certificate operation did not complete before its deadline")
+ 						}
+-					}
+-					if op.method == http.MethodPatch {
+-						data, err := io.ReadAll(r.Body)
+-						if err != nil || string(data) != `{"certificate":{"cerName":"cert.pem","keyName":"key.pem","enable":true,"cerType":"PEM","cerId":"cert","keyId":"key"}}` {
+-							t.Errorf("activation body = %s, err=%v", data, err)
++						wantLogins, wantRequests := int32(0), int32(1)
++						if initialToken != "valid" {
++							wantLogins = 1
+ 						}
+-					}
+-					if r.Header.Get("Csrf-Token") == "expired" {
+-						fmt.Fprint(w, `{"errorCode":-1,"msg":"session expired"}`)
+-						return
+-					}
+-					expectedToken := "valid"
+-					if initialToken != "valid" {
+-						expectedToken = "fresh"
+-					}
+-					if got := r.Header.Get("Csrf-Token"); got != expectedToken {
+-						t.Errorf("token = %q, want %q", got, expectedToken)
+-					}
+-					if op.method == http.MethodPost {
+-						fmt.Fprint(w, `{"errorCode":0,"result":{"cerId":"uploaded","keyId":"uploaded"}}`)
+-					} else {
+-						fmt.Fprint(w, `{"errorCode":0,"result":{"certificate":{"cerId":"cert","keyId":"key"}}}`)
+-					}
+-				}))
+-				defer server.Close()
+-				c := &Client{baseURL: server.URL, omadacID: "controller", token: initialToken, httpClient: server.Client()}
+-				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+-				defer cancel()
+-				type result struct {
+-					value string
+-					err   error
+-				}
+-				done := make(chan result, 1)
+-				go func() {
+-					value, err := op.call(ctx, c)
+-					done <- result{value, err}
+-				}()
+-				select {
+-				case got := <-done:
+-					if got.err != nil || got.value != op.want {
+-						t.Fatalf("operation = %q, %v; want %q, nil", got.value, got.err, op.want)
+-					}
+-				case <-ctx.Done():
+-					t.Fatal("certificate operation did not complete before its deadline")
+-				}
+-				wantLogins, wantRequests := int32(0), int32(1)
+-				if initialToken != "valid" {
+-					wantLogins = 1
+-				}
+-				if initialToken == "expired" {
+-					wantRequests = 2
+-				}
+-				if logins.Load() != wantLogins || requests.Load() != wantRequests {
+-					t.Errorf("logins/requests = %d/%d, want %d/%d", logins.Load(), requests.Load(), wantLogins, wantRequests)
++						if initialToken == "expired" {
++							wantRequests = 2
++						}
++						if logins.Load() != wantLogins || requests.Load() != wantRequests {
++							t.Errorf("logins/requests = %d/%d, want %d/%d", logins.Load(), requests.Load(), wantLogins, wantRequests)
++						}
++					})
+ 				}
+-			})
+-		}
++			}
++
++		})
+ 	}
+ }
+ 
+ func TestConcurrentSessionExpiry(t *testing.T) {
+-	const count = 12
+-	const freshToken = "fresh+token&with=punctuation"
+-	var oldRequests, logins atomic.Int32
+-	allArrived, firstRetry := make(chan struct{}), make(chan struct{})
+-	var retryOnce sync.Once
+-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+-		if strings.HasSuffix(r.URL.Path, "/login") {
+-			logins.Add(1)
+-			fmt.Fprintf(w, `{"errorCode":0,"result":{"token":%q}}`, freshToken)
+-			return
+-		}
+-		if r.URL.Query().Get("currentPage") != "2" || r.URL.Query().Get("name") != "a&b" {
+-			t.Errorf("additional query parameters changed: %s", r.URL.RawQuery)
+-		}
+-		if r.Header.Get("Csrf-Token") == "expired" {
+-			ordinal := oldRequests.Add(1)
+-			if ordinal == count {
+-				close(allArrived)
+-			}
+-			select {
+-			case <-allArrived:
+-			case <-r.Context().Done():
+-				return
+-			}
+-			// Delay one stale response until a refreshed request has succeeded.
+-			if ordinal == count {
+-				select {
+-				case <-firstRetry:
+-				case <-r.Context().Done():
++	for _, redirect := range []bool{false, true} {
++		t.Run(fmt.Sprintf("redirect=%v", redirect), func(t *testing.T) {
++			const count = 12
++			const freshToken = "fresh+token&with=punctuation"
++			var oldRequests, logins atomic.Int32
++			allArrived, firstRetry := make(chan struct{}), make(chan struct{})
++			var retryOnce sync.Once
++			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++				if strings.HasSuffix(r.URL.Path, "/login") {
++					logins.Add(1)
++					fmt.Fprintf(w, `{"errorCode":0,"result":{"token":%q}}`, freshToken)
+ 					return
+ 				}
++				if r.URL.Query().Get("currentPage") != "2" || r.URL.Query().Get("name") != "a&b" {
++					t.Errorf("additional query parameters changed: %s", r.URL.RawQuery)
++				}
++				if r.Header.Get("Csrf-Token") == "expired" {
++					ordinal := oldRequests.Add(1)
++					if ordinal == count {
++						close(allArrived)
++					}
++					select {
++					case <-allArrived:
++					case <-r.Context().Done():
++						return
++					}
++					// Delay one stale response until a refreshed request has succeeded.
++					if ordinal == count {
++						select {
++						case <-firstRetry:
++						case <-r.Context().Done():
++							return
++						}
++					}
++					writeExpiryResponse(w, redirect)
++					return
++				}
++				if r.Header.Get("Csrf-Token") != freshToken || r.URL.Query().Get("token") != freshToken {
++					t.Errorf("header/query token mismatch: %q / %q", r.Header.Get("Csrf-Token"), r.URL.Query().Get("token"))
++				}
++				retryOnce.Do(func() { close(firstRetry) })
++				fmt.Fprint(w, `{"errorCode":0,"result":{}}`)
++			}))
++			defer server.Close()
++			c := &Client{controllerVersion: "6.1.0.19", baseURL: server.URL, omadacID: "controller", token: "expired", httpClient: server.Client()}
++			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
++			defer cancel()
++			var wg sync.WaitGroup
++			for i := 0; i < count; i++ {
++				wg.Add(1)
++				go func() {
++					defer wg.Done()
++					_, err := c.doSiteRequestWithParams(ctx, "site", http.MethodGet, "/probe", "&currentPage=2&name=a%26b", nil)
++					if err != nil {
++						t.Error(err)
++					}
++				}()
+ 			}
+-			fmt.Fprint(w, `{"errorCode":-1,"msg":"expired"}`)
+-			return
+-		}
+-		if r.Header.Get("Csrf-Token") != freshToken || r.URL.Query().Get("token") != freshToken {
+-			t.Errorf("header/query token mismatch: %q / %q", r.Header.Get("Csrf-Token"), r.URL.Query().Get("token"))
+-		}
+-		retryOnce.Do(func() { close(firstRetry) })
+-		fmt.Fprint(w, `{"errorCode":0,"result":{}}`)
+-	}))
+-	defer server.Close()
+-	c := &Client{baseURL: server.URL, omadacID: "controller", token: "expired", httpClient: server.Client()}
+-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+-	defer cancel()
+-	var wg sync.WaitGroup
+-	for i := 0; i < count; i++ {
+-		wg.Add(1)
+-		go func() {
+-			defer wg.Done()
+-			_, err := c.doSiteRequestWithParams(ctx, "site", http.MethodGet, "/probe", "&currentPage=2&name=a%26b", nil)
+-			if err != nil {
+-				t.Error(err)
++			wg.Wait()
++			if got := logins.Load(); got != 1 {
++				t.Errorf("concurrent expiry caused %d logins, want 1", got)
+ 			}
+-		}()
+-	}
+-	wg.Wait()
+-	if got := logins.Load(); got != 1 {
+-		t.Errorf("concurrent expiry caused %d logins, want 1", got)
++
++		})
+ 	}
+ }
+ 
+@@ -301,31 +311,36 @@ func TestAuthenticationCancellation(t *testing.T) {
+ }
+ 
+ func TestSessionRetryFailures(t *testing.T) {
+-	for _, tc := range []struct {
+-		name, loginResponse string
+-		wantRequests        int32
+-	}{
+-		{"login denied", `{"errorCode":-30109,"msg":"denied"}`, 1},
+-		{"empty token", `{"errorCode":0,"result":{"token":""}}`, 1},
+-		{"expired again", `{"errorCode":0,"result":{"token":"fresh"}}`, 2},
+-	} {
+-		t.Run(tc.name, func(t *testing.T) {
+-			var logins, requests atomic.Int32
+-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+-				if strings.HasSuffix(r.URL.Path, "/login") {
+-					logins.Add(1)
+-					fmt.Fprint(w, tc.loginResponse)
+-					return
+-				}
+-				requests.Add(1)
+-				fmt.Fprint(w, `{"errorCode":-1,"msg":"expired"}`)
+-			}))
+-			defer server.Close()
+-			c := &Client{baseURL: server.URL, omadacID: "controller", token: "expired", httpClient: server.Client()}
+-			_, err := c.doSiteRequest(context.Background(), "site", http.MethodGet, "/probe", nil)
+-			if err == nil || logins.Load() != 1 || requests.Load() != tc.wantRequests {
+-				t.Errorf("err=%v logins=%d requests=%d; want error, 1 login, %d requests", err, logins.Load(), requests.Load(), tc.wantRequests)
++	for _, redirect := range []bool{false, true} {
++		t.Run(fmt.Sprintf("redirect=%v", redirect), func(t *testing.T) {
++			for _, tc := range []struct {
++				name, loginResponse string
++				wantRequests        int32
++			}{
++				{"login denied", `{"errorCode":-30109,"msg":"denied"}`, 1},
++				{"empty token", `{"errorCode":0,"result":{"token":""}}`, 1},
++				{"expired again", `{"errorCode":0,"result":{"token":"fresh"}}`, 2},
++			} {
++				t.Run(tc.name, func(t *testing.T) {
++					var logins, requests atomic.Int32
++					server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++						if strings.HasSuffix(r.URL.Path, "/login") {
++							logins.Add(1)
++							fmt.Fprint(w, tc.loginResponse)
++							return
++						}
++						requests.Add(1)
++						writeExpiryResponse(w, redirect)
++					}))
++					defer server.Close()
++					c := &Client{controllerVersion: "6.1.0.19", baseURL: server.URL, omadacID: "controller", token: "expired", httpClient: server.Client()}
++					_, err := c.doSiteRequest(context.Background(), "site", http.MethodGet, "/probe", nil)
++					if err == nil || logins.Load() != 1 || requests.Load() != tc.wantRequests {
++						t.Errorf("err=%v logins=%d requests=%d; want error, 1 login, %d requests", err, logins.Load(), requests.Load(), tc.wantRequests)
++					}
++				})
+ 			}
++
+ 		})
+ 	}
+ }
+@@ -388,3 +403,12 @@ func TestCertificateActivationRequiresIDs(t *testing.T) {
+ 		}
+ 	}
+ }
++
++func writeExpiryResponse(w http.ResponseWriter, redirect bool) {
++	if redirect {
++		w.Header().Set("Location", "/controller/login")
++		w.WriteHeader(http.StatusFound)
++		return
++	}
++	fmt.Fprint(w, `{"errorCode":-1,"msg":"expired"}`)
++}
+diff --git a/internal/client/client.go b/internal/client/client.go
+index fba56b3..61de774 100644
+--- a/internal/client/client.go
++++ b/internal/client/client.go
+@@ -17,12 +17,13 @@ import (
+ 
+ // Client is the Omada Controller API client.
+ type Client struct {
+-	baseURL    string
+-	username   string
+-	password   string
+-	omadacID   string
+-	httpClient *http.Client
+-	readOnly   bool
++	baseURL           string
++	username          string
++	password          string
++	omadacID          string
++	controllerVersion string
++	httpClient        *http.Client
++	readOnly          bool
+ 
+ 	// mu protects token, authGeneration, and auth. It is never held during I/O.
+ 	mu             sync.Mutex
+@@ -347,6 +348,7 @@ func (c *Client) getControllerInfo(ctx context.Context) error {
+ 		return &ProtocolError{reason: "missing controller ID"}
+ 	}
+ 	c.omadacID = info.OmadacID
++	c.controllerVersion = info.ControllerVer
+ 	return nil
+ }
+ 
+@@ -504,8 +506,8 @@ func (c *Client) doAuthenticatedRequest(ctx context.Context, method, url, conten
+ 	req.Header.Set("Csrf-Token", token)
+ 
+ 	apiResp, err := c.doAPIRequest(req)
+-	// Only a valid HTTP 2xx Omada expiry response can trigger one replay.
+-	if isAPIError(err, -1) && retry {
++	// Replay only verified session rejection signals, never follow redirects.
++	if isSessionExpiry(err) && retry {
+ 		if err := c.authenticate(ctx, generation, true); err != nil {
+ 			return nil, fmt.Errorf("re-authentication failed: %w", err)
+ 		}
+diff --git a/internal/client/response.go b/internal/client/response.go
+index 6ce1b71..e34956a 100644
+--- a/internal/client/response.go
++++ b/internal/client/response.go
+@@ -7,6 +7,8 @@ import (
+ 	"fmt"
+ 	"io"
+ 	"net/http"
++	"net/url"
++	"strings"
+ 	"unicode/utf8"
+ )
+ 
+@@ -15,7 +17,10 @@ const maxAPIResponseBytes = 16 << 20
+ // HTTPError means the HTTP exchange completed with a non-success status.
+ // Even 404 is not proof that a managed resource is absent: a proxy or an
+ // unsupported endpoint can produce it. Resource-specific classification is separate.
+-type HTTPError struct{ StatusCode int }
++type HTTPError struct {
++	StatusCode     int
++	sessionExpired bool
++}
+ 
+ func (e *HTTPError) Error() string {
+ 	return fmt.Sprintf("HTTP error %d (%s)", e.StatusCode, http.StatusText(e.StatusCode))
+@@ -55,7 +60,7 @@ func (c *Client) doAPIRequest(req *http.Request) (*APIResponse, error) {
+ 	}
+ 	defer resp.Body.Close()
+ 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+-		return nil, &HTTPError{StatusCode: resp.StatusCode}
++		return nil, &HTTPError{StatusCode: resp.StatusCode, sessionExpired: c.isLoginRedirect(req, resp)}
+ 	}
+ 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxAPIResponseBytes+1))
+ 	if err != nil {
+@@ -133,3 +138,37 @@ func isAPIError(err error, code int) bool {
+ 	var apiError *APIError
+ 	return errors.As(err, &apiError) && apiError.Code == code
+ }
++
++// isLoginRedirect recognizes the exact login destination observed on 6.1.0.19.
++// No URL or header from the response is retained in the diagnostic or followed.
++func (c *Client) isLoginRedirect(req *http.Request, resp *http.Response) bool {
++	if c.controllerVersion != "6.1.0.19" || c.omadacID == "" || resp.StatusCode != http.StatusFound || len(resp.Header.Values("Location")) != 1 {
++		return false
++	}
++	base, err := url.Parse(c.baseURL)
++	if err != nil {
++		return false
++	}
++	sameOrigin := func(u *url.URL) bool {
++		return u.User == nil && u.Scheme == base.Scheme && strings.EqualFold(u.Host, base.Host)
++	}
++	if !sameOrigin(req.URL) {
++		return false
++	}
++	prefix := strings.TrimSuffix(base.EscapedPath(), "/") + "/" + url.PathEscape(c.omadacID)
++	apiPrefix := prefix + "/api/v2/"
++	if !strings.HasPrefix(req.URL.EscapedPath(), apiPrefix) || req.URL.EscapedPath() == apiPrefix+"login" || req.URL.EscapedPath() == apiPrefix+"logout" {
++		return false
++	}
++	location, err := url.Parse(resp.Header.Get("Location"))
++	if err != nil {
++		return false
++	}
++	target := req.URL.ResolveReference(location)
++	return sameOrigin(target) && target.EscapedPath() == prefix+"/login" && target.RawQuery == "" && !target.ForceQuery && target.Fragment == "" && !strings.Contains(resp.Header.Get("Location"), "#")
++}
++
++func isSessionExpiry(err error) bool {
++	var httpError *HTTPError
++	return isAPIError(err, -1) || (errors.As(err, &httpError) && httpError.sessionExpired)
++}

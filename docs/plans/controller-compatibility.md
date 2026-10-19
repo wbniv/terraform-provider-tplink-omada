@@ -31,10 +31,13 @@ Locally verified on `fix/controller-certificate-protocol`, based on the verified
 
 ### L3 — Lost-session recovery
 
+Locally verified on `fix/controller-session-recovery`, based on L2 (`4c21666`); committed as `58610fd`. [L3 evidence](../investigations/session-recovery-fix/README.md). Six live recovery cases, client race detector, Go gates, and five Terraform certificate steps pass.
+
 - [x] Invalidate the client's local cookie/token and observe HTTP 302 on the protected request; the client returns an HTTP error rather than reauthenticating.
-- [ ] Capture the redirect's exact same-origin target and compare lost-cookie, invalid-CSRF-token, logout, and naturally expired-session responses.
-- [ ] Specify a narrow reauthentication signal for supported controllers. Keep arbitrary/cross-origin redirects rejected, bound retries, and never send credentials or tokens to redirect destinations.
-- [ ] Test failure state, concurrent requests, and multipart replay. Verify against the real controller; this probe did not wait for natural session expiry.
+- [x] Capture the exact same-origin login redirect for lost cookies, invalid CSRF tokens, and logout. The corrected probe disables redirect following for every opener.
+- [ ] Measure natural session expiry separately; logout is not evidence of the timeout behavior.
+- [x] Specify a narrow reauthentication signal for supported controllers. Keep arbitrary/cross-origin redirects rejected, bound retries, and never send credentials or tokens to redirect destinations.
+- [x] Test failure state, concurrent requests, and multipart replay. Verify against the real controller; this probe did not wait for natural session expiry.
 
 ### L4 — IP-group endpoint mismatch
 
@@ -104,7 +107,7 @@ Next action: G2 only after complete discovery is verified
 | --- | --- | --- |
 | WLAN data-source plan | Discovery fixed; empty-list assertion now exposed | Read complete known-unpaginated group list, then list SSIDs |
 | Certificate apply | L2 verified: nested PEM activation, stored JKS IDs, explicit restart, exact TLS match | Nonempty certificate/key IDs; verified activation and TLS presentation |
-| Refresh after lost session | HTTP 302 diagnostic | One bounded, verified reauthentication attempt or an explicit unsupported result |
+| Refresh after lost session | L3 verified for 6.1.0.19: one shared refresh, bounded replay, no redirect following | One bounded, verified reauthentication attempt or an explicit unsupported result |
 | IP-group plan | API `-1600` | Correct typed group inventory from a verified route |
 | Empty device count | Null list in Terraform | Empty list, count zero |
 

@@ -1,0 +1,17 @@
+=== RUN   TestControllerLabReauthentication
+=== RUN   TestControllerLabReauthentication/missing-cookie
+=== RUN   TestControllerLabReauthentication/missing-cookie-invalid-token
+=== RUN   TestControllerLabReauthentication/invalid-token
+    controller_lab_test.go:114: expected explicit HTML/protocol rejection, got <nil>
+=== RUN   TestControllerLabReauthentication/logout
+    controller_lab_test.go:114: expected explicit HTML/protocol rejection, got <nil>
+=== RUN   TestControllerLabReauthentication/multipart
+=== RUN   TestControllerLabReauthentication/concurrent
+--- FAIL: TestControllerLabReauthentication (1.71s)
+    --- PASS: TestControllerLabReauthentication/missing-cookie (0.21s)
+    --- PASS: TestControllerLabReauthentication/missing-cookie-invalid-token (0.17s)
+    --- FAIL: TestControllerLabReauthentication/invalid-token (0.17s)
+    --- FAIL: TestControllerLabReauthentication/logout (0.21s)
+    --- PASS: TestControllerLabReauthentication/multipart (0.27s)
+    --- PASS: TestControllerLabReauthentication/concurrent (0.68s)
+FAIL
