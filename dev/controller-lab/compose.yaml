@@ -1,0 +1,55 @@
+name: omada-provider-lab
+
+services:
+  controller:
+    # Community packaging of TP-Link's real 6.1.0.19 software, pinned by digest.
+    image: mbentley/omada-controller:6.1.0.19@sha256:94571a6544a5db9419681d3cecdaa7dccf9042e586cae9a1c34c3f22994e6b38
+    labels:
+      omada.provider.lab: "true"
+    mem_limit: 2g
+    cpus: 2
+    environment:
+      TZ: Etc/UTC
+      JAVA_MIN_HEAP_SIZE: 128m
+      JAVA_MAX_HEAP_SIZE: 768m
+      MONGOD_EXTRA_ARGS: --wiredTigerCacheSizeGB 0.25
+      SHOW_SERVER_LOGS: "false"
+    volumes:
+      - controller-data:/opt/tplink/EAPController/data
+      - controller-logs:/opt/tplink/EAPController/logs
+    networks:
+      - lab
+
+  console:
+    image: python:3.14-slim@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170
+    labels:
+      omada.provider.lab: "true"
+    mem_limit: 64m
+    cpus: 0.25
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command: [python, /relay.py]
+    volumes:
+      - ./relay.py:/relay.py:ro
+    ports:
+      - "127.0.0.1:18043:8043"
+    networks: [lab, console]
+    depends_on: [controller]
+
+networks:
+  console:
+    labels:
+      omada.provider.lab: "true"
+  lab:
+    internal: true
+    labels:
+      omada.provider.lab: "true"
+
+volumes:
+  controller-data:
+    labels:
+      omada.provider.lab: "true"
+  controller-logs:
+    labels:
+      omada.provider.lab: "true"

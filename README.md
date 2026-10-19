@@ -2,10 +2,12 @@
 
 A Terraform provider for managing [TP-Link Omada Software Controller](https://www.tp-link.com/us/omada-sdn/) 6.x resources as infrastructure-as-code.
 
+This review branch is maintained in [Will's standalone repository](https://github.com/wbniv/terraform-provider-tplink-omada), with the original project history preserved. The [upstream project](https://github.com/emanuelbesliu/terraform-provider-tplink-omada) and [preserved upstream fork](https://github.com/wbniv/terraform-provider-tplink-omada-upstream-fork) remain available for contributions. See the [current investigation and follow-ups](https://github.com/wbniv/terraform-provider-tplink-omada/blob/docs/provider-reliability-review/docs/investigations/software-controller-lab/README.md) for exact test results.
+
 ## Requirements
 
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
-- [Go](https://golang.org/doc/install) >= 1.23 (to build the provider)
+- [Go](https://golang.org/doc/install) >= 1.25.0 (to build the provider; lab pinned to 1.25.6)
 - TP-Link Omada Software Controller 6.x
 
 
@@ -51,10 +53,26 @@ terraform {
 ### Building from Source
 
 ```sh
-git clone https://github.com/emanuelbesliu/terraform-provider-tplink-omada.git
+git clone --branch test/software-controller-lab https://github.com/wbniv/terraform-provider-tplink-omada.git
 cd terraform-provider-tplink-omada
 make build
 ```
+
+Go dependencies are checked into `vendor/` at the versions in `go.mod` and `go.sum`. Ordinary builds use them automatically; `go build -mod=vendor` makes that choice explicit. Regenerate with Go 1.25.6 using `go mod vendor` after an intentional dependency update.
+
+### Real-controller development lab
+
+The [isolated lab](dev/controller-lab/README.md) runs the real Omada Software Controller **6.1.0.19** and Terraform **1.15.8** in Docker. It needs no adopted hardware for controller API tests. AP radio behavior, switch ports, provisioning, and traffic remain hardware checks.
+
+The [official controller archive](third_party/omada/README.md) is vendored through **Git LFS**, with its SHA-256 and source recorded. Run `git lfs pull` after cloning. The lab verifies the archive and compares all 533 controller JARs with its pinned community runtime image before testing. Go dependencies use ordinary Git; the Omada distribution uses LFS.
+
+```sh
+dev/controller-lab/run.sh up
+dev/controller-lab/run.sh test
+dev/controller-lab/run.sh down
+```
+
+The first real-controller run passed network/profile CRUD, site credential rotation, and discovery of **102 networks**. It also exposed open compatibility failures: G1 treats the unpaginated WLAN-group response as paginated; certificate uploads use incorrect metadata/identity fields; a lost session can return HTTP 302; the IP-group route is rejected; and an empty device inventory becomes Terraform `null`. These are retained as failing probes. This branch is a development/review branch, and the real-controller suite is not yet all green.
 
 ## Provider Configuration
 

@@ -1,10 +1,16 @@
 | Date | Change |
 |------|--------|
+| [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/9343503) | fix(client)!: read complete paginated collections |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/c210dec) | fix(client)!: validate HTTP responses and protect error diagnostics |
 | [2026-04-09](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/2f3f5c7) | feat: add omada_controller_certificate resource for TLS certificate management |
 | [2026-03-30](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/ace2169) | feat: add CI workflow, release-please, dependabot, issue/PR templates, Makefile, and README |
 
 <!--history-meta v1
+9343503	author	Will Norris
+9343503	added	4
+9343503	deleted	0
+9343503	files	1
+9343503	body	Read all pages for ten collections and raw SSID lookup. Preserve filters and authentication, validate pagination and unique identities, and return no partial results. Add bounded reads, client regressions, Terraform import/refresh recovery coverage, and collection documentation.\n\nBREAKING CHANGE: Collection reads reject inconsistent metadata, missing or duplicate identities, malformed objects, and unfinished listings. Data-only page wrappers must advance to an empty page. Reads are bounded to 10000 pages and 64 MiB of result JSON. Schemas and import IDs are unchanged.
 c210dec	author	Will Norris
 c210dec	added	4
 c210dec	deleted	0

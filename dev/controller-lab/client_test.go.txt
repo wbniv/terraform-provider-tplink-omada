@@ -1,0 +1,266 @@
+package client
+
+// This file is copied into internal/client by run.sh. It is deliberately opt-in:
+// these probes write to, and replace the HTTPS certificate of, a disposable lab.
+import (
+	"bytes"
+	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/json"
+	"encoding/pem"
+	"fmt"
+	"math/big"
+	"mime/multipart"
+	"net"
+	"net/http"
+	"net/http/cookiejar"
+	"os"
+	"testing"
+	"time"
+)
+
+func labClient(t *testing.T) (*Client, context.Context, string) {
+	t.Helper()
+	if os.Getenv("OMADA_CONTROLLER_LAB") != "1" {
+		t.Skip("disposable controller lab only")
+	}
+	if os.Getenv("OMADA_URL") != "https://controller:8043" || os.Getenv("OMADA_TEST_SITE_ID") == "" {
+		t.Fatal("refusing a target outside the isolated lab")
+	}
+	c, err := NewClient(os.Getenv("OMADA_URL"), os.Getenv("OMADA_USERNAME"), os.Getenv("OMADA_PASSWORD"), true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	t.Cleanup(cancel)
+	return c, ctx, os.Getenv("OMADA_TEST_SITE_ID")
+}
+
+func TestControllerLabCollections(t *testing.T) {
+	c, ctx, site := labClient(t)
+	checks := []struct {
+		name string
+		read func() (int, error)
+	}{
+		{"sites", func() (int, error) { v, e := c.ListSites(ctx); return len(v), e }},
+		{"networks", func() (int, error) { v, e := c.ListNetworks(ctx, site); return len(v), e }},
+		{"wlan_groups", func() (int, error) { v, e := c.ListWlanGroups(ctx, site); return len(v), e }},
+		{"profiles", func() (int, error) { v, e := c.ListPortProfiles(ctx, site); return len(v), e }},
+		{"acls", func() (int, error) { v, e := c.ListACLRules(ctx, site, 0); return len(v), e }},
+		{"ip_groups", func() (int, error) { v, e := c.ListIPGroups(ctx, site); return len(v), e }},
+		{"mdns", func() (int, error) { v, e := c.ListMDNSRules(ctx, site); return len(v), e }},
+		{"saml_idps", func() (int, error) { v, e := c.ListSAMLIdPs(ctx); return len(v), e }},
+		{"saml_roles", func() (int, error) { v, e := c.ListSAMLRoles(ctx); return len(v), e }},
+		{"devices", func() (int, error) { v, e := c.ListDevices(ctx, site); return len(v), e }},
+	}
+	for _, check := range checks {
+		t.Run(check.name, func(t *testing.T) {
+			count, err := check.read()
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Logf("complete collection: %d rows", count)
+		})
+	}
+}
+
+func TestControllerLabReauthentication(t *testing.T) {
+	c, ctx, _ := labClient(t)
+	generation := c.authGeneration
+	// Invalidate our local session. This tests real rejection and automatic
+	// relogin, without claiming to have waited for the controller's timeout.
+	c.token = "deliberately-invalid-lab-token"
+	c.httpClient.Jar, _ = cookiejar.New(nil)
+	if _, err := c.ListSites(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if c.authGeneration <= generation {
+		t.Fatal("request did not reauthenticate")
+	}
+}
+
+func TestControllerLabNetworkPagination(t *testing.T) {
+	c, ctx, site := labClient(t)
+	before, err := c.ListNetworks(ctx, site)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ids []string
+	t.Cleanup(func() {
+		cleanup, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		defer cancel()
+		for _, id := range ids {
+			if err := c.DeleteNetwork(cleanup, site, id); err != nil {
+				t.Errorf("fixture cleanup: %v", err)
+			}
+		}
+		after, err := c.ListNetworks(cleanup, site)
+		if err != nil || len(after) != len(before) {
+			t.Errorf("network count was not restored: before=%d after=%d error=%v", len(before), len(after), err)
+		}
+	})
+	for i := 0; i < 101; i++ {
+		created, err := c.CreateNetwork(ctx, site, &Network{Name: fmt.Sprintf("LabPage%03d", i), Purpose: "vlan", Vlan: 2000 + i})
+		if err != nil {
+			t.Fatalf("creating fixture %d of 101: %v", i+1, err)
+		}
+		ids = append(ids, created.ID)
+	}
+	all, err := c.ListNetworks(ctx, site)
+	if err != nil || len(all) != len(before)+101 {
+		t.Fatalf("listing >100 networks: rows=%d error=%v", len(all), err)
+	}
+	if _, err := c.GetNetwork(ctx, site, ids[len(ids)-1]); err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("listed %d real networks and resolved the final fixture", len(all))
+}
+
+func TestControllerLabSiteLifecycle(t *testing.T) {
+	c, ctx, _ := labClient(t)
+	id, err := c.CreateSite(ctx, &SiteCreateRequest{Name: "LabLifecycle", Region: "United States", TimeZone: "UTC", Scenario: "Office",
+		DeviceAccountSetting: &DeviceAccountInput{Username: "lab-device", Password: os.Getenv("OMADA_LAB_DEVICE_PASSWORD")}})
+	if err != nil || id == "" {
+		t.Fatalf("site creation: id_present=%v error=%v", id != "", err)
+	}
+	deleted := false
+	t.Cleanup(func() {
+		if !deleted {
+			if err := c.DeleteSite(context.Background(), id); err != nil {
+				t.Errorf("site cleanup: %v", err)
+			}
+		}
+	})
+	if _, err := c.GetSite(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.UpdateSite(ctx, id, &SiteSettingFields{Name: "LabLifecycleRenamed", Region: "United States", TimeZone: "UTC", Scenario: "Office"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.DeleteSite(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+	deleted = true
+	if _, err := c.GetSite(ctx, id); err == nil {
+		t.Fatal("deleted site unexpectedly readable")
+	} else {
+		t.Logf("deleted site read: %T: %v", err, err)
+	}
+	if err := c.DeleteSite(ctx, id); err == nil {
+		t.Log("repeat delete accepted")
+	} else {
+		t.Logf("repeat delete: %T: %v", err, err)
+	}
+}
+
+func TestControllerLabCertificate(t *testing.T) {
+	c, ctx, _ := labClient(t)
+	certPEM, keyPEM, der := labCertificate(t)
+	certID, err := c.UploadCertificate(ctx, certPEM, "lab.pem")
+	if err != nil || certID == "" {
+		t.Fatalf("certificate upload: id_present=%v error=%v", certID != "", err)
+	}
+	keyID, err := c.UploadKey(ctx, keyPEM, "lab-key.pem")
+	if err != nil || keyID == "" {
+		t.Fatalf("key upload: id_present=%v error=%v", keyID != "", err)
+	}
+	if err := c.ActivateCertificate(ctx, certID, keyID); err != nil {
+		t.Fatal(err)
+	}
+	checkLabCertificate(t, c, ctx, certID, keyID, der)
+}
+
+func labCertificate(t *testing.T) ([]byte, []byte, []byte) {
+	t.Helper()
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatal(err)
+	}
+	template := &x509.Certificate{SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "controller"}, DNSNames: []string{"controller"},
+		NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(24 * time.Hour), KeyUsage: x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}}
+	der, err := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}),
+		pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)}), der
+}
+
+func checkLabCertificate(t *testing.T, c *Client, ctx context.Context, certID, keyID string, der []byte) {
+	t.Helper()
+	setting, err := c.GetControllerCertificateSetting(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if setting.CertID != certID || setting.KeyID != keyID {
+		t.Errorf("certificate readback does not match uploaded IDs: certificate_match=%v key_match=%v", setting.CertID == certID, setting.KeyID == keyID)
+	}
+	connection, err := tls.DialWithDialer(&net.Dialer{Timeout: 10 * time.Second}, "tcp", "controller:8043", &tls.Config{InsecureSkipVerify: true}) // isolated self-signed lab
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer connection.Close()
+	if string(connection.ConnectionState().PeerCertificates[0].Raw) != string(der) {
+		t.Error("new TLS connection does not serve the uploaded certificate")
+	}
+}
+
+// Diagnostic comparison with the multipart names used by the bundled TP-Link UI.
+// Passing this probe does not mean the provider's public upload methods work.
+func TestControllerLabCertificateWireShape(t *testing.T) {
+	c, ctx, _ := labClient(t)
+	cert, key, _ := labCertificate(t)
+	for _, file := range []struct {
+		kind, field, id, name string
+		content               []byte
+	}{
+		{"certificate", "cerName", "cerId", "lab.pem", cert},
+		{"key", "keyName", "keyId", "lab-key.pem", key},
+	} {
+		t.Run(file.kind, func(t *testing.T) {
+			var body bytes.Buffer
+			writer := multipart.NewWriter(&body)
+			part, err := writer.CreateFormFile("file", file.name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := part.Write(file.content); err != nil {
+				t.Fatal(err)
+			}
+			metadata, err := json.Marshal(map[string]string{file.field: file.name})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := writer.WriteField("data", string(metadata)); err != nil {
+				t.Fatal(err)
+			}
+			if err := writer.Close(); err != nil {
+				t.Fatal(err)
+			}
+			url := fmt.Sprintf("%s/%s/api/v2/files/controller/%s", c.baseURL, c.omadacID, file.kind)
+			response, err := c.doAuthenticatedRequest(ctx, http.MethodPost, url, writer.FormDataContentType(), body.Bytes(), true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var result map[string]any
+			if err := json.Unmarshal(response.Result, &result); err != nil {
+				t.Fatal(err)
+			}
+			id, _ := result[file.id].(string)
+			generic, _ := result["id"].(string)
+			t.Logf("wire %s present=%v; provider's generic id present=%v", file.id, id != "", generic != "")
+			if id == "" {
+				t.Fatal("missing UI-defined upload identity")
+			}
+			// These uploads are not activated; remove just the uploaded fixture.
+			if _, err := c.doRequest(ctx, http.MethodDelete, url+"/"+id, nil); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}

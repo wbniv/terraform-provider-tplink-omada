@@ -1,0 +1,105 @@
+package provider
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"reflect"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/terraform-provider-tplink-omada/internal/client"
+)
+
+func TestControllerLabEmptyDevices(t *testing.T) {
+	if os.Getenv("OMADA_CONTROLLER_LAB") != "1" {
+		t.Skip("disposable controller lab only")
+	}
+	if os.Getenv("OMADA_URL") != "https://controller:8043" {
+		t.Fatal("refusing a target outside the isolated lab")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) }, ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{{Config: fmt.Sprintf(`
+data "omada_devices" "lab" { site_id = %q }
+output "device_count" { value = length(data.omada_devices.lab.devices) }
+`, os.Getenv("OMADA_TEST_SITE_ID")), Check: resource.TestCheckOutput("device_count", "0")}},
+	})
+}
+
+func TestControllerLabSiteCredentials(t *testing.T) {
+	if os.Getenv("OMADA_CONTROLLER_LAB") != "1" {
+		t.Skip("disposable controller lab only")
+	}
+	if os.Getenv("OMADA_URL") != "https://controller:8043" {
+		t.Fatal("refusing a target outside the isolated lab")
+	}
+	bootstrap := os.Getenv("OMADA_LAB_DEVICE_PASSWORD")
+	if bootstrap == "" {
+		t.Fatal("missing private lab device credential")
+	}
+	site := fmt.Sprintf(`
+resource "omada_site" "lab" {
+  name = "Terraform Credential Lab"
+  region = "United States"
+  time_zone = "UTC"
+  scenario = "Office"
+  device_account_username = "lab-device"
+  device_account_password = %q
+}
+`, bootstrap)
+	config := func(password string) string {
+		return site + fmt.Sprintf(`
+resource "omada_site_settings" "lab" {
+  site_id = omada_site.lab.id
+  device_account_username = "lab-rotated"
+  device_account_password = %q
+}
+`, password)
+	}
+	var siteID string
+	var preserved map[string]any
+	check := func(password string) resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if err := resource.TestCheckResourceAttr("omada_site_settings.lab", "device_account_password", password)(state); err != nil {
+				return fmt.Errorf("configured credential not retained in state")
+			}
+			id := state.RootModule().Resources["omada_site.lab"].Primary.ID
+			if siteID != "" && id != siteID {
+				return fmt.Errorf("credential rotation replaced the site")
+			}
+			siteID = id
+			c, err := client.NewClient(os.Getenv("OMADA_URL"), os.Getenv("OMADA_USERNAME"), os.Getenv("OMADA_PASSWORD"), true)
+			if err != nil {
+				return err
+			}
+			raw, err := c.GetSiteSettingsRaw(context.Background(), id)
+			if err != nil {
+				return err
+			}
+			account, ok := raw["deviceAccount"].(map[string]any)
+			if !ok || account["username"] != "lab-rotated" {
+				return fmt.Errorf("controller did not retain the rotated username")
+			}
+			current := map[string]any{}
+			for _, section := range []string{"mesh", "roaming", "led", "lldp", "bandSteering"} {
+				current[section] = raw[section]
+			}
+			if preserved != nil && !reflect.DeepEqual(preserved, current) {
+				return fmt.Errorf("credential rotation changed unrelated settings")
+			}
+			preserved = current
+			return nil
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) }, ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: site, Check: resource.TestCheckResourceAttrSet("omada_site.lab", "id")},
+			{Config: config(bootstrap + "R1"), Check: check(bootstrap + "R1")},
+			{Config: config(bootstrap + "R2"), Check: check(bootstrap + "R2")},
+			{Config: config(bootstrap + "R2"), PlanOnly: true},
+		},
+	})
+}

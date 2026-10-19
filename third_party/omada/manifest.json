@@ -1,0 +1,10 @@
+{
+  "version": "6.1.0.19",
+  "filename": "Omada_Network_Application_v6.1.0.19_linux_x64_20260117100056.tar.gz",
+  "source": "https://static.tp-link.com/upload/software/2026/202601/20260121/Omada_Network_Application_v6.1.0.19_linux_x64_20260117100056.tar.gz",
+  "download_page": "https://support.omadanetworks.com/en/download/software/omada-controller/",
+  "sha256": "885eb2aeaed16b300e618297af2132d4e015c7f9bc5edce2ba81b8cdb181e126",
+  "application_jars": 533,
+  "controller_image": "mbentley/omada-controller:6.1.0.19@sha256:94571a6544a5db9419681d3cecdaa7dccf9042e586cae9a1c34c3f22994e6b38",
+  "packaging_source": "https://github.com/mbentley/docker-omada-controller"
+}

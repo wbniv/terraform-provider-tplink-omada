@@ -31,3 +31,7 @@ test-*/
 .vscode/
 *.swp
 *.swo
+
+# Disposable local controller lab (credentials, state, temporary assets)
+.controller-lab/
+__pycache__/
