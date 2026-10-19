@@ -1,9 +1,15 @@
 | Date | Change |
 |------|--------|
+| [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/c210dec) | fix(client)!: validate HTTP responses and protect error diagnostics |
 | [2026-04-09](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/2f3f5c7) | feat: add omada_controller_certificate resource for TLS certificate management |
 | [2026-03-30](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/ace2169) | feat: add CI workflow, release-please, dependabot, issue/PR templates, Makefile, and README |
 
 <!--history-meta v1
+c210dec	author	Will Norris
+c210dec	added	4
+c210dec	deleted	0
+c210dec	files	1
+c210dec	body	Validate status, strict JSON envelopes, response sizes, and redirects across discovery, login, JSON requests, and multipart uploads. Preserve typed causes and bounded authentication replay. Add client and Terraform failure-recovery regressions and an API response migration guide.\n\nBREAKING CHANGE: API redirects and nonstandard or empty response envelopes now fail; configure the final controller URL. Diagnostics omit raw controller messages and response bodies; use numeric status and API codes. HTTP 401/403 expiry responses do not trigger automatic replay.
 2f3f5c7	author	emanuelbesliu
 2f3f5c7	added	2
 2f3f5c7	deleted	0

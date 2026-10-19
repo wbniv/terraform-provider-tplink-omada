@@ -105,6 +105,10 @@ resource "omada_wireless_network" "iot_wifi" {
 
 See the [`docs/`](docs/) directory and the [Terraform Registry documentation](https://registry.terraform.io/providers/emanuelbesliu/tplink-omada/latest/docs) for full resource and data source schemas.
 
+## Complete collection reads
+
+Collection reads follow all pages and fail if an incomplete or inconsistent result cannot be trusted. See [Complete collection reads](docs/guides/collection-reads.md) for supported response shapes, limits, and refresh recovery.
+
 ## API response handling
 
 The provider validates HTTP status and explicit Omada success envelopes, rejects redirects, and omits raw response bodies and URLs from errors. See [API response and error handling](docs/guides/api-responses.md) for URL configuration, response limits, diagnostics, and failure recovery.

@@ -514,19 +514,6 @@ func (c *Client) doAuthenticatedRequest(ctx context.Context, method, url, conten
 	return apiResp, err
 }
 
-// decodePaginatedData decodes paginated list data from an API response.
-func decodePaginatedData(result json.RawMessage, target interface{}) error {
-	var paginated PaginatedResult
-	if err := json.Unmarshal(result, &paginated); err != nil {
-		// Try direct array decode (some endpoints don't paginate)
-		return json.Unmarshal(result, target)
-	}
-	if paginated.Data == nil {
-		return json.Unmarshal(result, target)
-	}
-	return json.Unmarshal(paginated.Data, target)
-}
-
 // isEmptyResult returns true if the API response result is empty, null, or
 // contains only whitespace. The Omada 6.x API sometimes returns an empty
 // result body on successful PATCH operations.
@@ -566,16 +553,7 @@ func (c *Client) ResolveSiteID(ctx context.Context, nameOrID string) (string, er
 
 // ListSites returns all sites from the controller.
 func (c *Client) ListSites(ctx context.Context) ([]Site, error) {
-	url := c.globalURL("/sites") + "&currentPage=1&currentPageSize=100"
-	resp, err := c.doRequest(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	var sites []Site
-	if err := decodePaginatedData(resp.Result, &sites); err != nil {
-		return nil, fmt.Errorf("decoding sites: %w", err)
-	}
-	return sites, nil
+	return listAll[Site](ctx, c, c.globalURL("/sites"), "id")
 }
 
 // GetSite returns a single site by ID via GET /api/v2/sites/{siteId}.
@@ -625,15 +603,7 @@ func (c *Client) DeleteSite(ctx context.Context, siteID string) error {
 
 // ListNetworks returns all LAN networks for the given site.
 func (c *Client) ListNetworks(ctx context.Context, siteID string) ([]Network, error) {
-	resp, err := c.doSiteRequestWithParams(ctx, siteID, http.MethodGet, "/setting/lan/networks", "&currentPage=1&currentPageSize=100", nil)
-	if err != nil {
-		return nil, err
-	}
-	var networks []Network
-	if err := decodePaginatedData(resp.Result, &networks); err != nil {
-		return nil, fmt.Errorf("decoding networks: %w", err)
-	}
-	return networks, nil
+	return listAll[Network](ctx, c, c.siteURL(siteID, "/setting/lan/networks"), "id")
 }
 
 // GetNetwork returns a network by ID.
@@ -715,15 +685,7 @@ func (c *Client) DeleteNetwork(ctx context.Context, siteID, networkID string) er
 
 // ListWlanGroups returns all WLAN groups.
 func (c *Client) ListWlanGroups(ctx context.Context, siteID string) ([]WlanGroup, error) {
-	resp, err := c.doSiteRequestWithParams(ctx, siteID, http.MethodGet, "/setting/wlans", "&currentPage=1&currentPageSize=100", nil)
-	if err != nil {
-		return nil, err
-	}
-	var groups []WlanGroup
-	if err := decodePaginatedData(resp.Result, &groups); err != nil {
-		return nil, fmt.Errorf("decoding wlan groups: %w", err)
-	}
-	return groups, nil
+	return listAll[WlanGroup](ctx, c, c.siteURL(siteID, "/setting/wlans"), "id")
 }
 
 // GetDefaultWlanGroupID returns the first WLAN group's ID (usually "Default").
@@ -784,15 +746,7 @@ func (c *Client) DeleteWlanGroup(ctx context.Context, siteID, wlanGroupID string
 
 // ListWirelessNetworks returns all SSIDs in a WLAN group.
 func (c *Client) ListWirelessNetworks(ctx context.Context, siteID, wlanGroupID string) ([]WirelessNetwork, error) {
-	resp, err := c.doSiteRequestWithParams(ctx, siteID, http.MethodGet, fmt.Sprintf("/setting/wlans/%s/ssids", wlanGroupID), "&currentPage=1&currentPageSize=100", nil)
-	if err != nil {
-		return nil, err
-	}
-	var ssids []WirelessNetwork
-	if err := decodePaginatedData(resp.Result, &ssids); err != nil {
-		return nil, fmt.Errorf("decoding SSIDs: %w", err)
-	}
-	return ssids, nil
+	return listAll[WirelessNetwork](ctx, c, c.siteURL(siteID, fmt.Sprintf("/setting/wlans/%s/ssids", wlanGroupID)), "id")
 }
 
 // GetWirelessNetwork returns a specific SSID.
@@ -811,18 +765,8 @@ func (c *Client) GetWirelessNetwork(ctx context.Context, siteID, wlanGroupID, ss
 
 // GetWirelessNetworkRaw returns the raw JSON for a specific SSID (needed for PATCH).
 func (c *Client) GetWirelessNetworkRaw(ctx context.Context, siteID, wlanGroupID, ssidID string) (map[string]interface{}, error) {
-	resp, err := c.doSiteRequestWithParams(ctx, siteID, http.MethodGet, fmt.Sprintf("/setting/wlans/%s/ssids", wlanGroupID), "&currentPage=1&currentPageSize=100", nil)
+	ssids, err := listAll[map[string]interface{}](ctx, c, c.siteURL(siteID, fmt.Sprintf("/setting/wlans/%s/ssids", wlanGroupID)), "id")
 	if err != nil {
-		return nil, err
-	}
-
-	var paginated PaginatedResult
-	if err := json.Unmarshal(resp.Result, &paginated); err != nil {
-		return nil, err
-	}
-
-	var ssids []map[string]interface{}
-	if err := json.Unmarshal(paginated.Data, &ssids); err != nil {
 		return nil, err
 	}
 
@@ -889,15 +833,7 @@ func (c *Client) DeleteWirelessNetwork(ctx context.Context, siteID, wlanGroupID,
 
 // ListPortProfiles returns all LAN port profiles.
 func (c *Client) ListPortProfiles(ctx context.Context, siteID string) ([]PortProfile, error) {
-	resp, err := c.doSiteRequestWithParams(ctx, siteID, http.MethodGet, "/setting/lan/profiles", "&currentPage=1&currentPageSize=100", nil)
-	if err != nil {
-		return nil, err
-	}
-	var profiles []PortProfile
-	if err := decodePaginatedData(resp.Result, &profiles); err != nil {
-		return nil, fmt.Errorf("decoding port profiles: %w", err)
-	}
-	return profiles, nil
+	return listAll[PortProfile](ctx, c, c.siteURL(siteID, "/setting/lan/profiles"), "id")
 }
 
 // GetPortProfile returns a port profile by ID.
@@ -1662,17 +1598,7 @@ type ACLListResult struct {
 // ListACLRules returns all ACL rules of the given type for a site.
 // aclType: 0=gateway, 1=switch, 2=eap
 func (c *Client) ListACLRules(ctx context.Context, siteID string, aclType int) ([]ACLRule, error) {
-	params := fmt.Sprintf("&type=%d&currentPage=1&currentPageSize=100", aclType)
-	resp, err := c.doSiteRequestWithParams(ctx, siteID, http.MethodGet, "/setting/firewall/acls", params, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var listResult ACLListResult
-	if err := json.Unmarshal(resp.Result, &listResult); err != nil {
-		return nil, fmt.Errorf("decoding ACL list: %w", err)
-	}
-	return listResult.Data, nil
+	return listAll[ACLRule](ctx, c, c.siteURL(siteID, "/setting/firewall/acls")+fmt.Sprintf("&type=%d", aclType), "id")
 }
 
 // GetACLRule returns a single ACL rule by ID (found by listing all rules of the type).
@@ -1744,15 +1670,7 @@ type IPGroup struct {
 // ListIPGroups returns all IP groups for a site.
 // Note: requires a gateway device adopted into the site.
 func (c *Client) ListIPGroups(ctx context.Context, siteID string) ([]IPGroup, error) {
-	resp, err := c.doSiteRequestWithParams(ctx, siteID, http.MethodGet, "/setting/firewall/ipGroups", "&currentPage=1&currentPageSize=100", nil)
-	if err != nil {
-		return nil, err
-	}
-	var groups []IPGroup
-	if err := decodePaginatedData(resp.Result, &groups); err != nil {
-		return nil, fmt.Errorf("decoding IP groups: %w", err)
-	}
-	return groups, nil
+	return listAll[IPGroup](ctx, c, c.siteURL(siteID, "/setting/firewall/ipGroups"), "id")
 }
 
 // GetIPGroup returns a single IP group by ID.
@@ -1840,16 +1758,7 @@ type MDNSListResult struct {
 
 // ListMDNSRules returns all mDNS reflector rules for a site.
 func (c *Client) ListMDNSRules(ctx context.Context, siteID string) ([]MDNSRule, error) {
-	resp, err := c.doSiteRequestWithParams(ctx, siteID, http.MethodGet, "/setting/service/mdns", "&currentPage=1&currentPageSize=100", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var listResult MDNSListResult
-	if err := json.Unmarshal(resp.Result, &listResult); err != nil {
-		return nil, fmt.Errorf("decoding mDNS list: %w", err)
-	}
-	return listResult.Data, nil
+	return listAll[MDNSRule](ctx, c, c.siteURL(siteID, "/setting/service/mdns"), "id")
 }
 
 // GetMDNSRule returns a single mDNS rule by ID (found by listing all rules).
@@ -1933,16 +1842,7 @@ type SAMLIdPCreateRequest struct {
 
 // ListSAMLIdPs returns all SAML identity provider connections.
 func (c *Client) ListSAMLIdPs(ctx context.Context) ([]SAMLIdP, error) {
-	url := c.globalURL("/idps") + "&currentPage=1&currentPageSize=100"
-	resp, err := c.doRequest(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	var idps []SAMLIdP
-	if err := decodePaginatedData(resp.Result, &idps); err != nil {
-		return nil, fmt.Errorf("decoding SAML IdPs: %w", err)
-	}
-	return idps, nil
+	return listAll[SAMLIdP](ctx, c, c.globalURL("/idps"), "idpId")
 }
 
 // GetSAMLIdP returns a single SAML IdP by ID.
@@ -2055,16 +1955,7 @@ type SAMLRoleCreateRequest struct {
 
 // ListSAMLRoles returns all SAML external user groups.
 func (c *Client) ListSAMLRoles(ctx context.Context) ([]SAMLRole, error) {
-	url := c.globalURL("/extendUserGroups") + "&currentPage=1&currentPageSize=100"
-	resp, err := c.doRequest(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	var roles []SAMLRole
-	if err := decodePaginatedData(resp.Result, &roles); err != nil {
-		return nil, fmt.Errorf("decoding SAML roles: %w", err)
-	}
-	return roles, nil
+	return listAll[SAMLRole](ctx, c, c.globalURL("/extendUserGroups"), "id")
 }
 
 // GetSAMLRole returns a single SAML role by ID.

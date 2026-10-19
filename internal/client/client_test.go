@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -64,7 +65,7 @@ func mustMarshal(t *testing.T, v interface{}) json.RawMessage {
 func paginatedResponse(t *testing.T, data interface{}) json.RawMessage {
 	t.Helper()
 	return mustMarshal(t, PaginatedResult{
-		TotalRows:   1,
+		TotalRows:   reflect.ValueOf(data).Len(),
 		CurrentPage: 1,
 		CurrentSize: 100,
 		Data:        mustMarshal(t, data),
@@ -397,42 +398,6 @@ func TestSiteURL(t *testing.T) {
 	want := "https://10.0.20.7:8043/abc123/api/v2/sites/site-1/setting/lan/networks?token=mytoken"
 	if got != want {
 		t.Errorf("siteURL = %q, want %q", got, want)
-	}
-}
-
-// =============================================================================
-// decodePaginatedData Tests
-// =============================================================================
-
-func TestDecodePaginatedData_Paginated(t *testing.T) {
-	data := []Site{{ID: "s1", Name: "Site1"}}
-	paginated := PaginatedResult{
-		TotalRows:   1,
-		CurrentPage: 1,
-		CurrentSize: 100,
-		Data:        mustMarshal(t, data),
-	}
-	raw := mustMarshal(t, paginated)
-
-	var result []Site
-	if err := decodePaginatedData(raw, &result); err != nil {
-		t.Fatalf("decodePaginatedData: %v", err)
-	}
-	if len(result) != 1 || result[0].Name != "Site1" {
-		t.Errorf("got %+v, want [{ID:s1 Name:Site1}]", result)
-	}
-}
-
-func TestDecodePaginatedData_DirectArray(t *testing.T) {
-	data := []Site{{ID: "s1", Name: "Site1"}}
-	raw := mustMarshal(t, data)
-
-	var result []Site
-	if err := decodePaginatedData(raw, &result); err != nil {
-		t.Fatalf("decodePaginatedData: %v", err)
-	}
-	if len(result) != 1 || result[0].Name != "Site1" {
-		t.Errorf("got %+v, want [{ID:s1 Name:Site1}]", result)
 	}
 }
 
