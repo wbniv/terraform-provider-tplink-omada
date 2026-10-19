@@ -290,3 +290,45 @@ func TestControllerLabCertificateResource(t *testing.T) {
   {ResourceName:"omada_controller_certificate.lab",ImportState:true,ImportStateVerify:true,ImportStateVerifyIgnore:[]string{"certificate_pem","private_key_pem"}},
  }})
 }
+
+func TestControllerLabIPGroup(t *testing.T) {
+ if os.Getenv("OMADA_CONTROLLER_LAB")!="1"{t.Skip("disposable lab only")}
+ if os.Getenv("OMADA_URL")!="https://controller:8043"{t.Fatal("refusing non-lab target")}
+ site:=os.Getenv("OMADA_TEST_SITE_ID")
+ config:=func(name,ports string)string{return fmt.Sprintf(`
+resource "omada_ip_group" "lab" {
+ site_id = %q
+ name = %q
+ ip_list = [
+  {ip = "192.0.2.0/24", port_list = %s},
+  {ip = "198.51.100.10/32", port_list = %s}
+ ]
+}
+data "omada_ip_groups" "lab" {
+ site_id = %q
+ depends_on = [omada_ip_group.lab]
+}
+`,site,name,ports,ports,site)}
+ first:=config("L4 Terraform",`["80", "7000-7100"]`)
+ second:=config("L4 Terraform renamed",`["443", "8443"]`)
+ var id string
+ check:=func(s *terraform.State)error{
+  attrs:=s.RootModule().Resources["omada_ip_group.lab"].Primary.Attributes
+  if attrs["id"]=="" || (id!="" && id!=attrs["id"]) {return fmt.Errorf("IP group identity changed")};id=attrs["id"]
+  c,err:=client.NewClient(os.Getenv("OMADA_URL"),os.Getenv("OMADA_USERNAME"),os.Getenv("OMADA_PASSWORD"),true);if err!=nil{return err}
+  g,err:=c.GetIPGroup(context.Background(),site,id);if err!=nil{return err}
+  if g.Name!=attrs["name"] || len(g.IPList)!=2 || g.IPList[0].PortList[0]!=attrs["ip_list.0.port_list.0"] {return fmt.Errorf("controller IP group differs from state")}
+  return resource.TestCheckResourceAttr("data.omada_ip_groups.lab","ip_groups.#","1")(s)
+ }
+ resource.Test(t,resource.TestCase{PreCheck:func(){testAccPreCheck(t)},ProtoV6ProviderFactories:testAccProtoV6ProviderFactories,
+ CheckDestroy:func(s *terraform.State)error{
+  c,err:=client.NewClient(os.Getenv("OMADA_URL"),os.Getenv("OMADA_USERNAME"),os.Getenv("OMADA_PASSWORD"),true);if err!=nil{return err}
+  groups,err:=c.ListIPGroups(context.Background(),site);if err!=nil{return err};for _,g:=range groups{if g.ID==id{return fmt.Errorf("IP group survived destroy")}};return nil
+ },Steps:[]resource.TestStep{
+  {Config:first,Check:check},
+  {Config:first,PlanOnly:true},
+  {Config:second,Check:check},
+  {Config:second,PlanOnly:true},
+  {ResourceName:"omada_ip_group.lab",ImportState:true,ImportStateIdFunc:func(s *terraform.State)(string,error){return site+"/"+id,nil},ImportStateVerify:true,ImportStateVerifyIgnore:[]string{"ip_list.1.ip"}},
+ }})
+}

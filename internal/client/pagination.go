@@ -13,8 +13,8 @@ type collectionPolicy int
 
 const (
 	pagedCollection collectionPolicy = iota
-	// WLAN groups on 6.1 return a complete data envelope without page metadata.
-	wlanGroupCollection
+	// WLAN and profile-group endpoints on 6.1 return complete data envelopes.
+	completeDataCollection
 )
 
 const maxCollectionPages = 10000
@@ -55,7 +55,7 @@ func listCollection[T any](ctx context.Context, c *Client, requestURL, identityK
 		if err != nil {
 			return nil, err
 		}
-		if policy == wlanGroupCollection && !direct {
+		if policy == completeDataCollection && !direct {
 			fields, err := collectionObject(resp.Result)
 			if err != nil {
 				return nil, err

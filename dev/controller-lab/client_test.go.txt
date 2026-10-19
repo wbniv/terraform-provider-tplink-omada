@@ -280,3 +280,38 @@ func TestControllerLabCertificateWireShape(t *testing.T) {
 		})
 	}
 }
+
+func TestControllerLabIPGroups(t *testing.T){
+ c,ctx,site:=labClient(t)
+ before,err:=c.ListIPGroups(ctx,site);if err!=nil{t.Fatal(err)}
+ var ids []string
+ var aclID string
+ t.Cleanup(func(){
+  cleanup,cancel:=context.WithTimeout(context.Background(),2*time.Minute);defer cancel()
+  if aclID!="" {if err:=c.DeleteACLRule(cleanup,site,aclID);err!=nil{t.Error(err)}}
+  for _,id:=range ids{if err:=c.DeleteIPGroup(cleanup,site,id);err!=nil{t.Error(err)}}
+  after,err:=c.ListIPGroups(cleanup,site);if err!=nil || len(after)!=len(before){t.Errorf("group cleanup count mismatch: %v",err)}
+ })
+ for i:=0;i<101;i++{
+  group,err:=c.CreateIPGroup(ctx,site,&IPGroup{Name:fmt.Sprintf("L4 collection %03d",i),Type:1,IPList:[]IPGroupEntry{{IP:"192.0.2.0/24",PortList:[]string{"80"}}}})
+  if err!=nil {if isAPIError(err,-33725) && len(ids)>1 {t.Logf("controller IP/Port group capacity reached after %d synthetic groups",len(ids));break};t.Fatalf("creating group %d: %v",i,err)};ids=append(ids,group.ID)
+ }
+ groups,err:=c.ListIPGroups(ctx,site);if err!=nil || len(groups)!=len(before)+len(ids){t.Fatalf("incomplete group collection: count=%d err=%v",len(groups),err)}
+ t.Logf("all %d synthetic type-1 groups returned",len(ids))
+ response,err:=c.doSiteRequestWithParams(ctx,site,http.MethodGet,ipGroupsRoute+"/1","&currentPage=2&currentPageSize=1",nil);if err!=nil{t.Fatal(err)}
+ var envelope struct{Data []json.RawMessage `json:"data"`};if err:=json.Unmarshal(response.Result,&envelope);err!=nil{t.Fatal(err)}
+ if len(envelope.Data)!=len(groups){t.Fatal("profile-group envelope was unexpectedly paginated")}
+ t.Log("page 2 with size 1 still returns the complete group collection")
+ rule:=&ACLRule{Name:"L4 Group Reference",Type:0,Status:false,Policy:1,Protocols:[]int{6},SourceType:2,SourceIDs:[]string{ids[0]},DestinationType:2,DestinationIDs:[]string{ids[0]},Direction:ACLDirection{LanToWan:true}}
+ // ACL creation returns an empty success envelope on 6.1.0.19. The generic
+ // CreateACLRule decoder is separately tracked as L8; use the raw client here.
+ if _,err:=c.doSiteRequest(ctx,site,http.MethodPost,"/setting/firewall/acls",rule);err!=nil{t.Fatal(err)}
+ rules,err:=c.ListACLRules(ctx,site,0);if err!=nil{t.Fatal(err)}
+ for _,r:=range rules{if r.Name==rule.Name{aclID=r.ID}}
+ if aclID==""{t.Fatal("ACL reference was not stored")}
+ group,err:=c.UpdateIPGroup(ctx,site,ids[0],&IPGroup{Name:"L4 referenced rename",Type:1,IPList:[]IPGroupEntry{{IP:"192.0.2.0/24",PortList:[]string{"443"}}}})
+ if err!=nil || group.ID!=ids[0]{t.Fatalf("referenced group update: %v",err)}
+ stored,err:=c.GetACLRule(ctx,site,aclID,0);if err!=nil{t.Fatal(err)}
+ if len(stored.SourceIDs)!=1 || stored.SourceIDs[0]!=ids[0] || len(stored.DestinationIDs)!=1 || stored.DestinationIDs[0]!=ids[0]{t.Fatal("ACL lost group references")}
+ t.Log("disabled ACL references survive group rename and port update; traffic enforcement not tested")
+}

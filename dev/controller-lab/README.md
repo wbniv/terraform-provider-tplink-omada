@@ -83,3 +83,15 @@ LAB_CLIENT_RUN='^TestControllerLabReauthentication$' dev/controller-lab/run.sh t
 ```
 
 The raw probe disables redirect following for every opener and records only sanitized response shapes. Live cases cover missing cookies, invalid tokens, logout, multipart replay, and eight concurrent reads. The client now also runs under Go's race detector during the normal lab build gates. The new HTTP 302 recovery rule is limited to controller 6.1.0.19 and the exact same-origin login destination, with one shared reauthentication attempt and at most one replay per request. No redirected API request is followed. Natural timeout and other controller versions need separate verification.
+
+## IP/Port group check (L4)
+
+```sh
+python3 dev/controller-lab/ip-group-probe.py
+LAB_ACCEPTANCE_RUN='^TestControllerLabIPGroup$|^TestAccIPGroupCreateReadbackFailure$' \
+LAB_CLIENT_RUN='^TestControllerLabIPGroups$' dev/controller-lab/run.sh test
+```
+
+The raw probe inventories group types and response formats, then creates and removes synthetic groups and a disabled ACL. The live tests verify the Terraform lifecycle and data source, listing the complete supported group population (up to the controller quota or 101 fixtures), and retained ACL references after a group update. A mock Terraform scenario checks accepted creation followed by readback failure and recovery. All temporary groups and ACLs are cleaned up. These tests do not verify traffic enforcement.
+
+ACL creation's empty acknowledgment is a separate L8 finding: the raw client proves references can be stored, but the existing Terraform ACL create decoder still needs correction.

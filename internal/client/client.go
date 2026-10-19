@@ -687,7 +687,7 @@ func (c *Client) DeleteNetwork(ctx context.Context, siteID, networkID string) er
 
 // ListWlanGroups returns all WLAN groups.
 func (c *Client) ListWlanGroups(ctx context.Context, siteID string) ([]WlanGroup, error) {
-	return listCollection[WlanGroup](ctx, c, c.siteURL(siteID, "/setting/wlans"), "id", wlanGroupCollection)
+	return listCollection[WlanGroup](ctx, c, c.siteURL(siteID, "/setting/wlans"), "id", completeDataCollection)
 }
 
 // GetDefaultWlanGroupID returns the first WLAN group's ID (usually "Default").
@@ -1650,78 +1650,6 @@ func (c *Client) UpdateACLRule(ctx context.Context, siteID, ruleID string, rule 
 // DeleteACLRule deletes an ACL rule.
 func (c *Client) DeleteACLRule(ctx context.Context, siteID, ruleID string) error {
 	_, err := c.doSiteRequest(ctx, siteID, http.MethodDelete, fmt.Sprintf("/setting/firewall/acls/%s", ruleID), nil)
-	return err
-}
-
-// --- IP Groups ---
-
-// IPGroupEntry represents a single IP + port combination within an IP group.
-type IPGroupEntry struct {
-	IP       string   `json:"ip"`
-	PortList []string `json:"portList,omitempty"` // port numbers/ranges as strings (e.g., "80", "7000-7100")
-}
-
-// IPGroup represents an IP/Port group used in ACL rules.
-type IPGroup struct {
-	ID     string         `json:"id,omitempty"`
-	Name   string         `json:"name"`
-	Type   int            `json:"type"` // 1=IP/Port group
-	IPList []IPGroupEntry `json:"ipList"`
-}
-
-// ListIPGroups returns all IP groups for a site.
-// Note: requires a gateway device adopted into the site.
-func (c *Client) ListIPGroups(ctx context.Context, siteID string) ([]IPGroup, error) {
-	return listAll[IPGroup](ctx, c, c.siteURL(siteID, "/setting/firewall/ipGroups"), "id")
-}
-
-// GetIPGroup returns a single IP group by ID.
-func (c *Client) GetIPGroup(ctx context.Context, siteID, groupID string) (*IPGroup, error) {
-	groups, err := c.ListIPGroups(ctx, siteID)
-	if err != nil {
-		return nil, err
-	}
-	for _, g := range groups {
-		if g.ID == groupID {
-			return &g, nil
-		}
-	}
-	return nil, fmt.Errorf("IP group %q not found", groupID)
-}
-
-// CreateIPGroup creates a new IP group.
-func (c *Client) CreateIPGroup(ctx context.Context, siteID string, group *IPGroup) (*IPGroup, error) {
-	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPost, "/setting/firewall/ipGroups", group)
-	if err != nil {
-		return nil, err
-	}
-
-	var created IPGroup
-	if err := json.Unmarshal(resp.Result, &created); err != nil {
-		return nil, fmt.Errorf("decoding created IP group: %w", err)
-	}
-	return &created, nil
-}
-
-// UpdateIPGroup updates an existing IP group.
-func (c *Client) UpdateIPGroup(ctx context.Context, siteID, groupID string, group *IPGroup) (*IPGroup, error) {
-	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPatch, fmt.Sprintf("/setting/firewall/ipGroups/%s", groupID), group)
-	if err != nil {
-		return nil, err
-	}
-	if isEmptyResult(resp.Result) {
-		return c.GetIPGroup(ctx, siteID, groupID)
-	}
-	var updated IPGroup
-	if err := json.Unmarshal(resp.Result, &updated); err != nil {
-		return nil, fmt.Errorf("decoding updated IP group: %w", err)
-	}
-	return &updated, nil
-}
-
-// DeleteIPGroup deletes an IP group.
-func (c *Client) DeleteIPGroup(ctx context.Context, siteID, groupID string) error {
-	_, err := c.doSiteRequest(ctx, siteID, http.MethodDelete, fmt.Sprintf("/setting/firewall/ipGroups/%s", groupID), nil)
 	return err
 }
 

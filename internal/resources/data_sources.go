@@ -937,8 +937,7 @@ func (d *IPGroupsDataSource) Metadata(_ context.Context, req datasource.Metadata
 
 func (d *IPGroupsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Lists all IP/Port groups on the Omada Controller for the given site. " +
-			"Requires a gateway device adopted into the site.",
+		Description: "Lists IPv4 IP/Port groups (type 1) for the site. Controller configuration does not require an adopted gateway.",
 		Attributes: map[string]schema.Attribute{
 			"site_id": siteIDDataSourceSchema(),
 			"ip_groups": schema.ListNestedAttribute{

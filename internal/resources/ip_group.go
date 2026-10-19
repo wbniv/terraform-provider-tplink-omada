@@ -48,7 +48,7 @@ func (r *IPGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 	resp.Schema = schema.Schema{
 		Description: "Manages an IP/Port group on the Omada Controller. " +
 			"IP groups are used as source or destination in firewall ACL rules for port-based filtering. " +
-			"Requires a gateway device adopted into the site.",
+			"Controller configuration is supported without an adopted gateway; traffic enforcement requires hardware.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "The unique identifier of the IP group.",
@@ -76,8 +76,8 @@ func (r *IPGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 							Required:    true,
 						},
 						"port_list": schema.ListAttribute{
-							Description: "List of port numbers or ranges as strings (e.g., '80', '7000-7100').",
-							Optional:    true,
+							Description: "Nonempty port numbers or ranges; every IP entry must use the same list because Omada applies ports to the whole group.",
+							Required:    true,
 							ElementType: types.StringType,
 						},
 					},
@@ -124,6 +124,11 @@ func (r *IPGroupResource) Create(ctx context.Context, req resource.CreateRequest
 
 	created, err := r.client.CreateIPGroup(ctx, siteID, group)
 	if err != nil {
+		if created != nil && created.ID != "" {
+			plan.ID = types.StringValue(created.ID)
+			plan.Type = types.Int64Value(1)
+			resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+		}
 		resp.Diagnostics.AddError("Error creating IP group", err.Error())
 		return
 	}
@@ -252,10 +257,14 @@ func (r *IPGroupResource) setStateFromAPI(ctx context.Context, model *IPGroupRes
 	model.Name = types.StringValue(group.Name)
 	model.Type = types.Int64Value(int64(group.Type))
 
+	previous := model.IPList
 	model.IPList = make([]IPGroupEntryModel, len(group.IPList))
 	for i, entry := range group.IPList {
 		model.IPList[i] = IPGroupEntryModel{
 			IP: types.StringValue(entry.IP),
+		}
+		if i < len(previous) && previous[i].IP.ValueString() == entry.IP+"/32" {
+			model.IPList[i].IP = previous[i].IP
 		}
 		if len(entry.PortList) > 0 {
 			portList, _ := types.ListValueFrom(ctx, types.StringType, entry.PortList)

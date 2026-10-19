@@ -39,7 +39,7 @@ func TestPaginationCollections(t *testing.T) {
 			v, e := c.ListACLRules(ctx, "site", 2)
 			return len(v), e
 		}},
-		{"IP groups", "/sites/site/setting/firewall/ipGroups", "id", func(ctx context.Context, c *Client) (int, error) {
+		{"IP groups", "/sites/site/setting/profiles/groups/1", "groupId", func(ctx context.Context, c *Client) (int, error) {
 			v, e := c.ListIPGroups(ctx, "site")
 			return len(v), e
 		}},
@@ -76,12 +76,18 @@ func TestPaginationCollections(t *testing.T) {
 					if mode == "capped pages" || mode == "no metadata" {
 						size = 73
 					}
-					if mode == "direct array" || (endpoint.name == "groups" && mode == "no metadata") {
+					if mode == "direct array" || ((endpoint.name == "groups" || endpoint.name == "IP groups") && mode == "no metadata") {
 						size = total
 					}
 					rows := []map[string]any{}
 					for i := (page - 1) * size; i < min(page*size, total); i++ {
-						rows = append(rows, map[string]any{endpoint.key: fmt.Sprintf("row-%03d", i)})
+						row := map[string]any{endpoint.key: fmt.Sprintf("row-%03d", i)}
+						if endpoint.name == "IP groups" {
+							row["type"] = 1
+							row["portList"] = []string{"80"}
+							row["ipList"] = []any{map[string]any{"ip": "192.0.2.1", "mask": 32}}
+						}
+						rows = append(rows, row)
 					}
 					var result any = map[string]any{"totalRows": total, "currentPage": page, "currentSize": size, "data": rows, "extraCapability": true}
 					if mode == "direct array" {
@@ -107,7 +113,7 @@ func TestPaginationCollections(t *testing.T) {
 				if mode == "empty" {
 					want, requests = 0, 1
 				}
-				if mode == "direct array" || (endpoint.name == "groups" && mode == "no metadata") {
+				if mode == "direct array" || ((endpoint.name == "groups" || endpoint.name == "IP groups") && mode == "no metadata") {
 					requests = 1
 				}
 				if err != nil || n != want || calls != requests {
