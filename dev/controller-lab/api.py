@@ -166,10 +166,12 @@ def probe(api):
             payload = api.request(path + separator + f"currentPage={page}&currentPageSize=1", allow_error=True)
             result = payload.get("result")
             rows = result.get("data") if isinstance(result, dict) else result
-            identities = {row.get("id", row.get("idpId")) for row in rows} if isinstance(rows, list) else set()
+            values = [row.get("id", row.get("idpId")) for row in rows] if isinstance(rows, list) else []
+            identities = {value for value in values if isinstance(value, str) and value}
             summary = {"path": path.replace(site, "<site>"), "requested_page": page,
                        "code": payload.get("errorCode"), "shape": type(result).__name__,
                        "rows": len(rows) if isinstance(rows, list) else None,
+                       "identified_rows": sum(isinstance(value, str) and bool(value) for value in values),
                        "repeated_ids": len(identities & previous)}
             if groups:
                 summary["path"] = summary["path"].replace(groups[0]["id"], "<group>")
