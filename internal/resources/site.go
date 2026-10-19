@@ -75,11 +75,11 @@ func (r *SiteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Default:     int64default.StaticInt64(0),
 			},
 			"device_account_username": schema.StringAttribute{
-				Description: "The device management account username. Required for site creation. Used to SSH/manage adopted devices.",
+				Description: "The device management account username. Required for site creation. Creation-only; manage later rotations with omada_site_settings. Remove both site credential inputs when transferring management.",
 				Optional:    true,
 			},
 			"device_account_password": schema.StringAttribute{
-				Description: "The device management account password. Required for site creation. Must contain uppercase, lowercase, digits, and special characters.",
+				Description: "The device management account password. Required for site creation. Creation-only; manage later rotations with omada_site_settings. Must meet the controller password policy.",
 				Optional:    true,
 				Sensitive:   true,
 			},
@@ -103,9 +103,15 @@ func (r *SiteResource) Configure(_ context.Context, req resource.ConfigureReques
 }
 
 func (r *SiteResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	resp.State.RemoveResource(ctx)
 	var plan SiteResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := credentialPair(plan.DeviceAccountUsername, plan.DeviceAccountPassword, true, true); err != nil {
+		resp.Diagnostics.AddError("Invalid site device credentials", err.Error())
 		return
 	}
 
@@ -173,6 +179,7 @@ func (r *SiteResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 }
 
 func (r *SiteResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	resp.State = req.State
 	var plan SiteResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -182,6 +189,16 @@ func (r *SiteResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	var state SiteResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := siteCredentialChange(plan, state, true); err != nil {
+		resp.Diagnostics.AddError("Invalid site device credentials", err.Error())
+		return
+	}
+	if plan.Name.Equal(state.Name) && plan.Region.Equal(state.Region) && plan.TimeZone.Equal(state.TimeZone) && plan.Scenario.Equal(state.Scenario) && plan.Type.Equal(state.Type) {
+		plan.ID = state.ID
+		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 		return
 	}
 
@@ -242,7 +259,7 @@ func (r *SiteResource) ImportState(ctx context.Context, req resource.ImportState
 		Scenario: types.StringValue(site.Scenario),
 		Type:     types.Int64Value(int64(site.Type)),
 		// device_account fields are not available from site GET — they come from site settings.
-		// User should set these in their TF config if they want to manage them.
+		// Use omada_site_settings for credential rotation after import.
 		DeviceAccountUsername: types.StringNull(),
 		DeviceAccountPassword: types.StringNull(),
 	}

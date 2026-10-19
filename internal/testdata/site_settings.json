@@ -1,0 +1,86 @@
+{
+  "site": {
+    "key": "site",
+    "name": "Original",
+    "region": "United States",
+    "timeZone": "UTC",
+    "scenario": "Office"
+  },
+  "autoUpgrade": {
+    "enable": false
+  },
+  "mesh": {
+    "meshEnable": true,
+    "autoFailoverEnable": true,
+    "defGatewayEnable": true,
+    "fullSector": true
+  },
+  "speedTest": {
+    "enable": false,
+    "interval": 120
+  },
+  "alert": {
+    "enable": false,
+    "delayEnable": true,
+    "delay": 60
+  },
+  "remoteLog": {
+    "enable": false,
+    "server": "fixture.invalid",
+    "port": 514,
+    "moreClientLog": false
+  },
+  "advancedFeature": {
+    "enable": false
+  },
+  "lldp": {
+    "enable": true
+  },
+  "beaconControl": {
+    "beaconIntvMode2g": 0,
+    "dtimPeriod2g": 1,
+    "rtsThreshold2g": 2347,
+    "fragmentationThreshold2g": 2346,
+    "beaconIntvMode5g": 0,
+    "dtimPeriod5g": 1,
+    "rtsThreshold5g": 2347,
+    "fragmentationThreshold5g": 2346,
+    "beaconInterval6g": 100,
+    "beaconIntvMode6g": 0,
+    "dtimPeriod6g": 1,
+    "rtsThreshold6g": 2347,
+    "fragmentationThreshold6g": 2346
+  },
+  "bandSteering": {
+    "enable": false,
+    "connectionThreshold": 30,
+    "differenceThreshold": 4,
+    "maxFailures": 5
+  },
+  "bandSteeringForMultiBand": {
+    "mode": 1
+  },
+  "airtimeFairness": {
+    "enable2g": false,
+    "enable5g": false,
+    "enable6g": false
+  },
+  "led": {
+    "enable": false
+  },
+  "deviceAccount": {
+    "username": "admin",
+    "password": "***"
+  },
+  "roaming": {
+    "fastRoamingEnable": true,
+    "aiRoamingEnable": false,
+    "dualBand11kReportEnable": false,
+    "forceDisassociationEnable": false,
+    "nonStickRoamingEnable": false,
+    "nonPingPongRoamingEnable": false
+  },
+  "rememberDevice": {
+    "enable": false
+  }
+}

@@ -1,3 +1,2 @@
-# Import by any string (the import ID is ignored; settings are read
-# from the provider's configured site).
-terraform import omada_site_settings.example settings
+# Import by site ID
+terraform import omada_site_settings.example site-id

@@ -438,14 +438,13 @@ func (r *SiteSettingsResource) Schema(_ context.Context, _ resource.SchemaReques
 
 			// --- Device account ---
 			"device_account_username": schema.StringAttribute{
-				Description: "Username for SSH/management access to devices.",
+				Description: "Username for SSH/management access to devices. Configure with device_account_password to manage credentials; omit both to preserve remote credentials.",
 				Optional:    true,
 				Computed:    true,
 			},
 			"device_account_password": schema.StringAttribute{
-				Description: "Password for SSH/management access to devices.",
+				Description: "Password for SSH/management access to devices. Configure with device_account_username. API-returned passwords are never imported or refreshed; removing both inputs relinquishes control without changing the remote credentials.",
 				Optional:    true,
-				Computed:    true,
 				Sensitive:   true,
 			},
 
@@ -476,40 +475,20 @@ func (r *SiteSettingsResource) Configure(_ context.Context, req resource.Configu
 }
 
 func (r *SiteSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan SiteSettingsResourceModel
+	resp.State.RemoveResource(ctx)
+	var plan, config SiteSettingsResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Read the config to determine if device_account was explicitly set by the user.
-	var config SiteSettingsResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	siteID := plan.SiteID.ValueString()
-
-	// Build the settings object from the plan
-	settings := planToSiteSettings(&plan)
-
-	// Only include deviceAccount if the user explicitly configured both fields.
-	if config.DeviceAccountUsername.IsNull() || config.DeviceAccountPassword.IsNull() {
-		settings.DeviceAccount = nil
+	applied, err := r.applySettings(ctx, plan, config)
+	if applied != nil {
+		resp.Diagnostics.Append(resp.State.Set(ctx, applied)...)
 	}
-
-	// PATCH the settings onto the existing site settings
-	updated, err := r.client.UpdateSiteSettings(ctx, siteID, settings)
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating site settings", err.Error())
-		return
+		resp.Diagnostics.AddError("Error adopting site settings", credentialError(err, plan.DeviceAccountPassword))
 	}
-
-	plan.ID = types.StringValue(siteID)
-	siteSettingsToState(updated, &plan)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *SiteSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -534,54 +513,22 @@ func (r *SiteSettingsResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *SiteSettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan SiteSettingsResourceModel
+	resp.State = req.State
+	var plan, config, prior SiteSettingsResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var state SiteSettingsResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Read the config to determine if device_account was explicitly set by the user.
-	// The plan merges state into Optional+Computed attributes, so we can't rely on
-	// plan values alone — we must check the config to know user intent.
-	var config SiteSettingsResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &prior)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	siteID := state.SiteID.ValueString()
-
-	settings := planToSiteSettings(&plan)
-
-	// Only include deviceAccount in the PATCH if the user explicitly configured both
-	// username and password. The Omada API requires the password on every PATCH that
-	// includes deviceAccount, but the GET response never returns the real password.
-	if config.DeviceAccountUsername.IsNull() || config.DeviceAccountPassword.IsNull() {
-		settings.DeviceAccount = nil
+	plan.ID, plan.SiteID = prior.ID, prior.SiteID
+	applied, err := r.applySettings(ctx, plan, config)
+	if applied != nil {
+		resp.Diagnostics.Append(resp.State.Set(ctx, applied)...)
 	}
-
-	updated, err := r.client.UpdateSiteSettings(ctx, siteID, settings)
 	if err != nil {
-		resp.Diagnostics.AddError("Error updating site settings", err.Error())
-		return
+		resp.Diagnostics.AddError("Error updating site settings", credentialError(err, plan.DeviceAccountPassword, prior.DeviceAccountPassword))
 	}
-
-	plan.ID = state.ID
-	plan.SiteID = state.SiteID
-	siteSettingsToState(updated, &plan)
-
-	// Preserve the device account password from state — the API returns "***".
-	if !state.DeviceAccountPassword.IsNull() {
-		plan.DeviceAccountPassword = state.DeviceAccountPassword
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *SiteSettingsResource) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
@@ -610,137 +557,6 @@ func (r *SiteSettingsResource) ImportState(ctx context.Context, req resource.Imp
 	siteSettingsToState(settings, &state)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-// planToSiteSettings converts the Terraform plan into a client.SiteSettings for PATCH.
-func planToSiteSettings(plan *SiteSettingsResourceModel) *client.SiteSettings {
-	s := &client.SiteSettings{}
-
-	// Site identity — only include if any site fields are set
-	if !plan.SiteName.IsNull() || !plan.Region.IsNull() || !plan.TimeZone.IsNull() || !plan.Scenario.IsNull() {
-		s.Site = &client.SiteSettingsSite{}
-		if !plan.SiteName.IsNull() && !plan.SiteName.IsUnknown() {
-			s.Site.Name = plan.SiteName.ValueString()
-		}
-		if !plan.Region.IsNull() && !plan.Region.IsUnknown() {
-			s.Site.Region = plan.Region.ValueString()
-		}
-		if !plan.TimeZone.IsNull() && !plan.TimeZone.IsUnknown() {
-			s.Site.TimeZone = plan.TimeZone.ValueString()
-		}
-		if !plan.Scenario.IsNull() && !plan.Scenario.IsUnknown() {
-			s.Site.Scenario = plan.Scenario.ValueString()
-		}
-	}
-
-	// Auto upgrade
-	s.AutoUpgrade = &client.AutoUpgrade{
-		Enable: plan.AutoUpgradeEnable.ValueBool(),
-	}
-
-	// Mesh
-	s.Mesh = &client.MeshSettings{
-		MeshEnable:         plan.MeshEnable.ValueBool(),
-		AutoFailoverEnable: plan.MeshAutoFailover.ValueBool(),
-		DefGatewayEnable:   plan.MeshDefGateway.ValueBool(),
-		FullSector:         plan.MeshFullSector.ValueBool(),
-	}
-
-	// LED
-	s.LED = &client.LEDSettings{
-		Enable: plan.LEDEnable.ValueBool(),
-	}
-
-	// Roaming
-	s.Roaming = &client.RoamingSettings{
-		FastRoamingEnable:         plan.FastRoamingEnable.ValueBool(),
-		AiRoamingEnable:           plan.AiRoamingEnable.ValueBool(),
-		DualBand11kReportEnable:   plan.DualBand11kReportEnable.ValueBool(),
-		ForceDisassociationEnable: plan.ForceDisassociationEnable.ValueBool(),
-		NonStickRoamingEnable:     plan.NonStickRoamingEnable.ValueBool(),
-		NonPingPongRoamingEnable:  plan.NonPingPongRoamingEnable.ValueBool(),
-	}
-
-	// Band steering
-	s.BandSteering = &client.BandSteering{
-		Enable:              plan.BandSteeringEnable.ValueBool(),
-		ConnectionThreshold: int(plan.BandSteeringConnectionThreshold.ValueInt64()),
-		DifferenceThreshold: int(plan.BandSteeringDifferenceThreshold.ValueInt64()),
-		MaxFailures:         int(plan.BandSteeringMaxFailures.ValueInt64()),
-	}
-	s.BandSteeringForMultiBand = &client.BandSteeringForMultiBand{
-		Mode: int(plan.BandSteeringMultiBandMode.ValueInt64()),
-	}
-
-	// Airtime fairness
-	s.AirtimeFairness = &client.AirtimeFairness{
-		Enable2g: plan.AirtimeFairness2g.ValueBool(),
-		Enable5g: plan.AirtimeFairness5g.ValueBool(),
-		Enable6g: plan.AirtimeFairness6g.ValueBool(),
-	}
-
-	// Beacon control
-	s.BeaconControl = &client.BeaconControl{
-		BeaconIntvMode2g:         int(plan.BeaconIntvMode2g.ValueInt64()),
-		DtimPeriod2g:             int(plan.DtimPeriod2g.ValueInt64()),
-		RtsThreshold2g:           int(plan.RtsThreshold2g.ValueInt64()),
-		FragmentationThreshold2g: int(plan.FragThreshold2g.ValueInt64()),
-		BeaconIntvMode5g:         int(plan.BeaconIntvMode5g.ValueInt64()),
-		DtimPeriod5g:             int(plan.DtimPeriod5g.ValueInt64()),
-		RtsThreshold5g:           int(plan.RtsThreshold5g.ValueInt64()),
-		FragmentationThreshold5g: int(plan.FragThreshold5g.ValueInt64()),
-		BeaconInterval6g:         int(plan.BeaconInterval6g.ValueInt64()),
-		BeaconIntvMode6g:         int(plan.BeaconIntvMode6g.ValueInt64()),
-		DtimPeriod6g:             int(plan.DtimPeriod6g.ValueInt64()),
-		RtsThreshold6g:           int(plan.RtsThreshold6g.ValueInt64()),
-		FragmentationThreshold6g: int(plan.FragThreshold6g.ValueInt64()),
-	}
-
-	// LLDP
-	s.LLDP = &client.LLDPSettings{
-		Enable: plan.LLDPEnable.ValueBool(),
-	}
-
-	// Advanced features
-	s.AdvancedFeature = &client.AdvancedFeature{
-		Enable: plan.AdvancedFeatureEnable.ValueBool(),
-	}
-
-	// Speed test
-	s.SpeedTest = &client.SpeedTest{
-		Enable:   plan.SpeedTestEnable.ValueBool(),
-		Interval: int(plan.SpeedTestInterval.ValueInt64()),
-	}
-
-	// Alert
-	s.Alert = &client.AlertSettings{
-		Enable:      plan.AlertEnable.ValueBool(),
-		DelayEnable: plan.AlertDelayEnable.ValueBool(),
-		Delay:       int(plan.AlertDelay.ValueInt64()),
-	}
-
-	// Remote log
-	s.RemoteLog = &client.RemoteLog{
-		Enable:        plan.RemoteLogEnable.ValueBool(),
-		Server:        plan.RemoteLogServer.ValueString(),
-		Port:          int(plan.RemoteLogPort.ValueInt64()),
-		MoreClientLog: plan.RemoteLogMoreClientLog.ValueBool(),
-	}
-
-	// Device account — only include if set
-	if !plan.DeviceAccountUsername.IsNull() || !plan.DeviceAccountPassword.IsNull() {
-		s.DeviceAccount = &client.DeviceAccount{
-			Username: plan.DeviceAccountUsername.ValueString(),
-			Password: plan.DeviceAccountPassword.ValueString(),
-		}
-	}
-
-	// Remember device
-	s.RememberDevice = &client.RememberDevice{
-		Enable: plan.RememberDeviceEnable.ValueBool(),
-	}
-
-	return s
 }
 
 // siteSettingsToState maps the API response into the Terraform state model.
@@ -850,11 +666,8 @@ func siteSettingsToState(s *client.SiteSettings, state *SiteSettingsResourceMode
 	// Device account
 	if s.DeviceAccount != nil {
 		state.DeviceAccountUsername = types.StringValue(s.DeviceAccount.Username)
-		// Password is returned as "***" from the API — preserve existing state if masked
-		if s.DeviceAccount.Password != "" && s.DeviceAccount.Password != "***" {
-			state.DeviceAccountPassword = types.StringValue(s.DeviceAccount.Password)
-		}
-		// If password is "***", keep whatever is in state already (don't overwrite with masked value)
+		// Keep only the configured/acknowledged password already in state.
+		// Responses may contain plaintext, different masks, or no password.
 	}
 
 	// Remember device

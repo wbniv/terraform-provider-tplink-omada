@@ -1,7 +1,6 @@
-# Site settings is a singleton resource -- each site has exactly one.
-# Creating this resource adopts the existing settings.
-# Destroying it removes the resource from Terraform state without
-# changing settings on the controller.
+# One settings resource owns rotations for this site.
+# Review all planned defaults when adopting or importing existing settings.
+# Destroying this resource forgets it without changing the controller.
 resource "omada_site_settings" "example" {
   site_id = omada_site.example.id
 
@@ -16,5 +15,10 @@ resource "omada_site_settings" "example" {
   band_steering_max_failures         = 5
 
   device_account_username = "admin"
-  device_account_password = "device-password"
+  device_account_password = var.device_password
+}
+
+variable "device_password" {
+  type      = string
+  sensitive = true
 }
