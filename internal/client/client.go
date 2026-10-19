@@ -1220,6 +1220,9 @@ func (c *Client) ListDevices(ctx context.Context, siteID string) ([]Device, erro
 	if err != nil {
 		return nil, err
 	}
+	if raw := bytes.TrimSpace(resp.Result); len(raw) == 0 || raw[0] != '[' {
+		return nil, &ProtocolError{reason: "devices result must be an array"}
+	}
 	var devices []Device
 	if err := json.Unmarshal(resp.Result, &devices); err != nil {
 		return nil, fmt.Errorf("decoding devices: %w", err)

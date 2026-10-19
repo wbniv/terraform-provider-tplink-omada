@@ -332,3 +332,33 @@ data "omada_ip_groups" "lab" {
   {ResourceName:"omada_ip_group.lab",ImportState:true,ImportStateIdFunc:func(s *terraform.State)(string,error){return site+"/"+id,nil},ImportStateVerify:true,ImportStateVerifyIgnore:[]string{"ip_list.1.ip"}},
  }})
 }
+
+func TestControllerLabEmptyCollections(t *testing.T) {
+ if os.Getenv("OMADA_CONTROLLER_LAB")!="1"{t.Skip("disposable lab only")}
+ if os.Getenv("OMADA_URL")!="https://controller:8043"{t.Fatal("refusing non-lab target")}
+ site:=os.Getenv("OMADA_TEST_SITE_ID")
+ cases:=[]struct{source,attribute,extra string;empty bool}{
+ {"sites","sites","",false},
+ {"networks","networks","",false},
+ {"port_profiles","port_profiles","",false},
+ {"devices","devices","",true},
+ {"wireless_networks","wireless_networks","",true},
+ {"firewall_acls","acl_rules","type = 0",true},
+ {"ip_groups","ip_groups","",true},
+ {"mdns_reflectors","rules","",true},
+ }
+ config:=""
+ var checks []resource.TestCheckFunc
+ for _,tc:=range cases {
+  settings:=tc.extra
+  if tc.source!="sites"{settings+=fmt.Sprintf("\nsite_id = %q\n",site)}
+  ref:="data.omada_"+tc.source+".empty."+tc.attribute
+  comparison:="> 0";if tc.empty{comparison="== 0"}
+  config+=fmt.Sprintf("data \"omada_%s\" \"empty\" {\n%s\n}\noutput \"%s_valid\" { value = length(%s) %s }\noutput \"%s_iterable\" { value = length([for row in %s : row.name]) == length(%s) }\n",tc.source,settings,tc.source,ref,comparison,tc.source,ref,ref)
+  checks=append(checks,resource.TestCheckOutput(tc.source+"_valid","true"),resource.TestCheckOutput(tc.source+"_iterable","true"))
+ }
+ resource.Test(t,resource.TestCase{PreCheck:func(){testAccPreCheck(t)},ProtoV6ProviderFactories:testAccProtoV6ProviderFactories,Steps:[]resource.TestStep{
+ {Config:config,Check:resource.ComposeAggregateTestCheckFunc(checks...)},
+ {Config:config,PlanOnly:true},
+ }})
+}

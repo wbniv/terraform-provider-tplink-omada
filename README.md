@@ -125,7 +125,7 @@ See the [`docs/`](docs/) directory and the [Terraform Registry documentation](ht
 
 ## Complete collection reads
 
-Collection reads follow all pages and fail if an incomplete or inconsistent result cannot be trusted. See [Complete collection reads](docs/guides/collection-reads.md) for supported response shapes, limits, and refresh recovery.
+Collection reads follow all pages and fail if an incomplete or inconsistent result cannot be trusted. Successful collection data-source reads return `[]` for no matches, including empty device inventories; `length()` and iteration are safe. See [Complete collection reads](docs/guides/collection-reads.md) for supported response shapes, limits, and refresh recovery.
 
 ## API response handling
 

@@ -1090,3 +1090,19 @@ func TestDeleteMDNSRule(t *testing.T) {
 		t.Fatalf("DeleteMDNSRule: %v", err)
 	}
 }
+
+func TestListDevicesRejectsNonArrays(t *testing.T) {
+	for _, result := range []string{"null", "{}", `{"data":[]}`, `"unexpected"`} {
+		t.Run(result, func(t *testing.T) {
+			server := mockOmadaServer(t, map[string]http.HandlerFunc{"/sites/site/devices": func(w http.ResponseWriter, r *http.Request) {
+				json.NewEncoder(w).Encode(APIResponse{Result: json.RawMessage(result)})
+			}})
+			defer server.Close()
+			c := newTestClient(t, server)
+			got, err := c.ListDevices(context.Background(), "site")
+			if err == nil || got != nil {
+				t.Fatalf("malformed device result accepted: %+v %v", got, err)
+			}
+		})
+	}
+}

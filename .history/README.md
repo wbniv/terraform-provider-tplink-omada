@@ -1,5 +1,6 @@
 | Date | Change |
 |------|--------|
+| [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/0730101) | fix(client): handle unpaginated WLAN group envelopes |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/0d26e72) | test: add vendored Omada controller lab |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/9343503) | fix(client)!: read complete paginated collections |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/c210dec) | fix(client)!: validate HTTP responses and protect error diagnostics |
@@ -7,6 +8,10 @@
 | [2026-03-30](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/ace2169) | feat: add CI workflow, release-please, dependabot, issue/PR templates, Makefile, and README |
 
 <!--history-meta v1
+0730101	author	Will Norris
+0730101	added	1
+0730101	deleted	1
+0730101	files	1
 0d26e72	author	Will Norris
 0d26e72	added	20
 0d26e72	deleted	2

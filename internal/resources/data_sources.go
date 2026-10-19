@@ -93,7 +93,8 @@ func (d *NetworksDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	state := NetworksDataSourceModel{
-		SiteID: config.SiteID,
+		Networks: []NetworkDataModel{},
+		SiteID:   config.SiteID,
 	}
 	for _, n := range networks {
 		dm := NetworkDataModel{
@@ -218,8 +219,9 @@ func (d *WirelessNetworksDataSource) Read(ctx context.Context, req datasource.Re
 	}
 
 	state := WirelessNetworksDataSourceModel{
-		SiteID:      config.SiteID,
-		WlanGroupID: types.StringValue(wlanGroupID),
+		WirelessNetworks: []WirelessNetworkDataModel{},
+		SiteID:           config.SiteID,
+		WlanGroupID:      types.StringValue(wlanGroupID),
 	}
 	for _, s := range ssids {
 		dm := WirelessNetworkDataModel{
@@ -331,10 +333,11 @@ func (d *PortProfilesDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	state := PortProfilesDataSourceModel{
-		SiteID: config.SiteID,
+		PortProfiles: []PortProfileDataModel{},
+		SiteID:       config.SiteID,
 	}
 	for _, p := range profiles {
-		tagIDs, diags := types.ListValueFrom(ctx, types.StringType, p.TagNetworkIDs)
+		tagIDs, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, p.TagNetworkIDs...))
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -418,7 +421,7 @@ func (d *SitesDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	var state SitesDataSourceModel
+	state := SitesDataSourceModel{Sites: []SiteDataModel{}}
 	for _, s := range sites {
 		state.Sites = append(state.Sites, SiteDataModel{
 			ID:   types.StringValue(s.ID),
@@ -732,7 +735,8 @@ func (d *DevicesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	state := DevicesDataSourceModel{
-		SiteID: config.SiteID,
+		Devices: []DeviceDataModel{},
+		SiteID:  config.SiteID,
 	}
 	for _, dev := range devices {
 		state.Devices = append(state.Devices, DeviceDataModel{
@@ -865,17 +869,17 @@ func (d *FirewallACLsDataSource) Read(ctx context.Context, req datasource.ReadRe
 		ACLRules: []ACLRuleDataModel{},
 	}
 	for _, r := range rules {
-		protocols, diags := types.ListValueFrom(ctx, types.Int64Type, r.Protocols)
+		protocols, diags := types.ListValueFrom(ctx, types.Int64Type, append([]int{}, r.Protocols...))
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		sourceIDs, diags := types.ListValueFrom(ctx, types.StringType, r.SourceIDs)
+		sourceIDs, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, r.SourceIDs...))
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		destIDs, diags := types.ListValueFrom(ctx, types.StringType, r.DestinationIDs)
+		destIDs, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, r.DestinationIDs...))
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -1005,16 +1009,12 @@ func (d *IPGroupsDataSource) Read(ctx context.Context, req datasource.ReadReques
 			ipList[i] = IPGroupEntryDataModel{
 				IP: types.StringValue(entry.IP),
 			}
-			if len(entry.PortList) > 0 {
-				portList, diags := types.ListValueFrom(ctx, types.StringType, entry.PortList)
-				resp.Diagnostics.Append(diags...)
-				if resp.Diagnostics.HasError() {
-					return
-				}
-				ipList[i].PortList = portList
-			} else {
-				ipList[i].PortList = types.ListNull(types.StringType)
+			portList, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, entry.PortList...))
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
 			}
+			ipList[i].PortList = portList
 		}
 		state.IPGroups = append(state.IPGroups, IPGroupDataModel{
 			ID:     types.StringValue(g.ID),
@@ -1128,21 +1128,21 @@ func (d *MDNSReflectorsDataSource) Read(ctx context.Context, req datasource.Read
 
 		var profileIDs, serviceNetworks, clientNetworks types.List
 		if setting != nil {
-			p, diags := types.ListValueFrom(ctx, types.StringType, setting.ProfileIDs)
+			p, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, setting.ProfileIDs...))
 			resp.Diagnostics.Append(diags...)
 			if resp.Diagnostics.HasError() {
 				return
 			}
 			profileIDs = p
 
-			s, diags := types.ListValueFrom(ctx, types.StringType, setting.ServiceNetworks)
+			s, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, setting.ServiceNetworks...))
 			resp.Diagnostics.Append(diags...)
 			if resp.Diagnostics.HasError() {
 				return
 			}
 			serviceNetworks = s
 
-			cn, diags := types.ListValueFrom(ctx, types.StringType, setting.ClientNetworks)
+			cn, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, setting.ClientNetworks...))
 			resp.Diagnostics.Append(diags...)
 			if resp.Diagnostics.HasError() {
 				return

@@ -95,3 +95,12 @@ LAB_CLIENT_RUN='^TestControllerLabIPGroups$' dev/controller-lab/run.sh test
 The raw probe inventories group types and response formats, then creates and removes synthetic groups and a disabled ACL. The live tests verify the Terraform lifecycle and data source, listing the complete supported group population (up to the controller quota or 101 fixtures), and retained ACL references after a group update. A mock Terraform scenario checks accepted creation followed by readback failure and recovery. All temporary groups and ACLs are cleaned up. These tests do not verify traffic enforcement.
 
 ACL creation's empty acknowledgment is a separate L8 finding: the raw client proves references can be stored, but the existing Terraform ACL create decoder still needs correction.
+
+## Empty collection check (L5)
+
+```sh
+LAB_ACCEPTANCE_RUN='^TestAccCollectionEmptyState$|^TestControllerLabEmptyCollections$|^TestControllerLabIPGroup$' \
+LAB_CLIENT_RUN='^TestListDevices' dev/controller-lab/run.sh test
+```
+
+The seven-step mock Terraform scenario covers all eight collection data sources, empty and populated states, nested lists, populated-to-empty refresh, HTTP failure, malformed response rejection, and recovery. Outputs exercise `length()` and iteration. The live scenario checks empty device, SSID, ACL, IP/Port-group, and mDNS inventories alongside populated sites, networks, and port profiles, followed by a stable plan. The existing IP/Port-group lifecycle retains populated-list coverage. No physical device behavior is asserted.
