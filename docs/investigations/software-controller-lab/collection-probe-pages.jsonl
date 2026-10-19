@@ -1,0 +1,26 @@
+{"path": "/api/v2/sites", "requested_page": 1, "code": 0, "shape": "dict", "rows": 1, "repeated_ids": 0, "totalRows": 1, "currentPage": 1, "currentSize": 1}
+{"path": "/api/v2/sites", "requested_page": 2, "code": 0, "shape": "dict", "rows": 0, "repeated_ids": 0, "totalRows": 1, "currentPage": 2, "currentSize": 1}
+{"path": "/api/v2/idps", "requested_page": 1, "code": 0, "shape": "dict", "rows": 0, "repeated_ids": 0, "totalRows": 0, "currentPage": 1, "currentSize": 1}
+{"path": "/api/v2/idps", "requested_page": 2, "code": 0, "shape": "dict", "rows": 0, "repeated_ids": 0, "totalRows": 0, "currentPage": 1, "currentSize": 1}
+{"path": "/api/v2/extendUserGroups", "requested_page": 1, "code": 0, "shape": "dict", "rows": 0, "repeated_ids": 0, "totalRows": 0, "currentPage": 1, "currentSize": 10}
+{"path": "/api/v2/extendUserGroups", "requested_page": 2, "code": 0, "shape": "dict", "rows": 0, "repeated_ids": 0, "totalRows": 0, "currentPage": 1, "currentSize": 10}
+{"path": "/api/v2/sites/<site>/setting/lan/networks", "requested_page": 1, "code": 0, "shape": "dict", "rows": 1, "repeated_ids": 0, "totalRows": 1, "currentPage": 1, "currentSize": 1}
+{"path": "/api/v2/sites/<site>/setting/lan/networks", "requested_page": 2, "code": 0, "shape": "dict", "rows": 1, "repeated_ids": 1, "totalRows": 1, "currentPage": 1, "currentSize": 1}
+{"path": "/api/v2/sites/<site>/setting/wlans", "requested_page": 1, "code": 0, "shape": "dict", "rows": 1, "repeated_ids": 0}
+{"path": "/api/v2/sites/<site>/setting/wlans", "requested_page": 2, "code": 0, "shape": "dict", "rows": 1, "repeated_ids": 1}
+{"path": "/api/v2/sites/<site>/setting/lan/profiles", "requested_page": 1, "code": 0, "shape": "dict", "rows": 1, "repeated_ids": 0, "totalRows": 3, "currentPage": 1, "currentSize": 1}
+{"path": "/api/v2/sites/<site>/setting/lan/profiles", "requested_page": 2, "code": 0, "shape": "dict", "rows": 1, "repeated_ids": 0, "totalRows": 3, "currentPage": 2, "currentSize": 1}
+{"path": "/api/v2/sites/<site>/setting/firewall/acls?type=0", "requested_page": 1, "code": 0, "shape": "dict", "rows": 0, "repeated_ids": 0, "totalRows": 0, "currentPage": 1, "currentSize": 1}
+{"path": "/api/v2/sites/<site>/setting/firewall/acls?type=0", "requested_page": 2, "code": 0, "shape": "dict", "rows": 0, "repeated_ids": 0, "totalRows": 0, "currentPage": 1, "currentSize": 1}
+{"path": "/api/v2/sites/<site>/setting/firewall/ipGroups", "requested_page": 1, "code": -1600, "shape": "NoneType", "rows": null, "repeated_ids": 0}
+{"path": "/api/v2/sites/<site>/setting/firewall/ipGroups", "requested_page": 2, "code": -1600, "shape": "NoneType", "rows": null, "repeated_ids": 0}
+{"path": "/api/v2/sites/<site>/setting/service/mdns", "requested_page": 1, "code": 0, "shape": "dict", "rows": 0, "repeated_ids": 0, "totalRows": 0, "currentPage": 1, "currentSize": 1}
+{"path": "/api/v2/sites/<site>/setting/service/mdns", "requested_page": 2, "code": 0, "shape": "dict", "rows": 0, "repeated_ids": 0, "totalRows": 0, "currentPage": 1, "currentSize": 1}
+{"path": "/api/v2/sites/<site>/devices", "requested_page": 1, "code": 0, "shape": "list", "rows": 0, "repeated_ids": 0}
+{"path": "/api/v2/sites/<site>/devices", "requested_page": 2, "code": 0, "shape": "list", "rows": 0, "repeated_ids": 0}
+{"path": "/api/v2/sites/<site>/setting/profiles/groups", "requested_page": 1, "code": 0, "shape": "dict", "rows": 3, "repeated_ids": 0}
+{"path": "/api/v2/sites/<site>/setting/profiles/groups", "requested_page": 2, "code": 0, "shape": "dict", "rows": 3, "repeated_ids": 1}
+{"path": "/api/v2/sites/<site>/setting/profiles/groups/0", "requested_page": 1, "code": 0, "shape": "dict", "rows": 1, "repeated_ids": 0}
+{"path": "/api/v2/sites/<site>/setting/profiles/groups/0", "requested_page": 2, "code": 0, "shape": "dict", "rows": 1, "repeated_ids": 1}
+{"path": "/api/v2/sites/<site>/setting/wlans/<group>/ssids", "requested_page": 1, "code": 0, "shape": "dict", "rows": 0, "repeated_ids": 0, "totalRows": 0, "currentPage": 1, "currentSize": 1}
+{"path": "/api/v2/sites/<site>/setting/wlans/<group>/ssids", "requested_page": 2, "code": 0, "shape": "dict", "rows": 0, "repeated_ids": 0, "totalRows": 0, "currentPage": 1, "currentSize": 1}

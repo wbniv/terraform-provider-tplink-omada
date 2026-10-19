@@ -1,0 +1,46 @@
+=== RUN   TestControllerLabEmptyDevices
+    controller_lab_test.go:22: Step 1/1 error: Error running pre-apply plan: exit status 1
+        
+        Error: Invalid function argument
+        
+          on terraform_plugin_test.tf line 13, in output "device_count":
+          13: output "device_count" { value = length(data.omada_devices.lab.devices) }
+            ├────────────────
+            │ while calling length(value)
+            │ data.omada_devices.lab.devices is null
+        
+        Invalid value for "value" parameter: argument must not be null.
+--- FAIL: TestControllerLabEmptyDevices (0.45s)
+=== RUN   TestControllerLabSiteCredentials
+--- PASS: TestControllerLabSiteCredentials (4.51s)
+=== RUN   TestAccDataSourceSites
+--- PASS: TestAccDataSourceSites (1.18s)
+=== RUN   TestAccDataSourceNetworks
+--- PASS: TestAccDataSourceNetworks (1.30s)
+=== RUN   TestAccDataSourceWirelessNetworks
+    provider_acc_test.go:97: Step 1/1 error: Error running pre-apply plan: exit status 1
+        
+        Error: Error getting default WLAN group
+        
+          with data.omada_wireless_networks.test,
+          on terraform_plugin_test.tf line 12, in data "omada_wireless_networks" "test":
+          12: data "omada_wireless_networks" "test" {
+        
+        invalid API response: collection has missing, invalid or duplicate identities
+--- FAIL: TestAccDataSourceWirelessNetworks (0.36s)
+=== RUN   TestAccDataSourcePortProfiles
+--- PASS: TestAccDataSourcePortProfiles (1.20s)
+=== RUN   TestAccDataSourceDevices
+    provider_acc_test.go:153: Step 1/1 error: Check failed: Check 1/1 error: data.omada_devices.test: Attribute 'devices.#' expected to be set
+--- FAIL: TestAccDataSourceDevices (0.75s)
+=== RUN   TestAccDataSourceSiteSettings
+--- PASS: TestAccDataSourceSiteSettings (1.18s)
+=== RUN   TestAccResourceNetwork_CRUD
+--- PASS: TestAccResourceNetwork_CRUD (3.31s)
+=== RUN   TestAccResourcePortProfile_CRUD
+--- PASS: TestAccResourcePortProfile_CRUD (2.91s)
+=== RUN   TestAccDataSourceMDNSReflectors
+--- PASS: TestAccDataSourceMDNSReflectors (1.41s)
+=== RUN   TestAccDataSourceFirewallACLs
+--- PASS: TestAccDataSourceFirewallACLs (1.17s)
+FAIL

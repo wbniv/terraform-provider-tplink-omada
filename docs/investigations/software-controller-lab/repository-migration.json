@@ -1,0 +1,13 @@
+{
+  "old_repository": "wbniv/terraform-provider-tplink-omada-upstream-fork",
+  "standalone_repository": "wbniv/terraform-provider-tplink-omada",
+  "matched_branches": 14,
+  "matched_tags": 9,
+  "all_original_refs_match": true,
+  "transport": "verified wbniv SSH identity",
+  "lfs_object_sha256": "885eb2aeaed16b300e618297af2132d4e015c7f9bc5edce2ba81b8cdb181e126",
+  "lfs_upload_complete": true,
+  "fresh_lfs_download_verified": true,
+  "downloaded_bytes": 307699260,
+  "actions_restored": true
+}

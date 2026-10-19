@@ -1,5 +1,7 @@
 # Authentication patch evidence
 
+Real-controller follow-up (2026-10-19): the [6.1.0.19 lab](../software-controller-lab/README.md) confirms separate certificate upload protocol and lost-session HTTP 302 problems (L2/L3). A fixes the reproduced deadlock/concurrency issues; it does not yet establish a working certificate lifecycle on this controller.
+
 Date: 2026-10-18. Local PR tracker: [work A](../../plans/provider-reliability-prs.md#a--authentication-and-certificates).
 
 Scope: F01 (certificate deadlock), F07 (expired query token on retry), and F08 (concurrent token access). The local patch is on `fix/client-authentication`, based on `6bc71b310bc81a90f3ad32194ba8c17947bf79d6`. Committed and pushed to Will's fork on 2026-10-19 as [52ed681](https://github.com/wbniv/terraform-provider-tplink-omada/commit/52ed681674e5a0058ae7807fcd08399c21fa021a). No upstream PR has been opened. F02 and F03 are now implemented and locally verified in separate [switch-port patch B](../switch-port-fix/README.md) and [AP radio patch C](../ap-radio-fix/README.md); the remaining findings are open in the tracker. A's code and test hashes remain unchanged. C's evidence includes a passing combined A + C full unit suite and AP acceptance run on 2026-10-19.

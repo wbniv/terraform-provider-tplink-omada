@@ -1,5 +1,7 @@
 # F — HTTP response validation
 
+Real-controller follow-up (2026-10-19): the [6.1.0.19 lab](../software-controller-lab/README.md) accepts normal discovery/login/network/profile/site/settings responses, but lost local session state produces HTTP 302 and no recovery. L3 must specify a narrow reauthentication signal while retaining arbitrary-redirect rejection.
+
 Prepared for Will on 2026-10-19. Implemented and locally verified on `fix/http-responses` in `/home/will/terraform-provider-tplink-omada-http-responses`, **committed and pushed** as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31). Base: E `8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5`, including A. Upstream main was rechecked at `6bc71b310bc81a90f3ad32194ba8c17947bf79d6`. Parent: [response repair plan](../../plans/http-responses.md) and [reliability tracker](../../plans/provider-reliability-prs.md#f--response-handling).
 
 ## Scope and decisions

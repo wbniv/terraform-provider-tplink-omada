@@ -1,6 +1,6 @@
 # Software-controller validation lab
 
-Prepared for Will on 2026-10-19 after his question about virtual appliances. No real Omada controller has been run during this investigation yet. Parent: [reliability tracker](provider-reliability-prs.md).
+Prepared for Will on 2026-10-19 after his question about virtual appliances. The real Omada Software Controller 6.1.0.19 is now running in the disposable lab; first results are recorded below. Parent: [reliability tracker](provider-reliability-prs.md).
 
 ## What is available
 
@@ -42,14 +42,16 @@ flowchart TD
 - [x] Separate software-controller checks from physical-device checks in the reliability tracker.
 - [x] Retain existing mock results as synthetic evidence; do not relabel them as controller tests.
 
-### Next lab implementation
+### 2026-10-19 — First real-controller round
 
-- [ ] Inspect the exact controller version targeted by this provider and pin an official package/checksum and compatible runtime dependencies.
-- [ ] Add repeatable isolated startup, initialization, test, and cleanup scripts. Record required resources and ports before launching.
-- [ ] Confirm discovery, local login, session expiry, JSON/status envelopes, and certificate operations against the real controller (A/F).
-- [ ] Exercise sites/settings, networks, WLAN groups/SSIDs, credentials stored by the controller, and profile APIs where zero-device configuration is supported (D/E/G/H).
-- [ ] Capture actual pagination metadata, page-size behavior, list limits, and missing-object responses for G. Never invent a not-found code mapping.
-- [ ] Use measured behavior to revise mocks and implementation assumptions; rerun affected regression gates.
+- [x] Inspect the version target: README specifies Software Controller 6.x; maintained client fixtures report 6.1.0.19. Use 6.1.0.19 for the first lab. TP-Link lists official Linux packages for this version.
+- [x] Pin the `mbentley/omada-controller:6.1.0.19` community image by digest; verify all 533 application JARs against TP-Link's official archive. Runtime: Java 17.0.20.1 and MongoDB 8.0.32.
+- [x] Add repeatable isolated startup, initialization, test, and cleanup scripts; record resource/port limits.
+- [x] Exercise discovery, local login, JSON/status envelopes, lost-local-session recovery, and certificate uploads. Preserve actual failures; naturally expired sessions and working activation remain open.
+- [x] Exercise network/profile CRUD and site/settings credential rotation. Group discovery fails on G1; live SSID lifecycle remains blocked by L1.
+- [x] Capture actual pagination metadata, page-size behavior, and a 102-network inventory. Do not infer all controller limits from this sample or invent absence mappings.
+- [x] Write a separate [plan for each observed compatibility failure](controller-compatibility.md).
+- [ ] Correct L1–L5, revise mocks to match observed contracts, and rerun affected regression gates.
 - [ ] Add a second controller version only after the first is reproducible. Declare exactly which versions and operations passed in PR evidence.
 
 ### Conditional — Physical-device validation
@@ -58,4 +60,29 @@ flowchart TD
 - [ ] Validate B/C switch-port and radio changes with supported hardware and firmware.
 - [ ] Verify configuration propagation and traffic behavior separately from controller acceptance.
 
-No lab has been installed or started by this document. This plan does not mark any real-controller gate complete.
+Initial execution: local account and one site initialized without cloud binding or adopted devices. Eight of ten existing Terraform acceptance tests pass, including network and port-profile CRUD. A separate four-step credential scenario passes. WLAN discovery fails because the group endpoint ignores pagination and G1 rejects the repeated second page. Empty device state is null because the data source leaves a nil slice; the earlier hardware-assumption explanation was incorrect. [Evidence and limits](../investigations/software-controller-lab/README.md). These results do not establish compatibility for every fix.
+
+## Active setup decisions
+
+G1 is pushed as `9343503`; its evidence is pushed as `2f9032c`. The lab harness is isolated in `/home/will/terraform-provider-tplink-omada-lab`, branch `test/software-controller-lab`, based on G1. Prior fix worktrees remain unchanged.
+
+- [x] Use an internal Docker bridge with only management HTTPS published on host loopback `127.0.0.1:18043`; expose no device-discovery/adoption ports or production networks. Use fresh disposable storage and a local test account, with no cloud binding. A fixed-destination TLS relay bridges the loopback console; the controller itself remains on the internal network only.
+- [x] Limit the controller to 2 GiB RAM and two CPUs, with a 256 MiB MongoDB cache and 128–768 MiB JVM heap. The host initially had about 7.7 GiB available RAM and 16 GiB free disk.
+- [x] Preserve startup, initialization, API probe, Terraform validation, and cleanup commands as reusable scripts. Store credentials/state in ignored private runtime storage and retain only sanitized evidence.
+- [x] Build the provider in pinned Go 1.25.6 and execute Terraform 1.15.8 in Docker. Initial run combines G1 (including A/E/F) and the recorded D integration patches. The finished harness vendors dependencies and confines both compilation and test execution to the internal lab network.
+- [x] Check real response envelopes and metadata before trusting absence; retain unsupported operations and measured limits explicitly.
+
+### 2026-10-19 — Requested vendoring and publication
+
+- [x] Update the project README with exact controller/test coverage, open failures, and vendoring instructions; correct its Go minimum to match `go.mod`.
+- [x] Vendor existing Go dependency versions using Go 1.25.6; keep `go.mod`/`go.sum` unchanged.
+- [x] Stage the unmodified official Omada archive through Git LFS, with a checked manifest and mandatory 533-JAR lab comparison.
+- [x] Complete the final vendored harness run: compilation and execution both confined to the internal Docker network. Go vet/unit/build pass; live failures remain visible in the evidence.
+- [x] Recreate the whole repository as standalone at Will's request; preserve the original fork as `wbniv/terraform-provider-tplink-omada-upstream-fork`.
+- [x] Restore and verify all 14 branches/nine tags using the existing authenticated wbniv SSH identity. The HTTPS token lacked workflow scope; SSH preserves every historical workflow commit.
+- [x] Upload the Omada LFS object into the standalone repository; verify its recorded SHA-256/size.
+- [x] Fetch the published LFS object into an empty cache and verify all 307,699,260 bytes against the recorded SHA-256.
+- [x] Commit and push the lab branch, verifying the remote commit and binary retrieval separately. Documentation is maintained on `docs/provider-reliability-review`.
+- [x] Remove disposable lab containers/volumes, credentials, and exploratory files after preserving evidence. Keep requested vendored artifacts and reusable Docker image caches.
+
+The image is community packaging of TP-Link software, not an official TP-Link container. Source: [image repository](https://github.com/mbentley/docker-omada-controller); official package availability: [TP-Link downloads](https://support.omadanetworks.com/en/download/software/omada-controller/). Pin the actual pulled digest in the harness and evidence.

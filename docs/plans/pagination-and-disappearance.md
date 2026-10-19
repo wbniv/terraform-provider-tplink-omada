@@ -7,7 +7,7 @@ Prepared for Will on 2026-10-19. Parent: [reliability tracker](provider-reliabil
 - [x] **G1 / F09: complete collection reads.** Iterate pages in every affected list method and raw SSID lookup. Verify the entire response before returning anything to callers. Keep the public resource schemas and existing absence behavior unchanged.
 - [ ] **G2 / F10: confirmed disappearance.** Build on verified G1. Add a semantic absence type for successful complete lookups, audit Read/Delete paths, and remove state only with positive evidence of absence. Direct endpoint HTTP 404, permission errors, incomplete lists, and decoding failures must retain state.
 
-Splitting G avoids coupling pagination changes to automatic Terraform state removal. G1 is implemented and locally verified, pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6). G2 follows in a separate patch. The planned [software-controller lab](software-controller-lab.md) will supply real API evidence; mocks remain necessary for injected failures and large inventories.
+Splitting G avoids coupling pagination changes to automatic Terraform state removal. G1 is implemented and locally verified, pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6). G2 follows in a separate patch. The [software-controller lab](software-controller-lab.md) now supplies real API evidence, including 102 networks. It found a G1 regression for unpaginated WLAN-group envelopes; [L1](controller-compatibility.md) must precede G2. Mocks remain necessary for injected failures.
 
 ## G1 collection inventory and policy
 
@@ -82,7 +82,8 @@ flowchart TD
 
 ### Conditional — Controller validation and submission
 
-- [ ] Validate page metadata and collection behavior on the software-controller lab; record tested version and zero-device limitations.
+- [x] Validate initial page metadata and collection behavior on Software Controller 6.1.0.19, including 102 real networks; record zero-device limitations.
+- [ ] Repair the unpaginated WLAN-group envelope regression before claiming compatibility. Populated variants of the other empty collections remain unverified.
 - [ ] Commit/push each patch when requested; verify file hashes and remote refs.
 - [ ] Recheck upstream/standards, prepare separate PR descriptions, and publish only when authorized. Record CI/review/merge separately.
 
@@ -93,4 +94,4 @@ No G tests have run and no G production code has changed at the time this plan w
 - [x] G1 is implemented and locally verified, pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6). All 94 client cases, full Go/race gates, three new Terraform scenarios/11 steps, and combined 44 scenarios/216 steps pass. [Evidence and integration notes](../investigations/pagination-fix/README.md).
 - [ ] G2 not started.
 
-Next: implement the software-controller lab to validate actual controller behavior, then G2 confirmed disappearance. Preserve the recorded D integration and fixture patches; original D worktrees remain unchanged.
+Next: correct the measured WLAN-group pagination contract under [L1](controller-compatibility.md), rerun the real-controller suite, then implement G2 confirmed disappearance. Preserve the recorded D integration and fixture patches; original D worktrees remain unchanged.

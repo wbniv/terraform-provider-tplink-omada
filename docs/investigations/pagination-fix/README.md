@@ -84,7 +84,8 @@ Suggested migration note: collection reads now fail on inconsistent metadata, mi
 - [x] Recheck contribution standards: conventional commits, fmt/vet/tests, documentation, and real-controller test declaration. No explicit AI attribution rule found; no session metadata guessed.
 - [x] Retain final evidence and matching seven host/container hashes. Remove the disposable container and both temporary host patches after saving logs and integration patches. Requested worktrees and deliverables are preserved. Final link checks pass with the previously documented README-to-LICENSE baseline exception; all seven prior code worktrees remain clean.
 - [x] Commit/push G1 as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6); all seven committed file hashes match the tested sources and the fork ref is verified. The commit also updates generated README history.
-- [ ] Implement the [software-controller lab](../../plans/software-controller-lab.md), verify actual response shapes/page behavior, and record the exact version and operations. Official software exists; a real controller has not yet been run for this work.
+- [x] Run the [software-controller lab](../software-controller-lab/README.md) on 6.1.0.19: 102-network listing succeeds.
+- [ ] Correct the measured WLAN-group envelope regression under [L1](../../plans/controller-compatibility.md). The earlier mock evidence does not establish real compatibility for this endpoint.
 - [ ] Implement G2 with typed confirmed absence, audited resource Read/Delete behavior, and Terraform refresh/recreation tests. HTTP 404 remains insufficient evidence of deletion.
 - [ ] Recheck upstream/standards before publication; record PR, CI, reviews, and merge separately. No upstream PR or comment has been posted.
 

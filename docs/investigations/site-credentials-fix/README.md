@@ -1,5 +1,7 @@
 # E — Site device credentials and settings preservation
 
+Real-controller follow-up (2026-10-19): the [6.1.0.19 lab](../software-controller-lab/README.md) passes a four-step Terraform bootstrap/settings-ownership/rotation/stable-plan scenario and preserves the checked unrelated settings sections. Delivery of credentials to physical devices remains unverified.
+
 Prepared for Will on 2026-10-19. Implemented, locally verified, committed, and pushed as [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5) on `fix/site-credentials` in `/home/will/terraform-provider-tplink-omada-credentials`. Base: authentication A `52ed681674e5a0058ae7807fcd08399c21fa021a`; upstream `main` remains `6bc71b310bc81a90f3ad32194ba8c17947bf79d6`. Parent: [credential repair plan](../../plans/site-credentials.md) and [PR tracker](../../plans/provider-reliability-prs.md#e--credentials).
 
 ## Scope and decisions

@@ -11,7 +11,7 @@ This is the working record for fixing the [code-review findings](../investigatio
 - [x] Implement and locally verify D3/F13, WLAN-group replacement, on `fix/ssid-group-identity` in `/home/will/terraform-provider-tplink-omada-ssid-group`, stacked on D2 `0bbd076`. Committed and pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e); [D3 evidence and PR notes](../investigations/ssid-group-fix/README.md).
 - [x] Implement and locally verify E, credential rotation/state and settings preservation (F05/F06/F16), on `fix/site-credentials` in `/home/will/terraform-provider-tplink-omada-credentials`, based on A `52ed681`. E is committed and pushed as [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5); [plan](site-credentials.md) and [evidence/PR notes](../investigations/site-credentials-fix/README.md) record 48 direct cases, 12 Terraform scenarios, and combined A + D1–D3 + E verification.
 - [x] Implement and locally verify F/F12 on `fix/http-responses` in `/home/will/terraform-provider-tplink-omada-http-responses`, based on E `8f24c37` (including A). F is committed and pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31); [plan](http-responses.md) and [evidence](../investigations/http-response-fix/README.md) record 223 client cases, full Go/race gates, and 41 combined Terraform scenarios/205 steps.
-- [x] G1/F09 complete pagination is implemented and locally verified on `fix/complete-pagination`, based on F `c210dec`; pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6). [Evidence](../investigations/pagination-fix/README.md): 94 client cases, full Go/race gates, three new Terraform scenarios, and 44 combined scenarios/216 steps pass. See the [G1/G2 plan](pagination-and-disappearance.md). Next: software-controller lab validation, then G2/F10 confirmed disappearance separately. Software-controller and physical-device validation are tracked separately.
+- [x] G1/F09 complete pagination is implemented and locally verified on `fix/complete-pagination`, based on F `c210dec`; pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6). [Evidence](../investigations/pagination-fix/README.md): 94 client cases, full Go/race gates, three new Terraform scenarios, and 44 combined scenarios/216 steps pass. See the [G1/G2 plan](pagination-and-disappearance.md). Real-controller testing now exposes an unpaginated WLAN-group regression: complete [L1](controller-compatibility.md) before G2/F10. The successful mock evidence remains valid for its recorded fixtures.
 - [x] Implement and locally verify C, AP radio preservation (F03), in `/home/will/terraform-provider-tplink-omada-ap-radios` on `fix/ap-radio-updates`, based on `6bc71b3`. [C evidence and review notes](../investigations/ap-radio-fix/README.md).
 - [ ] Finish C's controlled-AP validation and PR-submission review. A, B, and C are committed and pushed to Will's fork; no upstream PR has been opened.
 - [x] Implement and locally verify PR B in worktree `/home/will/terraform-provider-tplink-omada-switch-ports`, branch `fix/switch-port-updates`, based directly on `6bc71b3`. A remains isolated on `fix/client-authentication`. [B evidence and review notes](../investigations/switch-port-fix/README.md).
@@ -21,10 +21,15 @@ This is the working record for fixing the [code-review findings](../investigatio
 - [x] Preserve baseline reproductions and logs under `docs/investigations/`.
 - [x] Inspect repository contribution standards: `.github/PULL_REQUEST_TEMPLATE.md` requires conventional commits, formatting/vet/tests, documentation where applicable, and a real-controller test declaration.
 - [x] Check project AI attribution policy: no explicit policy found in tracked contribution files at the reviewed baseline. Will's attribution preference still applies if attribution is included or required later; verify tool/model/reasoning metadata before writing it.
-- [ ] Run real-controller validation using the free Omada Software Controller; see the [software-controller lab plan](software-controller-lab.md). Record software version and exact operations. Physical device provisioning, radio, and switch-port behavior remain separate gates. No real controller has been used yet.
+- [x] Run the first real-controller round on Software Controller 6.1.0.19 with zero adopted devices; see the [lab report](../investigations/software-controller-lab/README.md). Network/profile CRUD, site credential rotation, and a 102-network inventory pass.
+- [ ] Complete the five [controller compatibility follow-ups](controller-compatibility.md): WLAN pagination, certificate protocol, session recovery, IP groups, and empty device lists. Physical provisioning, radios, and switch ports remain separate gates.
+- [x] Complete the lab/README/plan updates and local commits: Go vendoring `5555332`, lab/Omada LFS manifest `0d26e72`. Go vet/unit/build pass without external network access. Live failures remain visible.
+- [x] Publish the lab/vendoring commits to the recreated standalone repository and verify the Omada LFS object with a fresh download/checksum. All original branches/tags are preserved; Actions are enabled again.
 - [ ] Publish PRs after the local changes and review packages are ready and publication is authorized. No GitHub review/comment/PR has been posted by this work.
 
 ## Commits and fork branches — 2026-10-19
+
+Will subsequently requested a standalone repository so the code and Omada LFS binary can live together. The original fork is preserved as `wbniv/terraform-provider-tplink-omada-upstream-fork`; `wbniv/terraform-provider-tplink-omada` is now standalone. All 14 original branches and nine tags match their recorded pre-migration commits exactly. New lab branch: `test/software-controller-lab`; Go vendor commit `5555332a65a4b52761c81b67d7b767e377f70fd3`, lab commit `0d26e723ce833a44c2043b6be23e69282b189a35`, diagnostic identity correction `c953da6ed94021d7774e26e76e55bb1ef2d7b8fc`. Historical fork-publication records below remain intact.
 
 Will authorized commit and push. Upstream does not grant this account push access, so the branches are published to [Will's fork](https://github.com/wbniv/terraform-provider-tplink-omada). All nine code commits retain the validated file hashes. A–D1 are based directly on `6bc71b3`; D2 stacks on D1, D3 stacks on D2, E stacks on A, F stacks on E, and G1 stacks on F.
 
@@ -175,7 +180,7 @@ Detailed plan: [HTTP response validation](http-responses.md), including status/e
 
 ### G — Pagination and disappearance
 
-Detailed plan: [G1 complete pagination and G2 confirmed disappearance](pagination-and-disappearance.md). G1 is the current patch; G2 follows after complete discovery is verified.
+Detailed plan: [G1 complete pagination and G2 confirmed disappearance](pagination-and-disappearance.md). G1 is pushed, but its real-controller WLAN-group regression requires [L1](controller-compatibility.md) before G2 can rely on complete discovery.
 
 - [x] Iterate all pages for every affected collection; retain direct-array compatibility.
 - [x] Test more than 100 objects, empty collections, later-page errors, duplicate/stalled pages, and metadata variations.
@@ -223,7 +228,8 @@ Priority: P2. The provider currently exposes `ports` as Optional+Computed, but t
 - [x] Reproduce on A, whose site/settings resource sources match `6bc71b3`: a credential update emits false mesh/failover/roaming values for unknown unconfigured plan attributes.
 - [x] Fix under E by resolving unconfigured unknown values from a fresh snapshot and patching changed sections with preserved writable siblings.
 - [x] Retain [baseline/patch evidence](../investigations/site-credentials-fix/README.md#new-finding-f16-unknown-site-settings-become-destructive-zero-values), including a direct case that keeps the old password unchanged to isolate preservation from F06.
-- [ ] Validate controller acceptance and resulting device behavior on hardware.
+- [x] Validate stored credential rotation and selected unrelated-settings preservation on Software Controller 6.1.0.19; see the [lab evidence](../investigations/software-controller-lab/README.md).
+- [ ] Validate resulting device behavior on dedicated hardware.
 
 Priority: P1. The incorrect request is reproduced; connectivity effects depend on firmware acceptance. This additional finding is fixed in the pushed E commit and does not change the original 14-finding baseline record.
 
