@@ -17,12 +17,13 @@ import (
 
 // Client is the Omada Controller API client.
 type Client struct {
-	baseURL    string
-	username   string
-	password   string
-	omadacID   string
-	httpClient *http.Client
-	readOnly   bool
+	baseURL           string
+	username          string
+	password          string
+	omadacID          string
+	controllerVersion string
+	httpClient        *http.Client
+	readOnly          bool
 
 	// mu protects token, authGeneration, and auth. It is never held during I/O.
 	mu             sync.Mutex
@@ -347,6 +348,7 @@ func (c *Client) getControllerInfo(ctx context.Context) error {
 		return &ProtocolError{reason: "missing controller ID"}
 	}
 	c.omadacID = info.OmadacID
+	c.controllerVersion = info.ControllerVer
 	return nil
 }
 
@@ -504,8 +506,8 @@ func (c *Client) doAuthenticatedRequest(ctx context.Context, method, url, conten
 	req.Header.Set("Csrf-Token", token)
 
 	apiResp, err := c.doAPIRequest(req)
-	// Only a valid HTTP 2xx Omada expiry response can trigger one replay.
-	if isAPIError(err, -1) && retry {
+	// Replay only verified session rejection signals, never follow redirects.
+	if isSessionExpiry(err) && retry {
 		if err := c.authenticate(ctx, generation, true); err != nil {
 			return nil, fmt.Errorf("re-authentication failed: %w", err)
 		}

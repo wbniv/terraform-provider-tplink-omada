@@ -73,3 +73,13 @@ python3 dev/controller-lab/verify-certificate.py
 ```
 
 The Terraform scenario covers create, a stable plan, rotation, another stable plan, and import. The client probe records only a public certificate fingerprint. The restart verifier compares that fingerprint with a fresh TLS handshake and checks stored identity persistence. Software Controller 6.1.0.19 converts PEM uploads to JKS identities and requires a restart to serve the certificate; the production provider reports this requirement and leaves restart scheduling to the operator. Run this sequence before `down`.
+
+## Session recovery check (L3)
+
+```sh
+python3 dev/controller-lab/session-probe.py
+LAB_ACCEPTANCE_RUN='^TestControllerLabCertificateResource$' \
+LAB_CLIENT_RUN='^TestControllerLabReauthentication$' dev/controller-lab/run.sh test
+```
+
+The raw probe disables redirect following for every opener and records only sanitized response shapes. Live cases cover missing cookies, invalid tokens, logout, multipart replay, and eight concurrent reads. The client now also runs under Go's race detector during the normal lab build gates. The new HTTP 302 recovery rule is limited to controller 6.1.0.19 and the exact same-origin login destination, with one shared reauthentication attempt and at most one replay per request. No redirected API request is followed. Natural timeout and other controller versions need separate verification.

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -15,7 +17,10 @@ const maxAPIResponseBytes = 16 << 20
 // HTTPError means the HTTP exchange completed with a non-success status.
 // Even 404 is not proof that a managed resource is absent: a proxy or an
 // unsupported endpoint can produce it. Resource-specific classification is separate.
-type HTTPError struct{ StatusCode int }
+type HTTPError struct {
+	StatusCode     int
+	sessionExpired bool
+}
 
 func (e *HTTPError) Error() string {
 	return fmt.Sprintf("HTTP error %d (%s)", e.StatusCode, http.StatusText(e.StatusCode))
@@ -55,7 +60,7 @@ func (c *Client) doAPIRequest(req *http.Request) (*APIResponse, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, &HTTPError{StatusCode: resp.StatusCode}
+		return nil, &HTTPError{StatusCode: resp.StatusCode, sessionExpired: c.isLoginRedirect(req, resp)}
 	}
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxAPIResponseBytes+1))
 	if err != nil {
@@ -132,4 +137,38 @@ func decodeAPIResponse(body []byte) (*APIResponse, error) {
 func isAPIError(err error, code int) bool {
 	var apiError *APIError
 	return errors.As(err, &apiError) && apiError.Code == code
+}
+
+// isLoginRedirect recognizes the exact login destination observed on 6.1.0.19.
+// No URL or header from the response is retained in the diagnostic or followed.
+func (c *Client) isLoginRedirect(req *http.Request, resp *http.Response) bool {
+	if c.controllerVersion != "6.1.0.19" || c.omadacID == "" || resp.StatusCode != http.StatusFound || len(resp.Header.Values("Location")) != 1 {
+		return false
+	}
+	base, err := url.Parse(c.baseURL)
+	if err != nil {
+		return false
+	}
+	sameOrigin := func(u *url.URL) bool {
+		return u.User == nil && u.Scheme == base.Scheme && strings.EqualFold(u.Host, base.Host)
+	}
+	if !sameOrigin(req.URL) {
+		return false
+	}
+	prefix := strings.TrimSuffix(base.EscapedPath(), "/") + "/" + url.PathEscape(c.omadacID)
+	apiPrefix := prefix + "/api/v2/"
+	if !strings.HasPrefix(req.URL.EscapedPath(), apiPrefix) || req.URL.EscapedPath() == apiPrefix+"login" || req.URL.EscapedPath() == apiPrefix+"logout" {
+		return false
+	}
+	location, err := url.Parse(resp.Header.Get("Location"))
+	if err != nil {
+		return false
+	}
+	target := req.URL.ResolveReference(location)
+	return sameOrigin(target) && target.EscapedPath() == prefix+"/login" && target.RawQuery == "" && !target.ForceQuery && target.Fragment == "" && !strings.Contains(resp.Header.Get("Location"), "#")
+}
+
+func isSessionExpiry(err error) bool {
+	var httpError *HTTPError
+	return isAPIError(err, -1) || (errors.As(err, &httpError) && httpError.sessionExpired)
 }

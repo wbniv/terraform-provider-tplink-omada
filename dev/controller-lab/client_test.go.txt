@@ -13,6 +13,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
+"sync"
 	"fmt"
 	"math/big"
 	"mime/multipart"
@@ -70,18 +71,31 @@ func TestControllerLabCollections(t *testing.T) {
 }
 
 func TestControllerLabReauthentication(t *testing.T) {
-	c, ctx, _ := labClient(t)
-	generation := c.authGeneration
-	// Invalidate our local session. This tests real rejection and automatic
-	// relogin, without claiming to have waited for the controller's timeout.
-	c.token = "deliberately-invalid-lab-token"
-	c.httpClient.Jar, _ = cookiejar.New(nil)
-	if _, err := c.ListSites(ctx); err != nil {
-		t.Fatal(err)
-	}
-	if c.authGeneration <= generation {
-		t.Fatal("request did not reauthenticate")
-	}
+ for _,mode:=range []string{"missing-cookie", "missing-cookie-invalid-token", "invalid-token", "logout", "multipart", "concurrent"} {
+  t.Run(mode,func(t *testing.T){
+   c,ctx,_:=labClient(t)
+   _,generation:=c.session()
+   if mode=="logout" {
+    if _,err:=c.doRequest(ctx,http.MethodPost,c.globalURL("/logout"),nil);err!=nil {t.Fatal(err)}
+   } else if mode=="invalid-token" {c.token="deliberately-invalid-lab-token"} else {
+    c.httpClient.Jar,_=cookiejar.New(nil)
+    if mode=="missing-cookie-invalid-token" {c.token="deliberately-invalid-lab-token"}
+   }
+   if mode=="multipart" {
+    cert,_,_:=labCertificate(t)
+    id,err:=c.UploadCertificate(ctx,cert,"recovery.pem")
+    if err!=nil || id=="" {t.Fatalf("multipart recovery failed: %v",err)}
+   } else if mode=="concurrent" {
+    var wg sync.WaitGroup
+    for i:=0;i<8;i++ {wg.Add(1);go func(){defer wg.Done();if _,err:=c.ListSites(ctx);err!=nil {t.Error(err)}}()}
+    wg.Wait()
+   } else {
+    _,err:=c.ListSites(ctx)
+    if err!=nil {t.Fatal(err)}
+   }
+   _,after:=c.session();if after!=generation+1 {t.Fatalf("expected exactly one shared refresh; generations advanced by %d",after-generation)}
+  })
+ }
 }
 
 func TestControllerLabNetworkPagination(t *testing.T) {

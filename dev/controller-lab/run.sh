@@ -67,6 +67,7 @@ case "${1:-}" in
       export GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local
       go vet -mod=vendor ./...
       go test -mod=vendor ./...
+      go test -race -mod=vendor ./internal/client
       go build -mod=vendor -o /tmp/bin/terraform-provider-tplink-omada .
       go test -mod=vendor -c -o /tmp/client-tests ./internal/client
       go test -mod=vendor -c -o /tmp/provider-tests ./internal/provider
