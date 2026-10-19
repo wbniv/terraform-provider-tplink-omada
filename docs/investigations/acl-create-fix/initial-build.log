@@ -1,0 +1,4 @@
+go version go1.25.6 linux/amd64
+Terraform v1.15.8
+on linux_amd64
+internal/resources/firewall_acl.go:12:2: cannot find module providing package github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier: import lookup disabled by -mod=vendor

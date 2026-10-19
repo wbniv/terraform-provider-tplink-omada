@@ -1,0 +1,11 @@
+=== RUN   TestListDevicesRejectsNonArrays
+=== RUN   TestListDevicesRejectsNonArrays/null
+=== RUN   TestListDevicesRejectsNonArrays/{}
+=== RUN   TestListDevicesRejectsNonArrays/{"data":[]}
+=== RUN   TestListDevicesRejectsNonArrays/"unexpected"
+--- PASS: TestListDevicesRejectsNonArrays (0.01s)
+    --- PASS: TestListDevicesRejectsNonArrays/null (0.00s)
+    --- PASS: TestListDevicesRejectsNonArrays/{} (0.00s)
+    --- PASS: TestListDevicesRejectsNonArrays/{"data":[]} (0.00s)
+    --- PASS: TestListDevicesRejectsNonArrays/"unexpected" (0.00s)
+PASS

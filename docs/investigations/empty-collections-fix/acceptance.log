@@ -1,0 +1,7 @@
+=== RUN   TestControllerLabIPGroup
+--- PASS: TestControllerLabIPGroup (9.77s)
+=== RUN   TestControllerLabEmptyCollections
+--- PASS: TestControllerLabEmptyCollections (10.27s)
+=== RUN   TestAccCollectionEmptyState
+--- PASS: TestAccCollectionEmptyState (6.12s)
+PASS

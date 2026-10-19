@@ -1,0 +1,1025 @@
+diff --git a/dev/controller-lab/README.md b/dev/controller-lab/README.md
+index 98d9ecc..b3ce630 100644
+--- a/dev/controller-lab/README.md
++++ b/dev/controller-lab/README.md
+@@ -94,4 +94,11 @@ LAB_CLIENT_RUN='^TestControllerLabIPGroups$' dev/controller-lab/run.sh test
+ 
+ The raw probe inventories group types and response formats, then creates and removes synthetic groups and a disabled ACL. The live tests verify the Terraform lifecycle and data source, listing the complete supported group population (up to the controller quota or 101 fixtures), and retained ACL references after a group update. A mock Terraform scenario checks accepted creation followed by readback failure and recovery. All temporary groups and ACLs are cleaned up. These tests do not verify traffic enforcement.
+ 
+-ACL creation's empty acknowledgment is a separate L8 finding: the raw client proves references can be stored, but the existing Terraform ACL create decoder still needs correction.
++## ACL creation and recovery check (L8)
++
++```sh
++LAB_ACCEPTANCE_RUN='^TestControllerLabACL$|^TestAccACLCreateReadbackFailure$' \
++LAB_CLIENT_RUN='^TestACL|^TestControllerLabACL$' dev/controller-lab/run.sh test
++```
++
++The live Terraform scenario covers disabled gateway ACL creation, stable plans, rename/policy update, identity/order retention, import, and destruction with synthetic IP/Port groups. The mock Terraform scenario injects a failure after accepted creation, verifies that retry refuses a duplicate, then imports the existing rule and destroys it. Client tests cover missing/ambiguous matches, complete-inventory failures, and preservation of settings outside Terraform's schema. The live client probe also checks second-rule ordering, syslog preservation, and an unchanged neighboring ACL. Traffic enforcement remains a hardware gate.
+diff --git a/dev/controller-lab/client_test.go.txt b/dev/controller-lab/client_test.go.txt
+index 1418ea9..843fe76 100644
+--- a/dev/controller-lab/client_test.go.txt
++++ b/dev/controller-lab/client_test.go.txt
+@@ -315,3 +315,25 @@ func TestControllerLabIPGroups(t *testing.T){
+  if len(stored.SourceIDs)!=1 || stored.SourceIDs[0]!=ids[0] || len(stored.DestinationIDs)!=1 || stored.DestinationIDs[0]!=ids[0]{t.Fatal("ACL lost group references")}
+  t.Log("disabled ACL references survive group rename and port update; traffic enforcement not tested")
+ }
++
++func TestControllerLabACL(t *testing.T) {
++ c,ctx,site:=labClient(t)
++ group,err:=c.CreateIPGroup(ctx,site,&IPGroup{Name:"L8 Client group",Type:1,IPList:[]IPGroupEntry{{IP:"192.0.2.0/24",PortList:[]string{"443"}}}})
++ if err!=nil{t.Fatal(err)}
++ t.Cleanup(func(){if err:=c.DeleteIPGroup(context.Background(),site,group.ID);err!=nil{t.Error(err)}})
++ t.Cleanup(func(){
++  rules,err:=c.ListACLRules(context.Background(),site,0);if err!=nil{t.Error(err);return}
++  for _,r:=range rules{if r.Name=="L8 Client anchor" || r.Name=="L8 Client target" || r.Name=="L8 Client renamed"{if err:=c.DeleteACLRule(context.Background(),site,r.ID);err!=nil{t.Error(err)}}}
++ })
++ input:=ACLRule{Name:"L8 Client anchor",Type:0,Policy:1,Protocols:[]int{6},SourceType:2,SourceIDs:[]string{group.ID},DestinationType:2,DestinationIDs:[]string{group.ID},Direction:ACLDirection{LanToWan:true},Syslog:true}
++ anchor,err:=c.CreateACLRule(ctx,site,&input);if err!=nil{t.Fatal(err)}
++ input.Name="L8 Client target"
++ target,err:=c.CreateACLRule(ctx,site,&input);if err!=nil{t.Fatal(err)}
++ if target.Index<=anchor.Index{t.Fatal("expected target after anchor")}
++ input.Name="L8 Client renamed";input.Policy=0;input.Syslog=false
++ updated,err:=c.UpdateACLRule(ctx,site,target.ID,&input);if err!=nil{t.Fatal(err)}
++ if updated.ID!=target.ID || updated.Index!=target.Index || !updated.Syslog || updated.Name!=input.Name || updated.Policy!=0{t.Fatalf("identity/order/syslog preservation failed: %+v",updated)}
++ untouched,err:=c.GetACLRule(ctx,site,anchor.ID,0);if err!=nil{t.Fatal(err)}
++ if untouched.Name!=anchor.Name || untouched.Index!=anchor.Index || untouched.Policy!=anchor.Policy || !untouched.Syslog{t.Fatal("unrelated ACL changed")}
++ t.Log("Disabled gateway ACL: empty create acknowledgment resolved, second-rule order and syslog preserved, unrelated anchor unchanged")
++}
+diff --git a/dev/controller-lab/provider_test.go.txt b/dev/controller-lab/provider_test.go.txt
+index badacdd..8494d2c 100644
+--- a/dev/controller-lab/provider_test.go.txt
++++ b/dev/controller-lab/provider_test.go.txt
+@@ -332,3 +332,50 @@ data "omada_ip_groups" "lab" {
+   {ResourceName:"omada_ip_group.lab",ImportState:true,ImportStateIdFunc:func(s *terraform.State)(string,error){return site+"/"+id,nil},ImportStateVerify:true,ImportStateVerifyIgnore:[]string{"ip_list.1.ip"}},
+  }})
+ }
++
++func TestControllerLabACL(t *testing.T) {
++ if os.Getenv("OMADA_CONTROLLER_LAB")!="1" {t.Skip("disposable lab only")}
++ if os.Getenv("OMADA_URL")!="https://controller:8043" {t.Fatal("refusing non-lab target")}
++ site:=os.Getenv("OMADA_TEST_SITE_ID")
++ config:=func(name string,policy int)string{return fmt.Sprintf(`
++resource "omada_ip_group" "acl" {
++ site_id = %q
++ name = "L8 ACL group"
++ ip_list = [{ip = "192.0.2.0/24", port_list = ["443"]}]
++}
++resource "omada_firewall_acl" "lab" {
++ site_id = %q
++ name = %q
++ type = 0
++ status = false
++ policy = %d
++ protocols = [6]
++ source_type = 2
++ source_ids = [omada_ip_group.acl.id]
++ destination_type = 2
++ destination_ids = [omada_ip_group.acl.id]
++ lan_to_wan = true
++ lan_to_lan = false
++}
++`,site,site,name,policy)}
++ first,second:=config("L8 Terraform",1),config("L8 Terraform renamed",0)
++ var id string
++ var index int
++ check:=func(s *terraform.State)error {
++  attrs:=s.RootModule().Resources["omada_firewall_acl.lab"].Primary.Attributes
++  c,err:=client.NewClient(os.Getenv("OMADA_URL"),os.Getenv("OMADA_USERNAME"),os.Getenv("OMADA_PASSWORD"),true);if err!=nil{return err}
++  rule,err:=c.GetACLRule(context.Background(),site,attrs["id"],0);if err!=nil{return err}
++  if id!="" && (id!=rule.ID || index!=rule.Index){return fmt.Errorf("ACL identity/order changed")};id=rule.ID;index=rule.Index
++  if rule.Status || rule.Name!=attrs["name"] || fmt.Sprint(rule.Policy)!=attrs["policy"] || len(rule.SourceIDs)!=1 || rule.SourceIDs[0]!=attrs["source_ids.0"] || len(rule.DestinationIDs)!=1 || rule.DestinationIDs[0]!=attrs["destination_ids.0"]{return fmt.Errorf("controller ACL differs from state")}
++  return nil
++ }
++ resource.Test(t,resource.TestCase{PreCheck:func(){testAccPreCheck(t)},ProtoV6ProviderFactories:testAccProtoV6ProviderFactories,
++ CheckDestroy:func(*terraform.State)error {
++  c,err:=client.NewClient(os.Getenv("OMADA_URL"),os.Getenv("OMADA_USERNAME"),os.Getenv("OMADA_PASSWORD"),true);if err!=nil{return err}
++  rules,err:=c.ListACLRules(context.Background(),site,0);if err!=nil{return err};for _,r:=range rules{if r.ID==id{return fmt.Errorf("ACL survived destroy")}};return nil
++ },Steps:[]resource.TestStep{
++ {Config:first,Check:check}, {Config:first,PlanOnly:true},
++ {Config:second,Check:check}, {Config:second,PlanOnly:true},
++ {ResourceName:"omada_firewall_acl.lab",ImportState:true,ImportStateIdFunc:func(*terraform.State)(string,error){return site+"/0/"+id,nil},ImportStateVerify:true},
++ }})
++}
+diff --git a/docs/resources/firewall_acl.md b/docs/resources/firewall_acl.md
+index 18d48f4..f08c4f1 100644
+--- a/docs/resources/firewall_acl.md
++++ b/docs/resources/firewall_acl.md
+@@ -3,12 +3,12 @@
+ page_title: "omada_firewall_acl Resource - omada"
+ subcategory: ""
+ description: |-
+-  Manages a firewall ACL rule on the Omada Controller. ACL rules control traffic between networks, IP groups, and other entities. Gateway ACL rules (type=0) require a gateway device adopted into the site.
++  Manages a firewall ACL rule on the Omada Controller. ACL rules control traffic between networks, IP groups, and other entities. Disabled gateway ACL configuration is verified without adopted hardware; traffic enforcement requires a gateway.
+ ---
+ 
+ # omada_firewall_acl (Resource)
+ 
+-Manages a firewall ACL rule on the Omada Controller. ACL rules control traffic between networks, IP groups, and other entities. Gateway ACL rules (type=0) require a gateway device adopted into the site.
++Manages a firewall ACL rule on the Omada Controller. ACL rules control traffic between networks, IP groups, and other entities. Disabled gateway ACL configuration is verified without adopted hardware; traffic enforcement requires a gateway.
+ 
+ 
+ 
+@@ -38,3 +38,13 @@ Manages a firewall ACL rule on the Omada Controller. ACL rules control traffic b
+ 
+ - `id` (String) The unique identifier of the ACL rule.
+ - `index` (Number) Rule ordering index (first-match-wins). Computed by the controller.
++
++## Creation and recovery
++
++On Software Controller 6.1.0.19, creation acknowledges success without returning an ID. The provider reads the complete rule inventory before and after creation and requires one new same-name rule matching the requested configuration. An existing same-name rule is rejected before creation; it is never automatically adopted.
++
++If creation is accepted but readback fails or is ambiguous, the controller may already contain the rule. Inspect its type, name, source/destination references, and policy before retrying. Import the intended rule with `terraform import omada_firewall_acl.example siteID/aclType/ruleID`. If multiple rules match, resolve ownership before importing or deleting anything. A retry that sees an existing same-name rule stops before sending another create. The provider cannot guarantee identity attribution while another writer creates or renames indistinguishable rules concurrently; avoid concurrent edits during creation.
++
++Changing `type` requires replacement. Updates retain the current ordering index and settings outside the Terraform schema, including syslog and additional direction selectors. Those settings remain externally managed. Import uses `siteID/aclType/ruleID`.
++
++The verified controller configuration uses disabled gateway rules with IPv4 IP/Port-group references. Actual traffic enforcement, switch/EAP rule variants, and other controller versions require separate validation.
+diff --git a/internal/client/client.go b/internal/client/client.go
+index 53dbb29..0bc15a4 100644
+--- a/internal/client/client.go
++++ b/internal/client/client.go
+@@ -1617,36 +1617,6 @@ func (c *Client) GetACLRule(ctx context.Context, siteID, ruleID string, aclType
+ 	return nil, fmt.Errorf("ACL rule %q not found", ruleID)
+ }
+ 
+-// CreateACLRule creates a new ACL rule.
+-func (c *Client) CreateACLRule(ctx context.Context, siteID string, rule *ACLRule) (*ACLRule, error) {
+-	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPost, "/setting/firewall/acls", rule)
+-	if err != nil {
+-		return nil, err
+-	}
+-
+-	var created ACLRule
+-	if err := json.Unmarshal(resp.Result, &created); err != nil {
+-		return nil, fmt.Errorf("decoding created ACL rule: %w", err)
+-	}
+-	return &created, nil
+-}
+-
+-// UpdateACLRule updates an existing ACL rule.
+-func (c *Client) UpdateACLRule(ctx context.Context, siteID, ruleID string, rule *ACLRule) (*ACLRule, error) {
+-	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPatch, fmt.Sprintf("/setting/firewall/acls/%s", ruleID), rule)
+-	if err != nil {
+-		return nil, err
+-	}
+-	if isEmptyResult(resp.Result) {
+-		return c.GetACLRule(ctx, siteID, ruleID, rule.Type)
+-	}
+-	var updated ACLRule
+-	if err := json.Unmarshal(resp.Result, &updated); err != nil {
+-		return nil, fmt.Errorf("decoding updated ACL rule: %w", err)
+-	}
+-	return &updated, nil
+-}
+-
+ // DeleteACLRule deletes an ACL rule.
+ func (c *Client) DeleteACLRule(ctx context.Context, siteID, ruleID string) error {
+ 	_, err := c.doSiteRequest(ctx, siteID, http.MethodDelete, fmt.Sprintf("/setting/firewall/acls/%s", ruleID), nil)
+diff --git a/internal/client/client_test.go b/internal/client/client_test.go
+index 2fdb1bc..1507581 100644
+--- a/internal/client/client_test.go
++++ b/internal/client/client_test.go
+@@ -690,110 +690,6 @@ func TestGetACLRule_NotFound(t *testing.T) {
+ 	}
+ }
+ 
+-func TestCreateACLRule(t *testing.T) {
+-	created := ACLRule{
+-		ID: "acl-new", Name: "New Rule", Type: 0, Status: true,
+-		Policy: 0, Protocols: []int{6}, SourceType: 0, SourceIDs: []string{"net-1"},
+-		DestinationType: 0, DestinationIDs: []string{"net-2"}, Index: 5,
+-	}
+-
+-	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+-		"/sites/site-1/setting/firewall/acls": func(w http.ResponseWriter, r *http.Request) {
+-			if r.Method != http.MethodPost {
+-				t.Errorf("expected POST, got %s", r.Method)
+-			}
+-			json.NewEncoder(w).Encode(APIResponse{
+-				ErrorCode: 0,
+-				Result:    mustMarshal(t, created),
+-			})
+-		},
+-	})
+-	defer server.Close()
+-	c := newTestClient(t, server)
+-
+-	input := &ACLRule{
+-		Name: "New Rule", Type: 0, Status: true, Policy: 0,
+-		Protocols: []int{6}, SourceType: 0, SourceIDs: []string{"net-1"},
+-		DestinationType: 0, DestinationIDs: []string{"net-2"},
+-	}
+-	got, err := c.CreateACLRule(context.Background(), "site-1", input)
+-	if err != nil {
+-		t.Fatalf("CreateACLRule: %v", err)
+-	}
+-	if got.ID != "acl-new" {
+-		t.Errorf("ID = %q, want %q", got.ID, "acl-new")
+-	}
+-	if got.Index != 5 {
+-		t.Errorf("Index = %d, want %d", got.Index, 5)
+-	}
+-}
+-
+-func TestUpdateACLRule(t *testing.T) {
+-	updated := ACLRule{
+-		ID: "acl-1", Name: "Updated Rule", Type: 0, Status: true,
+-		Policy: 1, Protocols: []int{6, 17},
+-	}
+-
+-	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+-		"/sites/site-1/setting/firewall/acls/acl-1": func(w http.ResponseWriter, r *http.Request) {
+-			if r.Method != http.MethodPatch {
+-				t.Errorf("expected PATCH, got %s", r.Method)
+-			}
+-			json.NewEncoder(w).Encode(APIResponse{
+-				ErrorCode: 0,
+-				Result:    mustMarshal(t, updated),
+-			})
+-		},
+-	})
+-	defer server.Close()
+-	c := newTestClient(t, server)
+-
+-	input := &ACLRule{Name: "Updated Rule", Type: 0, Policy: 1, Protocols: []int{6, 17}}
+-	got, err := c.UpdateACLRule(context.Background(), "site-1", "acl-1", input)
+-	if err != nil {
+-		t.Fatalf("UpdateACLRule: %v", err)
+-	}
+-	if got.Name != "Updated Rule" {
+-		t.Errorf("Name = %q, want %q", got.Name, "Updated Rule")
+-	}
+-}
+-
+-func TestUpdateACLRule_EmptyResult(t *testing.T) {
+-	rules := []ACLRule{
+-		{ID: "acl-1", Name: "Refreshed Rule", Type: 0, Status: true, Policy: 1},
+-	}
+-	listResult := ACLListResult{TotalRows: 1, CurrentPage: 1, CurrentSize: 100, Data: rules}
+-
+-	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+-		"/sites/site-1/setting/firewall/acls/acl-1": func(w http.ResponseWriter, r *http.Request) {
+-			if r.Method == http.MethodPatch {
+-				json.NewEncoder(w).Encode(APIResponse{
+-					ErrorCode: 0,
+-					Result:    json.RawMessage(`{}`),
+-				})
+-				return
+-			}
+-		},
+-		"/sites/site-1/setting/firewall/acls": func(w http.ResponseWriter, r *http.Request) {
+-			json.NewEncoder(w).Encode(APIResponse{
+-				ErrorCode: 0,
+-				Result:    mustMarshal(t, listResult),
+-			})
+-		},
+-	})
+-	defer server.Close()
+-	c := newTestClient(t, server)
+-
+-	input := &ACLRule{Name: "Refreshed Rule", Type: 0, Policy: 1}
+-	got, err := c.UpdateACLRule(context.Background(), "site-1", "acl-1", input)
+-	if err != nil {
+-		t.Fatalf("UpdateACLRule (empty result): %v", err)
+-	}
+-	if got.Name != "Refreshed Rule" {
+-		t.Errorf("Name = %q, want %q", got.Name, "Refreshed Rule")
+-	}
+-}
+-
+ func TestDeleteACLRule(t *testing.T) {
+ 	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+ 		"/sites/site-1/setting/firewall/acls/acl-1": func(w http.ResponseWriter, r *http.Request) {
+diff --git a/internal/resources/firewall_acl.go b/internal/resources/firewall_acl.go
+index a13d20e..6366f18 100644
+--- a/internal/resources/firewall_acl.go
++++ b/internal/resources/firewall_acl.go
+@@ -9,6 +9,7 @@ import (
+ 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+ 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+ 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
++	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+ 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+ 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+ 	"github.com/hashicorp/terraform-plugin-framework/types"
+@@ -54,7 +55,7 @@ func (r *ACLRuleResource) Schema(_ context.Context, _ resource.SchemaRequest, re
+ 	resp.Schema = schema.Schema{
+ 		Description: "Manages a firewall ACL rule on the Omada Controller. " +
+ 			"ACL rules control traffic between networks, IP groups, and other entities. " +
+-			"Gateway ACL rules (type=0) require a gateway device adopted into the site.",
++			"Disabled gateway ACL configuration is verified without adopted hardware; traffic enforcement requires a gateway.",
+ 		Attributes: map[string]schema.Attribute{
+ 			"id": schema.StringAttribute{
+ 				Description: "The unique identifier of the ACL rule.",
+@@ -69,8 +70,9 @@ func (r *ACLRuleResource) Schema(_ context.Context, _ resource.SchemaRequest, re
+ 				Required:    true,
+ 			},
+ 			"type": schema.Int64Attribute{
+-				Description: "The ACL type: 0=gateway, 1=switch, 2=eap.",
+-				Required:    true,
++				Description:   "The ACL type: 0=gateway, 1=switch, 2=eap.",
++				PlanModifiers: []planmodifier.Int64{int64planmodifier.RequiresReplace()},
++				Required:      true,
+ 			},
+ 			"status": schema.BoolAttribute{
+ 				Description: "Whether the rule is enabled.",
+diff --git a/vendor/modules.txt b/vendor/modules.txt
+index 5c1d87c..b2a601e 100644
+--- a/vendor/modules.txt
++++ b/vendor/modules.txt
+@@ -168,6 +168,7 @@ github.com/hashicorp/terraform-plugin-framework/resource/schema
+ github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault
+ github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults
+ github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default
++github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier
+ github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier
+ github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault
+ github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier
+diff --git a/internal/client/acls.go b/internal/client/acls.go
+new file mode 100644
+index 0000000..632ae27
+--- /dev/null
++++ b/internal/client/acls.go
+@@ -0,0 +1,116 @@
++package client
++
++import (
++	"context"
++	"encoding/json"
++	"fmt"
++	"net/http"
++	"slices"
++	"strings"
++)
++
++// CreateACLRule resolves an empty success acknowledgment using complete inventories.
++// No existing rule is adopted by name, and an uncertain write is never repeated here.
++func (c *Client) CreateACLRule(ctx context.Context, siteID string, rule *ACLRule) (*ACLRule, error) {
++	if c.readOnly {
++		return nil, fmt.Errorf("client is read-only")
++	}
++	if rule == nil || strings.TrimSpace(rule.Name) == "" {
++		return nil, fmt.Errorf("ACL name is required")
++	}
++	before, err := c.ListACLRules(ctx, siteID, rule.Type)
++	if err != nil {
++		return nil, fmt.Errorf("ACL create preflight: %w", err)
++	}
++	ids := make(map[string]bool, len(before))
++	for _, r := range before {
++		ids[r.ID] = true
++		if r.Name == rule.Name {
++			return nil, fmt.Errorf("ACL with this name already exists; inspect and import the intended rule using siteID/aclType/ruleID before retrying")
++		}
++	}
++	payload := *rule
++	payload.ID = ""
++	payload.Index = 0
++	_, err = c.doSiteRequest(ctx, siteID, http.MethodPost, "/setting/firewall/acls", &payload)
++	if err != nil {
++		return nil, fmt.Errorf("ACL creation did not complete: %w; inspect the controller before retrying if the write outcome is uncertain", err)
++	}
++	after, err := c.ListACLRules(ctx, siteID, rule.Type)
++	recovery := "ACL creation was accepted but its identity could not be confirmed; inspect the controller and import the intended rule using siteID/aclType/ruleID before retrying"
++	if err != nil {
++		return nil, fmt.Errorf("%s: %w", recovery, err)
++	}
++	var matches []ACLRule
++	for _, r := range after {
++		if !ids[r.ID] && r.Name == rule.Name {
++			matches = append(matches, r)
++		}
++	}
++	if len(matches) != 1 || !sameACLConfiguration(matches[0], *rule) {
++		return nil, fmt.Errorf("%s (new same-name matches: %d)", recovery, len(matches))
++	}
++	return &matches[0], nil
++}
++
++func sameACLConfiguration(a, b ACLRule) bool {
++	return a.Name == b.Name && a.Type == b.Type && a.Status == b.Status && a.Policy == b.Policy &&
++		slices.Equal(a.Protocols, b.Protocols) && a.SourceType == b.SourceType && slices.Equal(a.SourceIDs, b.SourceIDs) &&
++		a.DestinationType == b.DestinationType && slices.Equal(a.DestinationIDs, b.DestinationIDs) &&
++		a.Direction.LanToWan == b.Direction.LanToWan && a.Direction.LanToLan == b.Direction.LanToLan &&
++		slices.Equal(a.Direction.WanInIDs, b.Direction.WanInIDs) && slices.Equal(a.Direction.VpnInIDs, b.Direction.VpnInIDs) &&
++		a.BiDirectional == b.BiDirectional && a.StateMode == b.StateMode && a.IPSec == b.IPSec && a.Syslog == b.Syslog
++}
++
++// UpdateACLRule overlays Terraform-owned fields on the current rule. Preserve
++// ordering, unmodeled settings, and direction selectors outside the schema.
++func (c *Client) UpdateACLRule(ctx context.Context, siteID, ruleID string, rule *ACLRule) (*ACLRule, error) {
++	if c.readOnly {
++		return nil, fmt.Errorf("client is read-only")
++	}
++	rows, err := listAll[map[string]json.RawMessage](ctx, c, c.siteURL(siteID, "/setting/firewall/acls")+fmt.Sprintf("&type=%d", rule.Type), "id")
++	if err != nil {
++		return nil, err
++	}
++	var raw map[string]json.RawMessage
++	for _, row := range rows {
++		var id string
++		_ = json.Unmarshal(row["id"], &id)
++		if id == ruleID {
++			raw = row
++			break
++		}
++	}
++	if raw == nil {
++		return nil, fmt.Errorf("ACL rule %q not found", ruleID)
++	}
++	var currentType int
++	if err := json.Unmarshal(raw["type"], &currentType); err != nil || currentType != rule.Type {
++		return nil, fmt.Errorf("ACL type cannot change during update")
++	}
++	fields := map[string]any{"name": rule.Name, "type": rule.Type, "status": rule.Status, "policy": rule.Policy, "protocols": rule.Protocols, "sourceType": rule.SourceType, "sourceIds": rule.SourceIDs, "destinationType": rule.DestinationType, "destinationIds": rule.DestinationIDs, "biDirectional": rule.BiDirectional}
++	for k, v := range fields {
++		raw[k], err = json.Marshal(v)
++		if err != nil {
++			return nil, err
++		}
++	}
++	direction := map[string]json.RawMessage{}
++	if d, ok := raw["direction"]; ok {
++		if err := json.Unmarshal(d, &direction); err != nil {
++			return nil, fmt.Errorf("decoding ACL direction: %w", err)
++		}
++	}
++	if direction == nil {
++		direction = map[string]json.RawMessage{}
++	}
++	direction["lanToWan"], _ = json.Marshal(rule.Direction.LanToWan)
++	direction["lanToLan"], _ = json.Marshal(rule.Direction.LanToLan)
++	raw["direction"], _ = json.Marshal(direction)
++	delete(raw, "id")
++	delete(raw, "siteId")
++	if _, err := c.doSiteRequest(ctx, siteID, http.MethodPut, fmt.Sprintf("/setting/firewall/acls/%s", ruleID), raw); err != nil {
++		return nil, err
++	}
++	return c.GetACLRule(ctx, siteID, ruleID, rule.Type)
++}
+diff --git a/internal/client/acls_test.go b/internal/client/acls_test.go
+new file mode 100644
+index 0000000..05a11d4
+--- /dev/null
++++ b/internal/client/acls_test.go
+@@ -0,0 +1,133 @@
++package client
++
++import (
++	"context"
++	"encoding/json"
++	"fmt"
++	"net/http"
++	"strings"
++	"testing"
++)
++
++func TestACLCreateReadback(t *testing.T) {
++	for _, mode := range []string{"empty acknowledgment", "object acknowledgment", "preexisting", "preflight failure", "readback failure", "missing", "ambiguous", "different configuration", "late page failure"} {
++		t.Run(mode, func(t *testing.T) {
++			input := ACLRule{Name: "Test ACL", Protocols: []int{6}, SourceType: 2, SourceIDs: []string{"group"}, DestinationType: 2, DestinationIDs: []string{"group"}, Direction: ACLDirection{LanToWan: true}, Policy: 1}
++			created := input
++			created.ID = "new"
++			created.Index = 3
++			posts := 0
++			server := mockOmadaServer(t, map[string]http.HandlerFunc{"/sites/site/setting/firewall/acls": func(w http.ResponseWriter, r *http.Request) {
++				if r.Method == http.MethodPost {
++					posts++
++					var payload map[string]json.RawMessage
++					_ = json.NewDecoder(r.Body).Decode(&payload)
++					if _, ok := payload["id"]; ok {
++						t.Error("sent identity")
++					}
++					if _, ok := payload["index"]; ok {
++						t.Error("sent index")
++					}
++					if mode == "object acknowledgment" {
++						json.NewEncoder(w).Encode(APIResponse{Result: mustMarshal(t, created)})
++					} else {
++						fmt.Fprint(w, `{"errorCode":0,"msg":"Success."}`)
++					}
++					return
++				}
++				if r.Method != http.MethodGet {
++					t.Errorf("unexpected method %s", r.Method)
++				}
++				if mode == "preflight failure" || (posts > 0 && mode == "readback failure") {
++					http.Error(w, "unavailable", 503)
++					return
++				}
++				rows := []ACLRule{}
++				if mode == "preexisting" {
++					rows = append(rows, created)
++				}
++				if posts > 0 && mode != "missing" {
++					rows = append(rows, created)
++					if mode == "ambiguous" {
++						other := created
++						other.ID = "other"
++						rows = append(rows, other)
++					}
++					if mode == "different configuration" {
++						rows[0].Policy = 0
++					}
++				}
++				if mode == "late page failure" && posts > 0 {
++					if r.URL.Query().Get("currentPage") == "2" {
++						http.Error(w, "unavailable", 503)
++						return
++					}
++					json.NewEncoder(w).Encode(APIResponse{Result: mustMarshal(t, ACLListResult{TotalRows: 2, CurrentPage: 1, CurrentSize: 1, Data: rows})})
++					return
++				}
++				json.NewEncoder(w).Encode(APIResponse{Result: paginatedResponse(t, rows)})
++			}})
++			defer server.Close()
++			c := newTestClient(t, server)
++			got, err := c.CreateACLRule(context.Background(), "site", &input)
++			success := mode == "empty acknowledgment" || mode == "object acknowledgment"
++			if success {
++				if err != nil || got == nil || got.ID != "new" || got.Index != 3 {
++					t.Fatalf("result=%+v error=%v", got, err)
++				}
++			} else {
++				if err == nil || got != nil {
++					t.Fatalf("unsafe success: %+v %v", got, err)
++				}
++				if mode != "preflight failure" && !strings.Contains(err.Error(), "import") {
++					t.Errorf("missing recovery guidance: %v", err)
++				}
++			}
++			want := 1
++			if mode == "preexisting" || mode == "preflight failure" {
++				want = 0
++			}
++			if posts != want {
++				t.Fatalf("posts=%d want=%d", posts, want)
++			}
++		})
++	}
++}
++
++func TestACLUpdatePreservesUnmanagedFields(t *testing.T) {
++	raw := map[string]any{"id": "rule", "siteId": "site", "type": 0, "name": "old", "index": 7, "status": false, "policy": 0, "protocols": []int{6}, "sourceType": 2, "sourceIds": []string{"g"}, "destinationType": 2, "destinationIds": []string{"g"}, "syslog": true, "stateMode": 2, "customAclPorts": []string{"port"}, "futureSetting": map[string]any{"value": true}, "direction": map[string]any{"lanToWan": false, "lanToLan": true, "wanInIds": []string{"wan"}, "futureDirection": true}}
++	patches := 0
++	server := mockOmadaServer(t, map[string]http.HandlerFunc{
++		"/sites/site/setting/firewall/acls": func(w http.ResponseWriter, r *http.Request) {
++			json.NewEncoder(w).Encode(APIResponse{Result: paginatedResponse(t, []any{raw})})
++		},
++		"/sites/site/setting/firewall/acls/rule": func(w http.ResponseWriter, r *http.Request) {
++			patches++
++			if r.Method != http.MethodPut {
++				t.Errorf("method=%s", r.Method)
++			}
++			var payload map[string]any
++			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
++				t.Fatal(err)
++			}
++			if payload["index"] != float64(7) || payload["syslog"] != true || payload["stateMode"] != float64(2) || payload["futureSetting"] == nil || payload["customAclPorts"] == nil {
++				t.Errorf("lost fields: %v", payload)
++			}
++			if payload["id"] != nil || payload["siteId"] != nil {
++				t.Error("sent response identity fields")
++			}
++			direction := payload["direction"].(map[string]any)
++			if direction["lanToWan"] != true || direction["lanToLan"] != false || direction["wanInIds"] == nil || direction["futureDirection"] != true {
++				t.Errorf("direction=%v", direction)
++			}
++			raw = payload
++			raw["id"] = "rule"
++			fmt.Fprint(w, `{"errorCode":0}`)
++		}})
++	defer server.Close()
++	c := newTestClient(t, server)
++	got, err := c.UpdateACLRule(context.Background(), "site", "rule", &ACLRule{Name: "new", Policy: 1, Protocols: []int{17}, SourceType: 2, SourceIDs: []string{"g"}, DestinationType: 2, DestinationIDs: []string{"g"}, Direction: ACLDirection{LanToWan: true}})
++	if err != nil || got.Name != "new" || got.ID != "rule" || got.Index != 7 || !got.Syslog || patches != 1 {
++		t.Fatalf("result=%+v err=%v patches=%d", got, err, patches)
++	}
++}
+diff --git a/internal/provider/acl_recovery_test.go b/internal/provider/acl_recovery_test.go
+new file mode 100644
+index 0000000..0d40ff1
+--- /dev/null
++++ b/internal/provider/acl_recovery_test.go
+@@ -0,0 +1,100 @@
++package provider
++
++import (
++	"encoding/json"
++	"fmt"
++	"net/http"
++	"net/http/httptest"
++	"regexp"
++	"sync"
++	"testing"
++
++	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
++	"github.com/hashicorp/terraform-plugin-testing/terraform"
++)
++
++func TestAccACLCreateReadbackFailure(t *testing.T) {
++	var mu sync.Mutex
++	var rule map[string]any
++	posts := 0
++	failRead := false
++	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		mu.Lock()
++		defer mu.Unlock()
++		var result any
++		switch r.URL.Path {
++		case "/api/info":
++			result = map[string]any{"omadacId": "controller"}
++		case "/controller/api/v2/login":
++			result = map[string]any{"token": "fixture"}
++		case "/controller/api/v2/sites/site/setting/firewall/acls":
++			if r.Method == "POST" {
++				posts++
++				if posts > 1 {
++					t.Error("duplicate ACL creation")
++				}
++				_ = json.NewDecoder(r.Body).Decode(&rule)
++				rule["id"] = "rule"
++				rule["index"] = 1
++				failRead = true
++			} else {
++				if failRead {
++					failRead = false
++					w.WriteHeader(503)
++					return
++				}
++				data := []any{}
++				if rule != nil {
++					data = append(data, rule)
++				}
++				result = map[string]any{"data": data, "totalRows": len(data), "currentPage": 1, "currentSize": 100}
++			}
++		case "/controller/api/v2/sites/site/setting/firewall/acls/rule":
++			if r.Method != "DELETE" {
++				t.Errorf("unexpected method %s", r.Method)
++			}
++			rule = nil
++		default:
++			t.Errorf("unexpected path %s", r.URL.Path)
++			w.WriteHeader(404)
++			return
++		}
++		json.NewEncoder(w).Encode(map[string]any{"errorCode": 0, "result": result})
++	}))
++	defer server.Close()
++	config := fmt.Sprintf(`provider "omada" {
++ url = %q
++ username = "fixture"
++ password = "fixture"
++}
++resource "omada_firewall_acl" "test" {
++ site_id = "site"
++ name = "Recovery"
++ type = 0
++ status = false
++ policy = 1
++ protocols = [6]
++ source_type = 2
++ source_ids = ["group"]
++ destination_type = 2
++ destination_ids = ["group"]
++}`, server.URL)
++	resource.Test(t, resource.TestCase{ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
++		CheckDestroy: func(*terraform.State) error {
++			mu.Lock()
++			defer mu.Unlock()
++			if rule != nil {
++				return fmt.Errorf("ACL survived destroy")
++			}
++			if posts != 1 {
++				return fmt.Errorf("POST count=%d", posts)
++			}
++			return nil
++		},
++		Steps: []resource.TestStep{
++			{Config: config, ExpectError: regexp.MustCompile("identity could not be confirmed")},
++			{Config: config, ExpectError: regexp.MustCompile("already exists")},
++			{Config: config, ResourceName: "omada_firewall_acl.test", ImportState: true, ImportStateId: "site/0/rule", ImportStatePersist: true},
++			{Config: config, PlanOnly: true, Check: resource.TestCheckResourceAttr("omada_firewall_acl.test", "id", "rule")},
++		}})
++}
+diff --git a/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/doc.go b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/doc.go
+new file mode 100644
+index 0000000..8607406
+--- /dev/null
++++ b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/doc.go
+@@ -0,0 +1,5 @@
++// Copyright IBM Corp. 2021, 2026
++// SPDX-License-Identifier: MPL-2.0
++
++// Package int64planmodifier provides plan modifiers for types.Int64 attributes.
++package int64planmodifier
+diff --git a/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace.go b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace.go
+new file mode 100644
+index 0000000..ea553ff
+--- /dev/null
++++ b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace.go
+@@ -0,0 +1,30 @@
++// Copyright IBM Corp. 2021, 2026
++// SPDX-License-Identifier: MPL-2.0
++
++package int64planmodifier
++
++import (
++	"context"
++
++	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
++)
++
++// RequiresReplace returns a plan modifier that conditionally requires
++// resource replacement if:
++//
++//   - The resource is planned for update.
++//   - The plan and state values are not equal.
++//
++// Use RequiresReplaceIfConfigured if the resource replacement should
++// only occur if there is a configuration value (ignore unconfigured drift
++// detection changes). Use RequiresReplaceIf if the resource replacement
++// should check provider-defined conditional logic.
++func RequiresReplace() planmodifier.Int64 {
++	return RequiresReplaceIf(
++		func(_ context.Context, _ planmodifier.Int64Request, resp *RequiresReplaceIfFuncResponse) {
++			resp.RequiresReplace = true
++		},
++		"If the value of this attribute changes, Terraform will destroy and recreate the resource.",
++		"If the value of this attribute changes, Terraform will destroy and recreate the resource.",
++	)
++}
+diff --git a/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace_if.go b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace_if.go
+new file mode 100644
+index 0000000..dd11cd2
+--- /dev/null
++++ b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace_if.go
+@@ -0,0 +1,73 @@
++// Copyright IBM Corp. 2021, 2026
++// SPDX-License-Identifier: MPL-2.0
++
++package int64planmodifier
++
++import (
++	"context"
++
++	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
++)
++
++// RequiresReplaceIf returns a plan modifier that conditionally requires
++// resource replacement if:
++//
++//   - The resource is planned for update.
++//   - The plan and state values are not equal.
++//   - The given function returns true. Returning false will not unset any
++//     prior resource replacement.
++//
++// Use RequiresReplace if the resource replacement should always occur on value
++// changes. Use RequiresReplaceIfConfigured if the resource replacement should
++// occur on value changes, but only if there is a configuration value (ignore
++// unconfigured drift detection changes).
++func RequiresReplaceIf(f RequiresReplaceIfFunc, description, markdownDescription string) planmodifier.Int64 {
++	return requiresReplaceIfModifier{
++		ifFunc:              f,
++		description:         description,
++		markdownDescription: markdownDescription,
++	}
++}
++
++// requiresReplaceIfModifier is an plan modifier that sets RequiresReplace
++// on the attribute if a given function is true.
++type requiresReplaceIfModifier struct {
++	ifFunc              RequiresReplaceIfFunc
++	description         string
++	markdownDescription string
++}
++
++// Description returns a human-readable description of the plan modifier.
++func (m requiresReplaceIfModifier) Description(_ context.Context) string {
++	return m.description
++}
++
++// MarkdownDescription returns a markdown description of the plan modifier.
++func (m requiresReplaceIfModifier) MarkdownDescription(_ context.Context) string {
++	return m.markdownDescription
++}
++
++// PlanModifyInt64 implements the plan modification logic.
++func (m requiresReplaceIfModifier) PlanModifyInt64(ctx context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
++	// Do not replace on resource creation.
++	if req.State.Raw.IsNull() {
++		return
++	}
++
++	// Do not replace on resource destroy.
++	if req.Plan.Raw.IsNull() {
++		return
++	}
++
++	// Do not replace if the plan and state values are equal.
++	if req.PlanValue.Equal(req.StateValue) {
++		return
++	}
++
++	ifFuncResp := &RequiresReplaceIfFuncResponse{}
++
++	m.ifFunc(ctx, req, ifFuncResp)
++
++	resp.Diagnostics.Append(ifFuncResp.Diagnostics...)
++	resp.RequiresReplace = ifFuncResp.RequiresReplace
++}
+diff --git a/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace_if_configured.go b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace_if_configured.go
+new file mode 100644
+index 0000000..b66edec
+--- /dev/null
++++ b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace_if_configured.go
+@@ -0,0 +1,34 @@
++// Copyright IBM Corp. 2021, 2026
++// SPDX-License-Identifier: MPL-2.0
++
++package int64planmodifier
++
++import (
++	"context"
++
++	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
++)
++
++// RequiresReplaceIfConfigured returns a plan modifier that conditionally requires
++// resource replacement if:
++//
++//   - The resource is planned for update.
++//   - The plan and state values are not equal.
++//   - The configuration value is not null.
++//
++// Use RequiresReplace if the resource replacement should occur regardless of
++// the presence of a configuration value. Use RequiresReplaceIf if the resource
++// replacement should check provider-defined conditional logic.
++func RequiresReplaceIfConfigured() planmodifier.Int64 {
++	return RequiresReplaceIf(
++		func(_ context.Context, req planmodifier.Int64Request, resp *RequiresReplaceIfFuncResponse) {
++			if req.ConfigValue.IsNull() {
++				return
++			}
++
++			resp.RequiresReplace = true
++		},
++		"If the value of this attribute is configured and changes, Terraform will destroy and recreate the resource.",
++		"If the value of this attribute is configured and changes, Terraform will destroy and recreate the resource.",
++	)
++}
+diff --git a/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace_if_func.go b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace_if_func.go
+new file mode 100644
+index 0000000..ed2d815
+--- /dev/null
++++ b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/requires_replace_if_func.go
+@@ -0,0 +1,25 @@
++// Copyright IBM Corp. 2021, 2026
++// SPDX-License-Identifier: MPL-2.0
++
++package int64planmodifier
++
++import (
++	"context"
++
++	"github.com/hashicorp/terraform-plugin-framework/diag"
++	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
++)
++
++// RequiresReplaceIfFunc is a conditional function used in the RequiresReplaceIf
++// plan modifier to determine whether the attribute requires replacement.
++type RequiresReplaceIfFunc func(context.Context, planmodifier.Int64Request, *RequiresReplaceIfFuncResponse)
++
++// RequiresReplaceIfFuncResponse is the response type for a RequiresReplaceIfFunc.
++type RequiresReplaceIfFuncResponse struct {
++	// Diagnostics report errors or warnings related to this logic. An empty
++	// or unset slice indicates success, with no warnings or errors generated.
++	Diagnostics diag.Diagnostics
++
++	// RequiresReplace should be enabled if the resource should be replaced.
++	RequiresReplace bool
++}
+diff --git a/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/use_non_null_state_for_unknown.go b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/use_non_null_state_for_unknown.go
+new file mode 100644
+index 0000000..40016f1
+--- /dev/null
++++ b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/use_non_null_state_for_unknown.go
+@@ -0,0 +1,54 @@
++// Copyright IBM Corp. 2021, 2026
++// SPDX-License-Identifier: MPL-2.0
++
++package int64planmodifier
++
++import (
++	"context"
++
++	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
++)
++
++// UseNonNullStateForUnknown returns a plan modifier that copies a known, non-null, prior state
++// value into the planned value. Use this when it is known that an unconfigured value will remain the
++// same after the attribute is updated to a non-null value.
++//
++// To prevent Terraform errors, the framework automatically sets unconfigured
++// and Computed attributes to an unknown value "(known after apply)" on update.
++// Using this plan modifier will instead display the non-null prior state value in the
++// plan, unless a prior plan modifier adjusts the value.
++//
++// This plan modifier can be a useful alternative to [UseStateForUnknown] when the attribute is
++// a child of a nested attribute that can be null after the resource is created.
++func UseNonNullStateForUnknown() planmodifier.Int64 {
++	return useNonNullStateForUnknown{}
++}
++
++type useNonNullStateForUnknown struct{}
++
++func (m useNonNullStateForUnknown) Description(_ context.Context) string {
++	return "Once set to a non-null value, the value of this attribute in state will not change."
++}
++
++func (m useNonNullStateForUnknown) MarkdownDescription(_ context.Context) string {
++	return "Once set to a non-null value, the value of this attribute in state will not change."
++}
++
++func (m useNonNullStateForUnknown) PlanModifyInt64(ctx context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
++	// Do nothing if the state value is null.
++	if req.StateValue.IsNull() {
++		return
++	}
++
++	// Do nothing if there is a known planned value.
++	if !req.PlanValue.IsUnknown() {
++		return
++	}
++
++	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
++	if req.ConfigValue.IsUnknown() {
++		return
++	}
++
++	resp.PlanValue = req.StateValue
++}
+diff --git a/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/use_state_for_unknown.go b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/use_state_for_unknown.go
+new file mode 100644
+index 0000000..6b256db
+--- /dev/null
++++ b/vendor/github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier/use_state_for_unknown.go
+@@ -0,0 +1,59 @@
++// Copyright IBM Corp. 2021, 2026
++// SPDX-License-Identifier: MPL-2.0
++
++package int64planmodifier
++
++import (
++	"context"
++
++	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
++)
++
++// UseStateForUnknown returns a plan modifier that copies a known prior state
++// value into the planned value. Use this when it is known that an unconfigured
++// value will remain the same after a resource update.
++//
++// To prevent Terraform errors, the framework automatically sets unconfigured
++// and Computed attributes to an unknown value "(known after apply)" on update.
++// Using this plan modifier will instead display the prior state value in the
++// plan, unless a prior plan modifier adjusts the value.
++//
++// Null is also a known value in Terraform and will be copied to the planned value
++// by this plan modifier. For use-cases like a child attribute of a nested attribute or
++// if null is desired to be marked as unknown in the case of an update, use [UseNonNullStateForUnknown].
++func UseStateForUnknown() planmodifier.Int64 {
++	return useStateForUnknownModifier{}
++}
++
++// useStateForUnknownModifier implements the plan modifier.
++type useStateForUnknownModifier struct{}
++
++// Description returns a human-readable description of the plan modifier.
++func (m useStateForUnknownModifier) Description(_ context.Context) string {
++	return "Once set, the value of this attribute in state will not change."
++}
++
++// MarkdownDescription returns a markdown description of the plan modifier.
++func (m useStateForUnknownModifier) MarkdownDescription(_ context.Context) string {
++	return "Once set, the value of this attribute in state will not change."
++}
++
++// PlanModifyInt64 implements the plan modification logic.
++func (m useStateForUnknownModifier) PlanModifyInt64(_ context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
++	// Do nothing if there is no state (resource is being created).
++	if req.State.Raw.IsNull() {
++		return
++	}
++
++	// Do nothing if there is a known planned value.
++	if !req.PlanValue.IsUnknown() {
++		return
++	}
++
++	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
++	if req.ConfigValue.IsUnknown() {
++		return
++	}
++
++	resp.PlanValue = req.StateValue
++}

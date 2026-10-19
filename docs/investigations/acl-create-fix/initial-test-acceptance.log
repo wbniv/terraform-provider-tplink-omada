@@ -1,0 +1,14 @@
+=== RUN   TestAccACLCreateReadbackFailure
+--- PASS: TestAccACLCreateReadbackFailure (1.71s)
+=== RUN   TestControllerLabACL
+    controller_lab_test.go:474: Step 3/5 error: Error running apply: exit status 1
+        
+        Error: Error updating ACL rule
+        
+          with omada_firewall_acl.lab,
+          on terraform_plugin_test.tf line 17, in resource "omada_firewall_acl" "lab":
+          17: resource "omada_firewall_acl" "lab" {
+        
+        API error -1600 (controller rejected the operation)
+--- FAIL: TestControllerLabACL (9.42s)
+FAIL

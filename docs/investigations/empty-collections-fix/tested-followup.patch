@@ -1,0 +1,496 @@
+diff --git a/README.md b/README.md
+index 927f35e..b58ba3c 100644
+--- a/README.md
++++ b/README.md
+@@ -125,7 +125,7 @@ See the [`docs/`](docs/) directory and the [Terraform Registry documentation](ht
+ 
+ ## Complete collection reads
+ 
+-Collection reads follow all pages and fail if an incomplete or inconsistent result cannot be trusted. See [Complete collection reads](docs/guides/collection-reads.md) for supported response shapes, limits, and refresh recovery.
++Collection reads follow all pages and fail if an incomplete or inconsistent result cannot be trusted. Successful collection data-source reads return `[]` for no matches, including empty device inventories; `length()` and iteration are safe. See [Complete collection reads](docs/guides/collection-reads.md) for supported response shapes, limits, and refresh recovery.
+ 
+ ## API response handling
+ 
+diff --git a/dev/controller-lab/README.md b/dev/controller-lab/README.md
+index 98d9ecc..dd83597 100644
+--- a/dev/controller-lab/README.md
++++ b/dev/controller-lab/README.md
+@@ -95,3 +95,12 @@ LAB_CLIENT_RUN='^TestControllerLabIPGroups$' dev/controller-lab/run.sh test
+ The raw probe inventories group types and response formats, then creates and removes synthetic groups and a disabled ACL. The live tests verify the Terraform lifecycle and data source, listing the complete supported group population (up to the controller quota or 101 fixtures), and retained ACL references after a group update. A mock Terraform scenario checks accepted creation followed by readback failure and recovery. All temporary groups and ACLs are cleaned up. These tests do not verify traffic enforcement.
+ 
+ ACL creation's empty acknowledgment is a separate L8 finding: the raw client proves references can be stored, but the existing Terraform ACL create decoder still needs correction.
++
++## Empty collection check (L5)
++
++```sh
++LAB_ACCEPTANCE_RUN='^TestAccCollectionEmptyState$|^TestControllerLabEmptyCollections$|^TestControllerLabIPGroup$' \
++LAB_CLIENT_RUN='^TestListDevices' dev/controller-lab/run.sh test
++```
++
++The seven-step mock Terraform scenario covers all eight collection data sources, empty and populated states, nested lists, populated-to-empty refresh, HTTP failure, malformed response rejection, and recovery. Outputs exercise `length()` and iteration. The live scenario checks empty device, SSID, ACL, IP/Port-group, and mDNS inventories alongside populated sites, networks, and port profiles, followed by a stable plan. The existing IP/Port-group lifecycle retains populated-list coverage. No physical device behavior is asserted.
+diff --git a/dev/controller-lab/provider_test.go.txt b/dev/controller-lab/provider_test.go.txt
+index badacdd..4fb4f49 100644
+--- a/dev/controller-lab/provider_test.go.txt
++++ b/dev/controller-lab/provider_test.go.txt
+@@ -332,3 +332,33 @@ data "omada_ip_groups" "lab" {
+   {ResourceName:"omada_ip_group.lab",ImportState:true,ImportStateIdFunc:func(s *terraform.State)(string,error){return site+"/"+id,nil},ImportStateVerify:true,ImportStateVerifyIgnore:[]string{"ip_list.1.ip"}},
+  }})
+ }
++
++func TestControllerLabEmptyCollections(t *testing.T) {
++ if os.Getenv("OMADA_CONTROLLER_LAB")!="1"{t.Skip("disposable lab only")}
++ if os.Getenv("OMADA_URL")!="https://controller:8043"{t.Fatal("refusing non-lab target")}
++ site:=os.Getenv("OMADA_TEST_SITE_ID")
++ cases:=[]struct{source,attribute,extra string;empty bool}{
++ {"sites","sites","",false},
++ {"networks","networks","",false},
++ {"port_profiles","port_profiles","",false},
++ {"devices","devices","",true},
++ {"wireless_networks","wireless_networks","",true},
++ {"firewall_acls","acl_rules","type = 0",true},
++ {"ip_groups","ip_groups","",true},
++ {"mdns_reflectors","rules","",true},
++ }
++ config:=""
++ var checks []resource.TestCheckFunc
++ for _,tc:=range cases {
++  settings:=tc.extra
++  if tc.source!="sites"{settings+=fmt.Sprintf("\nsite_id = %q\n",site)}
++  ref:="data.omada_"+tc.source+".empty."+tc.attribute
++  comparison:="> 0";if tc.empty{comparison="== 0"}
++  config+=fmt.Sprintf("data \"omada_%s\" \"empty\" {\n%s\n}\noutput \"%s_valid\" { value = length(%s) %s }\noutput \"%s_iterable\" { value = length([for row in %s : row.name]) == length(%s) }\n",tc.source,settings,tc.source,ref,comparison,tc.source,ref,ref)
++  checks=append(checks,resource.TestCheckOutput(tc.source+"_valid","true"),resource.TestCheckOutput(tc.source+"_iterable","true"))
++ }
++ resource.Test(t,resource.TestCase{PreCheck:func(){testAccPreCheck(t)},ProtoV6ProviderFactories:testAccProtoV6ProviderFactories,Steps:[]resource.TestStep{
++ {Config:config,Check:resource.ComposeAggregateTestCheckFunc(checks...)},
++ {Config:config,PlanOnly:true},
++ }})
++}
+diff --git a/docs/data-sources/devices.md b/docs/data-sources/devices.md
+index 5d29961..adb14b0 100644
+--- a/docs/data-sources/devices.md
++++ b/docs/data-sources/devices.md
+@@ -22,6 +22,8 @@ output "devices" {
+ }
+ ```
+ 
++Successful reads return an empty list (`[]`) when there are no matching objects, so `length()` and iteration are safe. Empty nested collection fields also return lists. Controller errors and malformed responses remain diagnostics; they are not converted to empty inventories.
++
+ <!-- schema generated by tfplugindocs -->
+ ## Schema
+ 
+diff --git a/docs/data-sources/firewall_acls.md b/docs/data-sources/firewall_acls.md
+index 098d5f3..59560c1 100644
+--- a/docs/data-sources/firewall_acls.md
++++ b/docs/data-sources/firewall_acls.md
+@@ -12,6 +12,8 @@ Lists all firewall ACL rules of a given type on the Omada Controller for the giv
+ 
+ 
+ 
++Successful reads return an empty list (`[]`) when there are no matching objects, so `length()` and iteration are safe. Empty nested collection fields also return lists. Controller errors and malformed responses remain diagnostics; they are not converted to empty inventories.
++
+ <!-- schema generated by tfplugindocs -->
+ ## Schema
+ 
+diff --git a/docs/data-sources/ip_groups.md b/docs/data-sources/ip_groups.md
+index 4d917e3..6ba159b 100644
+--- a/docs/data-sources/ip_groups.md
++++ b/docs/data-sources/ip_groups.md
+@@ -14,6 +14,8 @@ Lists all IP/Port groups on the Omada Controller for the given site. Lists IPv4
+ 
+ Reads use the type-1 IPv4 IP/Port collection. Other profile types are excluded. Port-mask groups and groups with ports but no IP entries cannot be represented by the current schema and return a diagnostic. Ports shown on each IP entry are the shared group-wide port list.
+ 
++Successful reads return an empty list (`[]`) when there are no matching objects, so `length()` and iteration are safe. Empty nested collection fields also return lists. Controller errors and malformed responses remain diagnostics; they are not converted to empty inventories.
++
+ <!-- schema generated by tfplugindocs -->
+ ## Schema
+ 
+diff --git a/docs/data-sources/mdns_reflectors.md b/docs/data-sources/mdns_reflectors.md
+index 92621c9..8d9995b 100644
+--- a/docs/data-sources/mdns_reflectors.md
++++ b/docs/data-sources/mdns_reflectors.md
+@@ -12,6 +12,8 @@ Lists all mDNS reflector rules on the Omada Controller for the given site.
+ 
+ 
+ 
++Successful reads return an empty list (`[]`) when there are no matching objects, so `length()` and iteration are safe. Empty nested collection fields also return lists. Controller errors and malformed responses remain diagnostics; they are not converted to empty inventories.
++
+ <!-- schema generated by tfplugindocs -->
+ ## Schema
+ 
+diff --git a/docs/data-sources/networks.md b/docs/data-sources/networks.md
+index e3d7302..bf8d54b 100644
+--- a/docs/data-sources/networks.md
++++ b/docs/data-sources/networks.md
+@@ -22,6 +22,8 @@ output "networks" {
+ }
+ ```
+ 
++Successful reads return an empty list (`[]`) when there are no matching objects, so `length()` and iteration are safe. Empty nested collection fields also return lists. Controller errors and malformed responses remain diagnostics; they are not converted to empty inventories.
++
+ <!-- schema generated by tfplugindocs -->
+ ## Schema
+ 
+diff --git a/docs/data-sources/port_profiles.md b/docs/data-sources/port_profiles.md
+index 531c213..65046d4 100644
+--- a/docs/data-sources/port_profiles.md
++++ b/docs/data-sources/port_profiles.md
+@@ -22,6 +22,8 @@ output "port_profiles" {
+ }
+ ```
+ 
++Successful reads return an empty list (`[]`) when there are no matching objects, so `length()` and iteration are safe. Empty nested collection fields also return lists. Controller errors and malformed responses remain diagnostics; they are not converted to empty inventories.
++
+ <!-- schema generated by tfplugindocs -->
+ ## Schema
+ 
+diff --git a/docs/data-sources/sites.md b/docs/data-sources/sites.md
+index e333f44..e036256 100644
+--- a/docs/data-sources/sites.md
++++ b/docs/data-sources/sites.md
+@@ -20,6 +20,8 @@ output "sites" {
+ }
+ ```
+ 
++Successful reads return an empty list (`[]`) when there are no matching objects, so `length()` and iteration are safe. Empty nested collection fields also return lists. Controller errors and malformed responses remain diagnostics; they are not converted to empty inventories.
++
+ <!-- schema generated by tfplugindocs -->
+ ## Schema
+ 
+diff --git a/docs/data-sources/wireless_networks.md b/docs/data-sources/wireless_networks.md
+index 192d8b7..d24ad92 100644
+--- a/docs/data-sources/wireless_networks.md
++++ b/docs/data-sources/wireless_networks.md
+@@ -28,6 +28,8 @@ output "wireless_networks" {
+ }
+ ```
+ 
++Successful reads return an empty list (`[]`) when there are no matching objects, so `length()` and iteration are safe. Empty nested collection fields also return lists. Controller errors and malformed responses remain diagnostics; they are not converted to empty inventories.
++
+ <!-- schema generated by tfplugindocs -->
+ ## Schema
+ 
+diff --git a/docs/guides/collection-reads.md b/docs/guides/collection-reads.md
+index 60e8a7c..cfcb44d 100644
+--- a/docs/guides/collection-reads.md
++++ b/docs/guides/collection-reads.md
+@@ -8,8 +8,8 @@ Requests begin with page 1 and a page size of 100. The provider preserves ACL fi
+ 
+ - A direct array on the first request is treated as the complete collection.
+ - A page object must have an array `data`. When present, `totalRows` must be a nonnegative integer and remain stable across requests; collection completion requires that many unique objects. A supplied `currentPage` must match the request. `currentSize` is checked for a nonnegative integer but is not used to infer completion.
+-- Without `totalRows`, the provider continues until an empty page. An API that returns only a data wrapper must advance pages and eventually return an empty array; otherwise the read fails.
+-- Every object must have a unique, nonempty string identity (`id`, or `idpId` for SAML identity providers).
++- Without `totalRows`, the provider continues until an empty page. An API that returns only a data wrapper must advance pages and eventually return an empty array; otherwise the read fails. The explicitly verified WLAN-group and IP/Port-group endpoints on 6.1.0.19 return complete data wrappers without pagination metadata; those endpoints use the complete-wrapper policy.
++- Objects read through the collection paginator must have a unique, nonempty string identity (`id`, `groupId` for profile groups, or `idpId` for SAML identity providers).
+ 
+ Invalid metadata, duplicate identities/fields, unexpected response-shape changes, early empty pages, and later-page HTTP/API failures fail the entire read. The provider returns no partial collection. Errors use fixed protocol descriptions or numeric HTTP/API codes, excluding raw response values.
+ 
+@@ -22,3 +22,9 @@ An object beyond the first page can now be imported or refreshed. A read failure
+ Schemas and import IDs are unchanged. This patch does not remove missing resources from Terraform state: confirmed disappearance is a separate follow-up. A raw HTTP 404 remains an error, not confirmation of deletion.
+ 
+ Behavior is covered by synthetic client and Terraform tests. Real controller versions and zero-device behavior must be recorded separately when validated with the Omada Software Controller.
++
++## Empty data-source collections
++
++A successful read with no matches returns `[]` for all eight collection data sources: sites, networks, wireless networks, port profiles, devices, firewall ACLs, IP/Port groups, and mDNS reflectors. Empty nested collection fields also return lists. This supports `length(data.omada_devices.example.devices) == 0` and list iteration without null guards.
++
++Earlier versions returned null for some empty collections. Replace `collection == null` checks with `length(collection) == 0`. Nullable scalar fields retain their existing meaning. A failed or incomplete read remains a diagnostic; it is not converted to an empty list. The devices endpoint must return an array, including `[]` for no devices; a null or object result is rejected.
+diff --git a/internal/client/client.go b/internal/client/client.go
+index 53dbb29..22b23f0 100644
+--- a/internal/client/client.go
++++ b/internal/client/client.go
+@@ -1220,6 +1220,9 @@ func (c *Client) ListDevices(ctx context.Context, siteID string) ([]Device, erro
+ 	if err != nil {
+ 		return nil, err
+ 	}
++	if raw := bytes.TrimSpace(resp.Result); len(raw) == 0 || raw[0] != '[' {
++		return nil, &ProtocolError{reason: "devices result must be an array"}
++	}
+ 	var devices []Device
+ 	if err := json.Unmarshal(resp.Result, &devices); err != nil {
+ 		return nil, fmt.Errorf("decoding devices: %w", err)
+diff --git a/internal/client/client_test.go b/internal/client/client_test.go
+index 2fdb1bc..24a97e3 100644
+--- a/internal/client/client_test.go
++++ b/internal/client/client_test.go
+@@ -1090,3 +1090,19 @@ func TestDeleteMDNSRule(t *testing.T) {
+ 		t.Fatalf("DeleteMDNSRule: %v", err)
+ 	}
+ }
++
++func TestListDevicesRejectsNonArrays(t *testing.T) {
++	for _, result := range []string{"null", "{}", `{"data":[]}`, `"unexpected"`} {
++		t.Run(result, func(t *testing.T) {
++			server := mockOmadaServer(t, map[string]http.HandlerFunc{"/sites/site/devices": func(w http.ResponseWriter, r *http.Request) {
++				json.NewEncoder(w).Encode(APIResponse{Result: json.RawMessage(result)})
++			}})
++			defer server.Close()
++			c := newTestClient(t, server)
++			got, err := c.ListDevices(context.Background(), "site")
++			if err == nil || got != nil {
++				t.Fatalf("malformed device result accepted: %+v %v", got, err)
++			}
++		})
++	}
++}
+diff --git a/internal/resources/data_sources.go b/internal/resources/data_sources.go
+index a213202..2cddaca 100644
+--- a/internal/resources/data_sources.go
++++ b/internal/resources/data_sources.go
+@@ -93,7 +93,8 @@ func (d *NetworksDataSource) Read(ctx context.Context, req datasource.ReadReques
+ 	}
+ 
+ 	state := NetworksDataSourceModel{
+-		SiteID: config.SiteID,
++		Networks: []NetworkDataModel{},
++		SiteID:   config.SiteID,
+ 	}
+ 	for _, n := range networks {
+ 		dm := NetworkDataModel{
+@@ -218,8 +219,9 @@ func (d *WirelessNetworksDataSource) Read(ctx context.Context, req datasource.Re
+ 	}
+ 
+ 	state := WirelessNetworksDataSourceModel{
+-		SiteID:      config.SiteID,
+-		WlanGroupID: types.StringValue(wlanGroupID),
++		WirelessNetworks: []WirelessNetworkDataModel{},
++		SiteID:           config.SiteID,
++		WlanGroupID:      types.StringValue(wlanGroupID),
+ 	}
+ 	for _, s := range ssids {
+ 		dm := WirelessNetworkDataModel{
+@@ -331,10 +333,11 @@ func (d *PortProfilesDataSource) Read(ctx context.Context, req datasource.ReadRe
+ 	}
+ 
+ 	state := PortProfilesDataSourceModel{
+-		SiteID: config.SiteID,
++		PortProfiles: []PortProfileDataModel{},
++		SiteID:       config.SiteID,
+ 	}
+ 	for _, p := range profiles {
+-		tagIDs, diags := types.ListValueFrom(ctx, types.StringType, p.TagNetworkIDs)
++		tagIDs, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, p.TagNetworkIDs...))
+ 		resp.Diagnostics.Append(diags...)
+ 		if resp.Diagnostics.HasError() {
+ 			return
+@@ -418,7 +421,7 @@ func (d *SitesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
+ 		return
+ 	}
+ 
+-	var state SitesDataSourceModel
++	state := SitesDataSourceModel{Sites: []SiteDataModel{}}
+ 	for _, s := range sites {
+ 		state.Sites = append(state.Sites, SiteDataModel{
+ 			ID:   types.StringValue(s.ID),
+@@ -732,7 +735,8 @@ func (d *DevicesDataSource) Read(ctx context.Context, req datasource.ReadRequest
+ 	}
+ 
+ 	state := DevicesDataSourceModel{
+-		SiteID: config.SiteID,
++		Devices: []DeviceDataModel{},
++		SiteID:  config.SiteID,
+ 	}
+ 	for _, dev := range devices {
+ 		state.Devices = append(state.Devices, DeviceDataModel{
+@@ -865,17 +869,17 @@ func (d *FirewallACLsDataSource) Read(ctx context.Context, req datasource.ReadRe
+ 		ACLRules: []ACLRuleDataModel{},
+ 	}
+ 	for _, r := range rules {
+-		protocols, diags := types.ListValueFrom(ctx, types.Int64Type, r.Protocols)
++		protocols, diags := types.ListValueFrom(ctx, types.Int64Type, append([]int{}, r.Protocols...))
+ 		resp.Diagnostics.Append(diags...)
+ 		if resp.Diagnostics.HasError() {
+ 			return
+ 		}
+-		sourceIDs, diags := types.ListValueFrom(ctx, types.StringType, r.SourceIDs)
++		sourceIDs, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, r.SourceIDs...))
+ 		resp.Diagnostics.Append(diags...)
+ 		if resp.Diagnostics.HasError() {
+ 			return
+ 		}
+-		destIDs, diags := types.ListValueFrom(ctx, types.StringType, r.DestinationIDs)
++		destIDs, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, r.DestinationIDs...))
+ 		resp.Diagnostics.Append(diags...)
+ 		if resp.Diagnostics.HasError() {
+ 			return
+@@ -1005,16 +1009,12 @@ func (d *IPGroupsDataSource) Read(ctx context.Context, req datasource.ReadReques
+ 			ipList[i] = IPGroupEntryDataModel{
+ 				IP: types.StringValue(entry.IP),
+ 			}
+-			if len(entry.PortList) > 0 {
+-				portList, diags := types.ListValueFrom(ctx, types.StringType, entry.PortList)
+-				resp.Diagnostics.Append(diags...)
+-				if resp.Diagnostics.HasError() {
+-					return
+-				}
+-				ipList[i].PortList = portList
+-			} else {
+-				ipList[i].PortList = types.ListNull(types.StringType)
++			portList, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, entry.PortList...))
++			resp.Diagnostics.Append(diags...)
++			if resp.Diagnostics.HasError() {
++				return
+ 			}
++			ipList[i].PortList = portList
+ 		}
+ 		state.IPGroups = append(state.IPGroups, IPGroupDataModel{
+ 			ID:     types.StringValue(g.ID),
+@@ -1128,21 +1128,21 @@ func (d *MDNSReflectorsDataSource) Read(ctx context.Context, req datasource.Read
+ 
+ 		var profileIDs, serviceNetworks, clientNetworks types.List
+ 		if setting != nil {
+-			p, diags := types.ListValueFrom(ctx, types.StringType, setting.ProfileIDs)
++			p, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, setting.ProfileIDs...))
+ 			resp.Diagnostics.Append(diags...)
+ 			if resp.Diagnostics.HasError() {
+ 				return
+ 			}
+ 			profileIDs = p
+ 
+-			s, diags := types.ListValueFrom(ctx, types.StringType, setting.ServiceNetworks)
++			s, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, setting.ServiceNetworks...))
+ 			resp.Diagnostics.Append(diags...)
+ 			if resp.Diagnostics.HasError() {
+ 				return
+ 			}
+ 			serviceNetworks = s
+ 
+-			cn, diags := types.ListValueFrom(ctx, types.StringType, setting.ClientNetworks)
++			cn, diags := types.ListValueFrom(ctx, types.StringType, append([]string{}, setting.ClientNetworks...))
+ 			resp.Diagnostics.Append(diags...)
+ 			if resp.Diagnostics.HasError() {
+ 				return
+diff --git a/internal/provider/empty_collections_test.go b/internal/provider/empty_collections_test.go
+new file mode 100644
+index 0000000..18e4bb7
+--- /dev/null
++++ b/internal/provider/empty_collections_test.go
+@@ -0,0 +1,128 @@
++package provider
++
++import (
++	"encoding/json"
++	"fmt"
++	"net/http"
++	"net/http/httptest"
++	"regexp"
++	"strings"
++	"sync"
++	"testing"
++
++	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
++)
++
++func TestAccCollectionEmptyState(t *testing.T) {
++	var mu sync.Mutex
++	mode := "empty"
++	cases := []struct {
++		source, attribute, route, config string
++		row                              map[string]any
++		nested                           []string
++	}{
++		{"sites", "sites", "/sites", "", map[string]any{"id": "site", "name": "fixture"}, nil},
++		{"networks", "networks", "/sites/site/setting/lan/networks", "site_id = \"site\"", map[string]any{"id": "network", "name": "fixture", "purpose": "vlan", "vlan": 20}, nil},
++		{"wireless_networks", "wireless_networks", "/sites/site/setting/wlans/group/ssids", "site_id = \"site\"\nwlan_group_id = \"group\"", map[string]any{"id": "ssid", "name": "fixture"}, nil},
++		{"port_profiles", "port_profiles", "/sites/site/setting/lan/profiles", "site_id = \"site\"", map[string]any{"id": "profile", "name": "fixture"}, []string{"tag_network_ids"}},
++		{"devices", "devices", "/sites/site/devices", "site_id = \"site\"", map[string]any{"mac": "00-11-22-33-44-55", "name": "fixture", "type": "ap"}, nil},
++		{"firewall_acls", "acl_rules", "/sites/site/setting/firewall/acls", "site_id = \"site\"\ntype = 0", map[string]any{"id": "acl", "name": "fixture", "type": 0}, []string{"protocols", "source_ids", "destination_ids"}},
++		{"ip_groups", "ip_groups", "/sites/site/setting/profiles/groups/1", "site_id = \"site\"", map[string]any{"groupId": "group", "name": "fixture", "type": 1, "portType": 0, "portList": []string{"443"}, "ipList": []any{map[string]any{"ip": "192.0.2.1", "mask": 32}}}, nil},
++		{"mdns_reflectors", "rules", "/sites/site/setting/service/mdns", "site_id = \"site\"", map[string]any{"id": "mdns", "name": "fixture", "ap": map[string]any{}}, []string{"profile_ids", "service_networks", "client_networks"}},
++	}
++	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		mu.Lock()
++		defer mu.Unlock()
++		var result any
++		switch r.URL.Path {
++		case "/api/info":
++			result = map[string]any{"omadacId": "controller"}
++		case "/controller/api/v2/login":
++			result = map[string]any{"token": "fixture"}
++		default:
++			if r.Method != "GET" {
++				t.Errorf("unexpected mutation %s", r.Method)
++				w.WriteHeader(500)
++				return
++			}
++			found := false
++			for _, tc := range cases {
++				if r.URL.Path != "/controller/api/v2"+tc.route {
++					continue
++				}
++				found = true
++				if mode == "failure" {
++					w.WriteHeader(503)
++					return
++				}
++				if mode == "malformed" {
++					result = nil
++					break
++				}
++				rows := []any{}
++				if mode == "populated" || mode == "nested populated" {
++					row := map[string]any{}
++					for k, v := range tc.row {
++						row[k] = v
++					}
++					if mode == "nested populated" {
++						switch tc.source {
++						case "port_profiles":
++							row["tagNetworkIds"] = []string{"network"}
++						case "firewall_acls":
++							row["protocols"] = []int{6}
++							row["sourceIds"] = []string{"network"}
++							row["destinationIds"] = []string{"network"}
++						case "mdns_reflectors":
++							delete(row, "ap")
++							row["osg"] = map[string]any{"profileIds": []string{"service"}, "serviceNetworks": []string{"network"}, "clientNetworks": []string{"network"}}
++						}
++					}
++					rows = append(rows, row)
++				}
++				if tc.source == "devices" {
++					result = rows
++				} else {
++					result = map[string]any{"data": rows, "totalRows": len(rows), "currentPage": 1, "currentSize": 100}
++				}
++				break
++			}
++			if !found {
++				t.Errorf("unexpected path %s", r.URL.Path)
++				w.WriteHeader(404)
++				return
++			}
++		}
++		json.NewEncoder(w).Encode(map[string]any{"errorCode": 0, "result": result})
++	}))
++	defer server.Close()
++	var config strings.Builder
++	fmt.Fprintf(&config, "provider \"omada\" {\nurl = %q\nusername = \"fixture\"\npassword = \"fixture\"\n}\n", server.URL)
++	checks := func(count, nested string) resource.TestCheckFunc {
++		var result []resource.TestCheckFunc
++		for _, tc := range cases {
++			result = append(result, resource.TestCheckOutput(tc.source+"_count", count), resource.TestCheckOutput(tc.source+"_iteration", count), resource.TestCheckResourceAttr("data.omada_"+tc.source+".test", tc.attribute+".#", count))
++			for _, field := range tc.nested {
++				result = append(result, resource.TestCheckOutput(tc.source+"_"+field, nested))
++			}
++		}
++		return resource.ComposeAggregateTestCheckFunc(result...)
++	}
++	for _, tc := range cases {
++		ref := "data.omada_" + tc.source + ".test." + tc.attribute
++		fmt.Fprintf(&config, "data \"omada_%s\" \"test\" {\n%s\n}\noutput \"%s_count\" { value = length(%s) }\noutput \"%s_iteration\" { value = length([for row in %s : row.name]) }\n", tc.source, tc.config, tc.source, ref, tc.source, ref)
++		for _, field := range tc.nested {
++			fmt.Fprintf(&config, "output \"%s_%s\" { value = sum(concat([0], [for row in %s : length(row.%s)])) }\n", tc.source, field, ref, field)
++		}
++	}
++	setMode := func(next string) func() { return func() { mu.Lock(); defer mu.Unlock(); mode = next } }
++	resource.Test(t, resource.TestCase{ProtoV6ProviderFactories: testAccProtoV6ProviderFactories, Steps: []resource.TestStep{
++		{Config: config.String(), Check: checks("0", "0")},
++		{PreConfig: setMode("populated"), Config: config.String(), Check: checks("1", "0")},
++		{PreConfig: setMode("nested populated"), Config: config.String(), Check: checks("1", "1")},
++		{PreConfig: setMode("empty"), Config: config.String(), Check: checks("0", "0")},
++		{PreConfig: setMode("failure"), Config: config.String(), ExpectError: regexp.MustCompile("HTTP error 503")},
++		{PreConfig: setMode("malformed"), Config: config.String(), ExpectError: regexp.MustCompile("Error listing")},
++		{PreConfig: setMode("empty"), Config: config.String(), Check: checks("0", "0")},
++	}})
++}

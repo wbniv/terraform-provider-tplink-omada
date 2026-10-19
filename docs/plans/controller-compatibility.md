@@ -52,18 +52,22 @@ Locally verified on `fix/ip-group-protocol`, based on L3 (`58610fd`); committed 
 
 Discovered during L4 on 6.1.0.19: disabled gateway ACL creation succeeds and stores valid IP-group references, but returns no `result`. `CreateACLRule` currently decodes that empty result and fails. [L4 evidence](../investigations/ip-group-fix/README.md).
 
+Locally verified on `fix/acl-create-readback`, based on L4 (`a2b1baa`); committed as `5b1b14f`. Creation compares complete inventories and requires a unique new match. Accepted creation followed by failed readback requires inspection/import; duplicate retry is blocked. Updates use the UI's verified PUT method and preserve order and unmodeled settings. Go/race/build gates, five live Terraform steps, four mock recovery steps, and live order/syslog preservation pass with wrapper exit 0. [L8 evidence](../investigations/acl-create-fix/README.md).
+
 - [x] Reproduce successful raw creation, readback of both group references, and deletion on the disposable controller.
-- [ ] Capture the creation response contract and choose a complete, unique readback strategy for the new rule; reject missing or ambiguous matches.
-- [ ] Cover accepted writes followed by failed readback without inventing an ID or blindly repeating a mutation; make uncertain outcomes explicit and document recovery.
-- [ ] Verify Terraform ACL create, stable plan, update, import, and destroy with synthetic group references; retain rule identity/order and unrelated fields.
-- [ ] Keep actual traffic enforcement and other controller versions as separate compatibility gates.
+- [x] Capture the creation response contract and choose a complete, unique readback strategy for the new rule; reject missing or ambiguous matches.
+- [x] Cover accepted writes followed by failed readback without inventing an ID or blindly repeating a mutation; make uncertain outcomes explicit and document recovery. Four mock Terraform steps pass, including duplicate prevention and explicit import.
+- [x] Verify Terraform ACL create, stable plan, update, import, and destroy with synthetic group references; retain rule identity/order and unrelated fields.
+- [x] Keep actual traffic enforcement and other controller versions as separate compatibility gates.
 
 ### L5 — Empty device inventory becomes Terraform null
 
+Locally verified on `fix/empty-data-source-collections`, based on L4 (`a2b1baa`); committed as `6d5a721` in its separate worktree. L8 remains independent. Five top-level slices and nested lists now return empty lists consistently; malformed null device responses remain errors. Go/race/build gates, seven mock Terraform steps across all eight collections, live empty/populated inventory checks with a stable plan, and the existing IP/Port-group lifecycle pass with wrapper exit 0. [L5 evidence](../investigations/empty-collections-fix/README.md).
+
 - [x] Observe the real devices endpoint returning `[]` and successful client decoding to zero devices.
 - [x] Locate the uninitialized nil slice in the data source and the failing existing acceptance assertion.
-- [ ] Initialize empty collections consistently and test `length(data.omada_devices.example.devices) == 0` on a controller without devices.
-- [ ] Audit other collection data sources for the same nil-to-null behavior; retain populated-list coverage.
+- [x] Initialize empty collections consistently and test `length(data.omada_devices.example.devices) == 0` on a controller without devices.
+- [x] Audit other collection data sources for the same nil-to-null behavior; retain populated-list coverage.
 
 ### L6 — Open SSID PMF defaults disagree with the controller
 

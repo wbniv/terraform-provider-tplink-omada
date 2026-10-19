@@ -1,5 +1,6 @@
 | Date | Change |
 |------|--------|
+| [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/b79cd0b) | docs: record verified IP group controller protocol |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/a261bcd) | docs: record verified controller session recovery |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/9cb63bc) | docs: record verified controller certificate protocol fix |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/3a9b68d) | docs: record verified SSID PMF compatibility fix |
@@ -13,6 +14,10 @@
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/4c6433b) | docs: track provider reliability fixes and validation evidence |
 
 <!--history-meta v1
+b79cd0b	author	Will Norris
+b79cd0b	added	2
+b79cd0b	deleted	2
+b79cd0b	files	1
 a261bcd	author	Will Norris
 a261bcd	added	1
 a261bcd	deleted	1
