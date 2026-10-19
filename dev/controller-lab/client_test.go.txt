@@ -315,3 +315,25 @@ func TestControllerLabIPGroups(t *testing.T){
  if len(stored.SourceIDs)!=1 || stored.SourceIDs[0]!=ids[0] || len(stored.DestinationIDs)!=1 || stored.DestinationIDs[0]!=ids[0]{t.Fatal("ACL lost group references")}
  t.Log("disabled ACL references survive group rename and port update; traffic enforcement not tested")
 }
+
+func TestControllerLabACL(t *testing.T) {
+ c,ctx,site:=labClient(t)
+ group,err:=c.CreateIPGroup(ctx,site,&IPGroup{Name:"L8 Client group",Type:1,IPList:[]IPGroupEntry{{IP:"192.0.2.0/24",PortList:[]string{"443"}}}})
+ if err!=nil{t.Fatal(err)}
+ t.Cleanup(func(){if err:=c.DeleteIPGroup(context.Background(),site,group.ID);err!=nil{t.Error(err)}})
+ t.Cleanup(func(){
+  rules,err:=c.ListACLRules(context.Background(),site,0);if err!=nil{t.Error(err);return}
+  for _,r:=range rules{if r.Name=="L8 Client anchor" || r.Name=="L8 Client target" || r.Name=="L8 Client renamed"{if err:=c.DeleteACLRule(context.Background(),site,r.ID);err!=nil{t.Error(err)}}}
+ })
+ input:=ACLRule{Name:"L8 Client anchor",Type:0,Policy:1,Protocols:[]int{6},SourceType:2,SourceIDs:[]string{group.ID},DestinationType:2,DestinationIDs:[]string{group.ID},Direction:ACLDirection{LanToWan:true},Syslog:true}
+ anchor,err:=c.CreateACLRule(ctx,site,&input);if err!=nil{t.Fatal(err)}
+ input.Name="L8 Client target"
+ target,err:=c.CreateACLRule(ctx,site,&input);if err!=nil{t.Fatal(err)}
+ if target.Index<=anchor.Index{t.Fatal("expected target after anchor")}
+ input.Name="L8 Client renamed";input.Policy=0;input.Syslog=false
+ updated,err:=c.UpdateACLRule(ctx,site,target.ID,&input);if err!=nil{t.Fatal(err)}
+ if updated.ID!=target.ID || updated.Index!=target.Index || !updated.Syslog || updated.Name!=input.Name || updated.Policy!=0{t.Fatalf("identity/order/syslog preservation failed: %+v",updated)}
+ untouched,err:=c.GetACLRule(ctx,site,anchor.ID,0);if err!=nil{t.Fatal(err)}
+ if untouched.Name!=anchor.Name || untouched.Index!=anchor.Index || untouched.Policy!=anchor.Policy || !untouched.Syslog{t.Fatal("unrelated ACL changed")}
+ t.Log("Disabled gateway ACL: empty create acknowledgment resolved, second-rule order and syslog preserved, unrelated anchor unchanged")
+}

@@ -94,4 +94,11 @@ LAB_CLIENT_RUN='^TestControllerLabIPGroups$' dev/controller-lab/run.sh test
 
 The raw probe inventories group types and response formats, then creates and removes synthetic groups and a disabled ACL. The live tests verify the Terraform lifecycle and data source, listing the complete supported group population (up to the controller quota or 101 fixtures), and retained ACL references after a group update. A mock Terraform scenario checks accepted creation followed by readback failure and recovery. All temporary groups and ACLs are cleaned up. These tests do not verify traffic enforcement.
 
-ACL creation's empty acknowledgment is a separate L8 finding: the raw client proves references can be stored, but the existing Terraform ACL create decoder still needs correction.
+## ACL creation and recovery check (L8)
+
+```sh
+LAB_ACCEPTANCE_RUN='^TestControllerLabACL$|^TestAccACLCreateReadbackFailure$' \
+LAB_CLIENT_RUN='^TestACL|^TestControllerLabACL$' dev/controller-lab/run.sh test
+```
+
+The live Terraform scenario covers disabled gateway ACL creation, stable plans, rename/policy update, identity/order retention, import, and destruction with synthetic IP/Port groups. The mock Terraform scenario injects a failure after accepted creation, verifies that retry refuses a duplicate, then imports the existing rule and destroys it. Client tests cover missing/ambiguous matches, complete-inventory failures, and preservation of settings outside Terraform's schema. The live client probe also checks second-rule ordering, syslog preservation, and an unchanged neighboring ACL. Traffic enforcement remains a hardware gate.

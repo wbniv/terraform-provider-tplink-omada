@@ -3,12 +3,12 @@
 page_title: "omada_firewall_acl Resource - omada"
 subcategory: ""
 description: |-
-  Manages a firewall ACL rule on the Omada Controller. ACL rules control traffic between networks, IP groups, and other entities. Gateway ACL rules (type=0) require a gateway device adopted into the site.
+  Manages a firewall ACL rule on the Omada Controller. ACL rules control traffic between networks, IP groups, and other entities. Disabled gateway ACL configuration is verified without adopted hardware; traffic enforcement requires a gateway.
 ---
 
 # omada_firewall_acl (Resource)
 
-Manages a firewall ACL rule on the Omada Controller. ACL rules control traffic between networks, IP groups, and other entities. Gateway ACL rules (type=0) require a gateway device adopted into the site.
+Manages a firewall ACL rule on the Omada Controller. ACL rules control traffic between networks, IP groups, and other entities. Disabled gateway ACL configuration is verified without adopted hardware; traffic enforcement requires a gateway.
 
 
 
@@ -38,3 +38,13 @@ Manages a firewall ACL rule on the Omada Controller. ACL rules control traffic b
 
 - `id` (String) The unique identifier of the ACL rule.
 - `index` (Number) Rule ordering index (first-match-wins). Computed by the controller.
+
+## Creation and recovery
+
+On Software Controller 6.1.0.19, creation acknowledges success without returning an ID. The provider reads the complete rule inventory before and after creation and requires one new same-name rule matching the requested configuration. An existing same-name rule is rejected before creation; it is never automatically adopted.
+
+If creation is accepted but readback fails or is ambiguous, the controller may already contain the rule. Inspect its type, name, source/destination references, and policy before retrying. Import the intended rule with `terraform import omada_firewall_acl.example siteID/aclType/ruleID`. If multiple rules match, resolve ownership before importing or deleting anything. A retry that sees an existing same-name rule stops before sending another create. The provider cannot guarantee identity attribution while another writer creates or renames indistinguishable rules concurrently; avoid concurrent edits during creation.
+
+Changing `type` requires replacement. Updates retain the current ordering index and settings outside the Terraform schema, including syslog and additional direction selectors. Those settings remain externally managed. Import uses `siteID/aclType/ruleID`.
+
+The verified controller configuration uses disabled gateway rules with IPv4 IP/Port-group references. Actual traffic enforcement, switch/EAP rule variants, and other controller versions require separate validation.

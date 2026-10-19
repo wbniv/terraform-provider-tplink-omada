@@ -332,3 +332,50 @@ data "omada_ip_groups" "lab" {
   {ResourceName:"omada_ip_group.lab",ImportState:true,ImportStateIdFunc:func(s *terraform.State)(string,error){return site+"/"+id,nil},ImportStateVerify:true,ImportStateVerifyIgnore:[]string{"ip_list.1.ip"}},
  }})
 }
+
+func TestControllerLabACL(t *testing.T) {
+ if os.Getenv("OMADA_CONTROLLER_LAB")!="1" {t.Skip("disposable lab only")}
+ if os.Getenv("OMADA_URL")!="https://controller:8043" {t.Fatal("refusing non-lab target")}
+ site:=os.Getenv("OMADA_TEST_SITE_ID")
+ config:=func(name string,policy int)string{return fmt.Sprintf(`
+resource "omada_ip_group" "acl" {
+ site_id = %q
+ name = "L8 ACL group"
+ ip_list = [{ip = "192.0.2.0/24", port_list = ["443"]}]
+}
+resource "omada_firewall_acl" "lab" {
+ site_id = %q
+ name = %q
+ type = 0
+ status = false
+ policy = %d
+ protocols = [6]
+ source_type = 2
+ source_ids = [omada_ip_group.acl.id]
+ destination_type = 2
+ destination_ids = [omada_ip_group.acl.id]
+ lan_to_wan = true
+ lan_to_lan = false
+}
+`,site,site,name,policy)}
+ first,second:=config("L8 Terraform",1),config("L8 Terraform renamed",0)
+ var id string
+ var index int
+ check:=func(s *terraform.State)error {
+  attrs:=s.RootModule().Resources["omada_firewall_acl.lab"].Primary.Attributes
+  c,err:=client.NewClient(os.Getenv("OMADA_URL"),os.Getenv("OMADA_USERNAME"),os.Getenv("OMADA_PASSWORD"),true);if err!=nil{return err}
+  rule,err:=c.GetACLRule(context.Background(),site,attrs["id"],0);if err!=nil{return err}
+  if id!="" && (id!=rule.ID || index!=rule.Index){return fmt.Errorf("ACL identity/order changed")};id=rule.ID;index=rule.Index
+  if rule.Status || rule.Name!=attrs["name"] || fmt.Sprint(rule.Policy)!=attrs["policy"] || len(rule.SourceIDs)!=1 || rule.SourceIDs[0]!=attrs["source_ids.0"] || len(rule.DestinationIDs)!=1 || rule.DestinationIDs[0]!=attrs["destination_ids.0"]{return fmt.Errorf("controller ACL differs from state")}
+  return nil
+ }
+ resource.Test(t,resource.TestCase{PreCheck:func(){testAccPreCheck(t)},ProtoV6ProviderFactories:testAccProtoV6ProviderFactories,
+ CheckDestroy:func(*terraform.State)error {
+  c,err:=client.NewClient(os.Getenv("OMADA_URL"),os.Getenv("OMADA_USERNAME"),os.Getenv("OMADA_PASSWORD"),true);if err!=nil{return err}
+  rules,err:=c.ListACLRules(context.Background(),site,0);if err!=nil{return err};for _,r:=range rules{if r.ID==id{return fmt.Errorf("ACL survived destroy")}};return nil
+ },Steps:[]resource.TestStep{
+ {Config:first,Check:check}, {Config:first,PlanOnly:true},
+ {Config:second,Check:check}, {Config:second,PlanOnly:true},
+ {ResourceName:"omada_firewall_acl.lab",ImportState:true,ImportStateIdFunc:func(*terraform.State)(string,error){return site+"/0/"+id,nil},ImportStateVerify:true},
+ }})
+}

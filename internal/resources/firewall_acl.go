@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -54,7 +55,7 @@ func (r *ACLRuleResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 	resp.Schema = schema.Schema{
 		Description: "Manages a firewall ACL rule on the Omada Controller. " +
 			"ACL rules control traffic between networks, IP groups, and other entities. " +
-			"Gateway ACL rules (type=0) require a gateway device adopted into the site.",
+			"Disabled gateway ACL configuration is verified without adopted hardware; traffic enforcement requires a gateway.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "The unique identifier of the ACL rule.",
@@ -69,8 +70,9 @@ func (r *ACLRuleResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Required:    true,
 			},
 			"type": schema.Int64Attribute{
-				Description: "The ACL type: 0=gateway, 1=switch, 2=eap.",
-				Required:    true,
+				Description:   "The ACL type: 0=gateway, 1=switch, 2=eap.",
+				PlanModifiers: []planmodifier.Int64{int64planmodifier.RequiresReplace()},
+				Required:      true,
 			},
 			"status": schema.BoolAttribute{
 				Description: "Whether the rule is enabled.",

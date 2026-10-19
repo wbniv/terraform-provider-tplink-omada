@@ -1617,36 +1617,6 @@ func (c *Client) GetACLRule(ctx context.Context, siteID, ruleID string, aclType 
 	return nil, fmt.Errorf("ACL rule %q not found", ruleID)
 }
 
-// CreateACLRule creates a new ACL rule.
-func (c *Client) CreateACLRule(ctx context.Context, siteID string, rule *ACLRule) (*ACLRule, error) {
-	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPost, "/setting/firewall/acls", rule)
-	if err != nil {
-		return nil, err
-	}
-
-	var created ACLRule
-	if err := json.Unmarshal(resp.Result, &created); err != nil {
-		return nil, fmt.Errorf("decoding created ACL rule: %w", err)
-	}
-	return &created, nil
-}
-
-// UpdateACLRule updates an existing ACL rule.
-func (c *Client) UpdateACLRule(ctx context.Context, siteID, ruleID string, rule *ACLRule) (*ACLRule, error) {
-	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPatch, fmt.Sprintf("/setting/firewall/acls/%s", ruleID), rule)
-	if err != nil {
-		return nil, err
-	}
-	if isEmptyResult(resp.Result) {
-		return c.GetACLRule(ctx, siteID, ruleID, rule.Type)
-	}
-	var updated ACLRule
-	if err := json.Unmarshal(resp.Result, &updated); err != nil {
-		return nil, fmt.Errorf("decoding updated ACL rule: %w", err)
-	}
-	return &updated, nil
-}
-
 // DeleteACLRule deletes an ACL rule.
 func (c *Client) DeleteACLRule(ctx context.Context, siteID, ruleID string) error {
 	_, err := c.doSiteRequest(ctx, siteID, http.MethodDelete, fmt.Sprintf("/setting/firewall/acls/%s", ruleID), nil)
