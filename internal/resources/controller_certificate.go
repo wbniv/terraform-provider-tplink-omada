@@ -57,11 +57,11 @@ func (r *ControllerCertificateResource) Schema(_ context.Context, _ resource.Sch
 				Sensitive:   true,
 			},
 			"cert_id": schema.StringAttribute{
-				Description: "The certificate ID returned by the controller after upload (computed).",
+				Description: "The certificate ID stored by the controller after activation (computed).",
 				Computed:    true,
 			},
 			"key_id": schema.StringAttribute{
-				Description: "The private key ID returned by the controller after upload (computed).",
+				Description: "The private key ID stored by the controller after activation (computed).",
 				Computed:    true,
 			},
 		},
@@ -109,15 +109,22 @@ func (r *ControllerCertificateResource) Create(ctx context.Context, req resource
 	}
 
 	// Activate certificate
-	if err := r.client.ActivateCertificate(ctx, certID, keyID); err != nil {
+	if err := r.client.ActivateCertificate(ctx, certID, keyID, "controller.crt", "controller.key"); err != nil {
 		resp.Diagnostics.AddError("Error activating certificate", err.Error())
 		return
 	}
 
+	// The controller may convert PEM to JKS and return new stored identities.
+	setting, err := r.client.GetControllerCertificateSetting(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading activated certificate", err.Error())
+		return
+	}
+	resp.Diagnostics.AddWarning("Controller restart required", "Restart the Omada Software Controller to serve the new TLS certificate. The provider does not restart the controller.")
 	// Set the state
 	plan.ID = types.StringValue("controller-cert")
-	plan.CertID = types.StringValue(certID)
-	plan.KeyID = types.StringValue(keyID)
+	plan.CertID = types.StringValue(setting.CertID)
+	plan.KeyID = types.StringValue(setting.KeyID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -169,15 +176,21 @@ func (r *ControllerCertificateResource) Update(ctx context.Context, req resource
 	}
 
 	// Activate the new certificate
-	if err := r.client.ActivateCertificate(ctx, certID, keyID); err != nil {
+	if err := r.client.ActivateCertificate(ctx, certID, keyID, "controller.crt", "controller.key"); err != nil {
 		resp.Diagnostics.AddError("Error activating certificate", err.Error())
 		return
 	}
 
+	setting, err := r.client.GetControllerCertificateSetting(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading activated certificate", err.Error())
+		return
+	}
+	resp.Diagnostics.AddWarning("Controller restart required", "Restart the Omada Software Controller to serve the new TLS certificate. The provider does not restart the controller.")
 	// Update state
 	plan.ID = types.StringValue("controller-cert")
-	plan.CertID = types.StringValue(certID)
-	plan.KeyID = types.StringValue(keyID)
+	plan.CertID = types.StringValue(setting.CertID)
+	plan.KeyID = types.StringValue(setting.KeyID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }

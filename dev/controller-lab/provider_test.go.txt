@@ -2,6 +2,13 @@ package provider
 
 import (
 	"context"
+"crypto/rand"
+"crypto/rsa"
+"crypto/x509"
+"crypto/x509/pkix"
+"encoding/pem"
+"math/big"
+"time"
 	"fmt"
 	"os"
 	"reflect"
@@ -250,4 +257,36 @@ resource "omada_wireless_network" "lab" {
    {Config:config("L6 Renamed",0,""),PlanOnly:true},
   },
  })
+}
+
+
+func TestControllerLabCertificateResource(t *testing.T) {
+ if os.Getenv("OMADA_CONTROLLER_LAB") != "1" { t.Skip("disposable lab only") }
+ if os.Getenv("OMADA_URL") != "https://controller:8043" { t.Fatal("refusing non-lab target") }
+ config := func(serial int64) string {
+  key, err := rsa.GenerateKey(rand.Reader, 2048); if err != nil { t.Fatal(err) }
+  template := &x509.Certificate{SerialNumber:big.NewInt(serial), Subject:pkix.Name{CommonName:"controller"}, DNSNames:[]string{"controller"}, NotBefore:time.Now().Add(-time.Hour), NotAfter:time.Now().Add(24*time.Hour), KeyUsage:x509.KeyUsageDigitalSignature|x509.KeyUsageKeyEncipherment, ExtKeyUsage:[]x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}}
+  der, err := x509.CreateCertificate(rand.Reader,template,template,&key.PublicKey,key); if err != nil { t.Fatal(err) }
+  cert := pem.EncodeToMemory(&pem.Block{Type:"CERTIFICATE",Bytes:der})
+  private := pem.EncodeToMemory(&pem.Block{Type:"RSA PRIVATE KEY",Bytes:x509.MarshalPKCS1PrivateKey(key)})
+  return fmt.Sprintf(`resource "omada_controller_certificate" "lab" {
+ certificate_pem = %q
+ private_key_pem = %q
+}`,cert,private)
+ }
+ first,second := config(10),config(11)
+ check := func(state *terraform.State) error {
+  c,err:=client.NewClient(os.Getenv("OMADA_URL"),os.Getenv("OMADA_USERNAME"),os.Getenv("OMADA_PASSWORD"),true);if err != nil{return err}
+  setting,err:=c.GetControllerCertificateSetting(context.Background());if err != nil{return err}
+  attrs:=state.RootModule().Resources["omada_controller_certificate.lab"].Primary.Attributes
+  if setting.CertID=="" || setting.KeyID=="" || attrs["cert_id"]!=setting.CertID || attrs["key_id"]!=setting.KeyID {return fmt.Errorf("stored certificate identities differ from Terraform state")}
+  return nil
+ }
+ resource.Test(t,resource.TestCase{PreCheck:func(){testAccPreCheck(t)},ProtoV6ProviderFactories:testAccProtoV6ProviderFactories,Steps:[]resource.TestStep{
+  {Config:first,Check:check},
+  {Config:first,PlanOnly:true},
+  {Config:second,Check:check},
+  {Config:second,PlanOnly:true},
+  {ResourceName:"omada_controller_certificate.lab",ImportState:true,ImportStateVerify:true,ImportStateVerifyIgnore:[]string{"certificate_pem","private_key_pem"}},
+ }})
 }

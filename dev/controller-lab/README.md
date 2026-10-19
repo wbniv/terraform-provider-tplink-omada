@@ -61,3 +61,15 @@ Passing controller tests does not validate physical adoption, AP radios, switch-
 For an uncommitted SSID follow-up, set `LAB_SSID_PATCH` to a Git patch in addition to `LAB_SSID_INTEGRATION=1`. The harness copies it into the private runtime directory and applies it after D1–D3 and the client integration patches. Save the exact patch and compiled source hashes with the test evidence. Each test invocation clears the previous build/acceptance/client logs and status file so an interrupted build cannot retain stale successful results.
 
 Device passwords are generated with the wizard's verified constraints: strong character classes, length 10–64, and no adjacent identical characters. The earlier shorter hexadecimal candidates could violate the repeated-character rule.
+
+## Certificate protocol check (L2)
+
+Run the focused lifecycle, then explicitly restart the disposable controller and verify its TLS certificate:
+
+```sh
+LAB_ACCEPTANCE_RUN='^TestControllerLabCertificateResource$' \
+LAB_CLIENT_RUN='^TestControllerLabCertificate$' dev/controller-lab/run.sh test
+python3 dev/controller-lab/verify-certificate.py
+```
+
+The Terraform scenario covers create, a stable plan, rotation, another stable plan, and import. The client probe records only a public certificate fingerprint. The restart verifier compares that fingerprint with a fresh TLS handshake and checks stored identity persistence. Software Controller 6.1.0.19 converts PEM uploads to JKS identities and requires a restart to serve the certificate; the production provider reports this requirement and leaves restart scheduling to the operator. Run this sequence before `down`.

@@ -2036,8 +2036,8 @@ type ControllerCertificate struct {
 
 // UploadCertificateResponse holds the response when uploading a certificate or key.
 type UploadCertificateResponse struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	CertID string `json:"cerId"`
+	KeyID  string `json:"keyId"`
 }
 
 // UploadCertificate uploads a PEM-encoded certificate file to the controller.
@@ -2064,7 +2064,15 @@ func (c *Client) uploadControllerFile(ctx context.Context, kind string, data []b
 	if _, err := part.Write(data); err != nil {
 		return "", fmt.Errorf("writing file to form: %w", err)
 	}
-	if err := writer.WriteField("data", "{}"); err != nil {
+	metadataField := "cerName"
+	if kind == "key" {
+		metadataField = "keyName"
+	}
+	metadata, err := json.Marshal(map[string]string{metadataField: fileName})
+	if err != nil {
+		return "", fmt.Errorf("encoding upload metadata: %w", err)
+	}
+	if err := writer.WriteField("data", string(metadata)); err != nil {
 		return "", fmt.Errorf("writing form field: %w", err)
 	}
 	if err := writer.Close(); err != nil {
@@ -2079,33 +2087,43 @@ func (c *Client) uploadControllerFile(ctx context.Context, kind string, data []b
 	if err := json.Unmarshal(apiResp.Result, &uploadResp); err != nil {
 		return "", fmt.Errorf("parsing upload response: %w", err)
 	}
-	return uploadResp.ID, nil
+	id := uploadResp.CertID
+	if kind == "key" {
+		id = uploadResp.KeyID
+	}
+	if strings.TrimSpace(id) == "" {
+		return "", fmt.Errorf("uploading %s: response missing nonempty identity", kind)
+	}
+	return id, nil
 }
 
 // ActivateCertificate activates the certificate on the controller.
 // This sends a PATCH to /controller/setting with the certificate and key IDs.
 type CertificateSettings struct {
-	CertID string `json:"cerId"`
-	KeyID  string `json:"keyId"`
+	CertName string `json:"cerName"`
+	KeyName  string `json:"keyName"`
+	Enable   bool   `json:"enable"`
+	CertType string `json:"cerType"`
+	CertID   string `json:"cerId"`
+	KeyID    string `json:"keyId"`
 }
 
 type ControllerSettingUpdate struct {
-	CertID string `json:"cerId"`
-	KeyID  string `json:"keyId"`
+	Certificate CertificateSettings `json:"certificate"`
 }
 
 // ActivateCertificate applies the certificate configuration to the controller.
-func (c *Client) ActivateCertificate(ctx context.Context, certID, keyID string) error {
+func (c *Client) ActivateCertificate(ctx context.Context, certID, keyID, certName, keyName string) error {
 	if c.readOnly {
 		return ErrReadOnly
 	}
 
 	url := fmt.Sprintf("%s/%s/api/v2/controller/setting", c.baseURL, c.omadacID)
 
-	updateReq := ControllerSettingUpdate{
-		CertID: certID,
-		KeyID:  keyID,
+	if strings.TrimSpace(certID) == "" || strings.TrimSpace(keyID) == "" || strings.TrimSpace(certName) == "" || strings.TrimSpace(keyName) == "" {
+		return fmt.Errorf("activating certificate: certificate and key identities and filenames are required")
 	}
+	updateReq := ControllerSettingUpdate{Certificate: CertificateSettings{Enable: true, CertType: "PEM", CertID: certID, KeyID: keyID, CertName: certName, KeyName: keyName}}
 
 	_, err := c.doRequest(ctx, http.MethodPatch, url, updateReq)
 	return err
@@ -2127,10 +2145,15 @@ func (c *Client) GetControllerCertificateSetting(ctx context.Context) (*Controll
 		return nil, err
 	}
 
-	var setting ControllerSetting
+	var setting struct {
+		Certificate *ControllerSetting `json:"certificate"`
+	}
 	if err := json.Unmarshal(resp.Result, &setting); err != nil {
 		return nil, fmt.Errorf("decoding controller setting: %w", err)
 	}
 
-	return &setting, nil
+	if setting.Certificate == nil {
+		return nil, fmt.Errorf("decoding controller setting: missing certificate section")
+	}
+	return setting.Certificate, nil
 }

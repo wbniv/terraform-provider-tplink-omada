@@ -13,7 +13,7 @@ import (
 )
 
 const responseSecret = "Synthetic-Response-Secret-987!"
-const responseSuccess = `{"errorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`
+const responseSuccess = `{"errorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`
 
 var responseOperations = []struct {
 	name string
@@ -54,14 +54,14 @@ func TestResponseValidation(t *testing.T) {
 		{"server JSON", 500, responseSuccess, false},
 		{"proxy HTML", 502, "<html>" + responseSecret + "</html>", false},
 		{"proxy text", 503, responseSecret, false},
-		{"missing code", 200, `{"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`, false},
-		{"null code", 200, `{"errorCode":null,"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`, false},
+		{"missing code", 200, `{"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`, false},
+		{"null code", 200, `{"errorCode":null,"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`, false},
 		{"string code", 200, `{"errorCode":"0","msg":"` + responseSecret + `"}`, false},
 		{"fractional code", 200, `{"errorCode":0.5}`, false},
 		{"bool code", 200, `{"errorCode":false}`, false},
-		{"duplicate code", 200, `{"errorCode":-1001,"errorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`, false},
-		{"duplicate result", 200, `{"errorCode":0,"result":null,"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`, false},
-		{"wrong case code", 200, `{"ErrorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`, false},
+		{"duplicate code", 200, `{"errorCode":-1001,"errorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`, false},
+		{"duplicate result", 200, `{"errorCode":0,"result":null,"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`, false},
+		{"wrong case code", 200, `{"ErrorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`, false},
 		{"null envelope", 200, "null", false},
 		{"array envelope", 200, "[]", false},
 		{"empty object", 200, "{}", false},

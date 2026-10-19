@@ -26,7 +26,7 @@ func TestCertificateOperations(t *testing.T) {
 			return c.UploadKey(ctx, []byte("test PEM\n"), "test.pem")
 		}},
 		{"activate", "/controller/setting", http.MethodPatch, "", func(ctx context.Context, c *Client) (string, error) {
-			return "", c.ActivateCertificate(ctx, "cert", "key")
+			return "", c.ActivateCertificate(ctx, "cert", "key", "cert.pem", "key.pem")
 		}},
 		{"read", "/controller/setting", http.MethodGet, "cert/key", func(ctx context.Context, c *Client) (string, error) {
 			setting, err := c.GetControllerCertificateSetting(ctx)
@@ -63,13 +63,13 @@ func TestCertificateOperations(t *testing.T) {
 						defer file.Close()
 						defer r.MultipartForm.RemoveAll()
 						data, err := io.ReadAll(file)
-						if err != nil || string(data) != "test PEM\n" || header.Filename != "test.pem" || r.FormValue("data") != "{}" {
+						if err != nil || string(data) != "test PEM\n" || header.Filename != "test.pem" || r.FormValue("data") != map[string]string{"certificate": `{"cerName":"test.pem"}`, "key": `{"keyName":"test.pem"}`}[op.name] {
 							t.Errorf("multipart file or metadata changed: filename=%q data=%q err=%v", header.Filename, data, err)
 						}
 					}
 					if op.method == http.MethodPatch {
 						data, err := io.ReadAll(r.Body)
-						if err != nil || string(data) != `{"cerId":"cert","keyId":"key"}` {
+						if err != nil || string(data) != `{"certificate":{"cerName":"cert.pem","keyName":"key.pem","enable":true,"cerType":"PEM","cerId":"cert","keyId":"key"}}` {
 							t.Errorf("activation body = %s, err=%v", data, err)
 						}
 					}
@@ -84,7 +84,11 @@ func TestCertificateOperations(t *testing.T) {
 					if got := r.Header.Get("Csrf-Token"); got != expectedToken {
 						t.Errorf("token = %q, want %q", got, expectedToken)
 					}
-					fmt.Fprint(w, `{"errorCode":0,"result":{"id":"uploaded","cerId":"cert","keyId":"key"}}`)
+					if op.method == http.MethodPost {
+						fmt.Fprint(w, `{"errorCode":0,"result":{"cerId":"uploaded","keyId":"uploaded"}}`)
+					} else {
+						fmt.Fprint(w, `{"errorCode":0,"result":{"certificate":{"cerId":"cert","keyId":"key"}}}`)
+					}
 				}))
 				defer server.Close()
 				c := &Client{baseURL: server.URL, omadacID: "controller", token: initialToken, httpClient: server.Client()}
@@ -334,7 +338,53 @@ func TestCertificateWritesReadOnly(t *testing.T) {
 	if _, err := c.UploadKey(context.Background(), []byte("pem"), "key.pem"); !errors.Is(err, ErrReadOnly) {
 		t.Errorf("key upload: %v", err)
 	}
-	if err := c.ActivateCertificate(context.Background(), "cert", "key"); !errors.Is(err, ErrReadOnly) {
+	if err := c.ActivateCertificate(context.Background(), "cert", "key", "cert.pem", "key.pem"); !errors.Is(err, ErrReadOnly) {
 		t.Errorf("activation: %v", err)
+	}
+}
+
+func TestUploadIdentityValidation(t *testing.T) {
+	for _, kind := range []string{"certificate", "key"} {
+		wrongField := `{"keyId":"wrong-endpoint"}`
+		if kind == "key" {
+			wrongField = `{"cerId":"wrong-endpoint"}`
+		}
+		for _, result := range []string{wrongField, `{}`, `null`, `{"id":"generic"}`, `{"cerId":"","keyId":""}`, `{"cerId":" ","keyId":" "}`, `{"cerId":7,"keyId":7}`} {
+			t.Run(kind+result, func(t *testing.T) {
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					fmt.Fprintf(w, `{"errorCode":0,"result":%s}`, result)
+				}))
+				defer server.Close()
+				c := &Client{baseURL: server.URL, omadacID: "controller", token: "valid", httpClient: server.Client()}
+				id, err := c.uploadControllerFile(context.Background(), kind, []byte("pem"), "file.pem")
+				if err == nil || id != "" {
+					t.Fatalf("invalid upload identity accepted: %q, %v", id, err)
+				}
+			})
+		}
+	}
+}
+
+func TestCertificateReadMissingSection(t *testing.T) {
+	for _, result := range []string{`{}`, `null`, `{"certificate":null}`, `{"cerId":"flat","keyId":"flat"}`} {
+		t.Run(result, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				fmt.Fprintf(w, `{"errorCode":0,"result":%s}`, result)
+			}))
+			defer server.Close()
+			c := &Client{baseURL: server.URL, omadacID: "controller", token: "valid", httpClient: server.Client()}
+			if _, err := c.GetControllerCertificateSetting(context.Background()); err == nil {
+				t.Fatal("missing certificate section accepted")
+			}
+		})
+	}
+}
+
+func TestCertificateActivationRequiresIDs(t *testing.T) {
+	c := &Client{}
+	for _, ids := range [][2]string{{"", "key"}, {"cert", ""}, {" ", "key"}} {
+		if err := c.ActivateCertificate(context.Background(), ids[0], ids[1], "cert.pem", "key.pem"); err == nil {
+			t.Fatal("activation accepted empty identity")
+		}
 	}
 }
