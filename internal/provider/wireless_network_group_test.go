@@ -81,6 +81,7 @@ func TestAccWirelessNetworkGroupIdentity(t *testing.T) {
 				original["security"] = float64(3)
 			} else {
 				delete(original, "pskSetting")
+				original["pmfMode"] = float64(0)
 			}
 			objects := map[string]map[string]any{"site/group-a/ssid-old": original}
 			if strings.HasPrefix(scenario, "create omitted") || strings.HasPrefix(scenario, "create unknown") {
@@ -150,6 +151,12 @@ func TestAccWirelessNetworkGroupIdentity(t *testing.T) {
 						}
 						serial++
 						id := fmt.Sprintf("ssid-new%d", serial)
+						if body["security"] == float64(0) {
+							if _, ok := body["pmfMode"]; ok {
+								t.Error("open request includes PMF")
+							}
+							body["pmfMode"] = float64(0)
+						}
 						body["id"], body["wlanId"] = id, parts[2]
 						objects[collection+"/"+id] = body
 						result = map[string]any{"ssidId": id}
@@ -170,6 +177,12 @@ func TestAccWirelessNetworkGroupIdentity(t *testing.T) {
 						var body map[string]any
 						if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 							t.Error(err)
+						}
+						if body["security"] == float64(0) {
+							if _, ok := body["pmfMode"]; ok {
+								t.Error("open request includes PMF")
+							}
+							body["pmfMode"] = float64(0)
 						}
 						body["id"], body["wlanId"] = parts[3], parts[2]
 						objects[key] = body
@@ -241,7 +254,7 @@ import {
 				wantEvents, finalIdentity = []string{"PATCH site/group-a/ssid-old"}, "site/group-a/ssid-old"
 				actions, after = "[update]", "group-a"
 			case "replace with explicit settings":
-				final = config("site", groupB, "Original", "band = 1\nbroadcast = false\nenable_11r = true\npmf_mode = 3", "")
+				final = config("site", groupB, "Original", "band = 1\nbroadcast = false\nenable_11r = true\npmf_mode = 0", "")
 			case "secured replacement requires password":
 				final = strings.Replace(final, "security = 0", "security = 3", 1)
 				steps = append(steps,
@@ -295,9 +308,9 @@ import {
 			}
 			finalCheck := check(finalIdentity, wantEvents, wantDiscoveries)
 			if scenario == "replace with defaults" || scenario == "replace with explicit settings" {
-				values := map[string]string{"band": "3", "broadcast": "true", "enable_11r": "false", "pmf_mode": "2"}
+				values := map[string]string{"band": "3", "broadcast": "true", "enable_11r": "false", "pmf_mode": "0"}
 				if scenario == "replace with explicit settings" {
-					values = map[string]string{"band": "1", "broadcast": "false", "enable_11r": "true", "pmf_mode": "3"}
+					values = map[string]string{"band": "1", "broadcast": "false", "enable_11r": "true", "pmf_mode": "0"}
 				}
 				all := []resource.TestCheckFunc{finalCheck}
 				for name, value := range values {

@@ -13,14 +13,17 @@ import (
 )
 
 func TestAccWirelessNetworkCreate(t *testing.T) {
-	for _, mode := range []string{"defaults", "explicit", "unknown at plan"} {
+	for _, mode := range []string{"defaults", "explicit", "unknown at plan", "open default", "unknown security"} {
 		t.Run(mode, func(t *testing.T) {
 			var mu sync.Mutex
 			var current map[string]any
 			const collection = "/controller/api/v2/sites/site/setting/wlans/group/ssids"
 			want := map[string]any{"band": float64(3), "security": float64(3), "broadcast": true, "enable11r": false, "pmfMode": float64(2)}
 			if mode != "defaults" {
-				want = map[string]any{"band": float64(1), "security": float64(0), "broadcast": false, "enable11r": true, "pmfMode": float64(3)}
+				want = map[string]any{"band": float64(1), "security": float64(0), "broadcast": false, "enable11r": true, "pmfMode": nil}
+			}
+			if mode == "open default" || mode == "unknown security" {
+				want = map[string]any{"band": float64(3), "security": float64(0), "broadcast": true, "enable11r": false, "pmfMode": nil}
 			}
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				mu.Lock()
@@ -49,6 +52,9 @@ func TestAccWirelessNetworkCreate(t *testing.T) {
 					} else if _, ok := current["pskSetting"]; ok {
 						t.Error("open create includes PSK")
 					}
+					if current["security"] == float64(0) {
+						current["pmfMode"] = float64(0)
+					}
 					current["id"] = "ssid"
 					result = map[string]any{"ssidId": "ssid"}
 				case r.Method == http.MethodGet && r.URL.Path == collection:
@@ -68,16 +74,23 @@ func TestAccWirelessNetworkCreate(t *testing.T) {
 			extra := `passphrase = "fixture-passphrase-123"`
 			dependency := ""
 			if mode == "explicit" {
-				extra = "band = 1\nsecurity = 0\nbroadcast = false\nenable_11r = true\npmf_mode = 3"
+				extra = "band = 1\nsecurity = 0\nbroadcast = false\nenable_11r = true\npmf_mode = 0"
 			}
 			if mode == "unknown at plan" {
 				dependency = `resource "terraform_data" "settings" {
-  input = { band = 1, security = 0, broadcast = false, enable_11r = true, pmf_mode = 3 }
+  input = { band = 1, security = 0, broadcast = false, enable_11r = true, pmf_mode = 0 }
 }`
 				extra = ""
 				for _, name := range []string{"band", "security", "broadcast", "enable_11r", "pmf_mode"} {
 					extra += fmt.Sprintf("%s = terraform_data.settings.output.%s\n", name, name)
 				}
+			}
+			if mode == "open default" {
+				extra = "security = 0"
+			}
+			if mode == "unknown security" {
+				dependency = `resource "terraform_data" "security" { input = 0 }`
+				extra = "security = terraform_data.security.output"
 			}
 			config := fmt.Sprintf(`
 provider "omada" {

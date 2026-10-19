@@ -17,22 +17,53 @@ const ssidConfiguredKey = "ssid_configured_key_v1"
 // Defaults belong only to creation. Schema defaults would also replace omitted
 // values in an imported SSID before Update can preserve them.
 func (r *WirelessNetworkResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if !req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+	if req.Plan.Raw.IsNull() {
 		return
 	}
-	for name, value := range map[string]int64{"band": 3, "security": 3, "pmf_mode": 2} {
-		var configured types.Int64
-		resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(name), &configured)...)
-		if configured.IsNull() {
-			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(name), types.Int64Value(value))...)
+	if req.State.Raw.IsNull() {
+		for name, value := range map[string]int64{"band": 3, "security": 3} {
+			var configured types.Int64
+			resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(name), &configured)...)
+			if configured.IsNull() {
+				resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(name), types.Int64Value(value))...)
+			}
+		}
+		for name, value := range map[string]bool{"broadcast": true, "enable_11r": false} {
+			var configured types.Bool
+			resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(name), &configured)...)
+			if configured.IsNull() {
+				resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(name), types.BoolValue(value))...)
+			}
 		}
 	}
-	for name, value := range map[string]bool{"broadcast": true, "enable_11r": false} {
-		var configured types.Bool
-		resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(name), &configured)...)
-		if configured.IsNull() {
-			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(name), types.BoolValue(value))...)
+	// PMF is inapplicable to open SSIDs. Do not overwrite an explicit value,
+	// or guess while a security dependency is still unknown.
+	var configuredSecurity, configuredPMF types.Int64
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("security"), &configuredSecurity)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("pmf_mode"), &configuredPMF)...)
+	var effectiveSecurity types.Int64
+	resp.Diagnostics.Append(resp.Plan.GetAttribute(ctx, path.Root("security"), &effectiveSecurity)...)
+	var prior WirelessNetworkResourceModel
+	if !req.State.Raw.IsNull() {
+		resp.Diagnostics.Append(req.State.Get(ctx, &prior)...)
+		if configuredSecurity.IsNull() {
+			effectiveSecurity = prior.Security
 		}
+	}
+	if configuredPMF.IsNull() {
+		if effectiveSecurity.IsUnknown() {
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("pmf_mode"), types.Int64Unknown())...)
+		} else if effectiveSecurity.ValueInt64() == 0 && !effectiveSecurity.IsNull() {
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("pmf_mode"), types.Int64Value(0))...)
+		} else if req.State.Raw.IsNull() || !effectiveSecurity.Equal(prior.Security) {
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("pmf_mode"), types.Int64Value(2))...)
+		}
+	}
+	if err := validateSSIDPMF(effectiveSecurity, configuredPMF); err != nil {
+		resp.Diagnostics.AddError("Invalid wireless network PMF configuration", err.Error())
+	}
+	if !req.State.Raw.IsNull() {
+		return
 	}
 	// Terraform replans replacements with null prior state. Reject known
 	// invalid creation settings here, before it can destroy the old SSID.
@@ -52,7 +83,23 @@ func validateSSIDCreate(plan WirelessNetworkResourceModel) error {
 		plan.PmfMode.IsNull() || plan.PmfMode.IsUnknown() || plan.VlanID.IsUnknown() || plan.Passphrase.IsUnknown() {
 		return fmt.Errorf("SSID settings must be known before creation")
 	}
-	return validateSSIDCreateSecurity(plan)
+	if err := validateSSIDCreateSecurity(plan); err != nil {
+		return err
+	}
+	return validateSSIDPMF(plan.Security, plan.PmfMode)
+}
+
+func validateSSIDPMF(security, pmf types.Int64) error {
+	if security.IsNull() || security.IsUnknown() || pmf.IsNull() || pmf.IsUnknown() {
+		return nil
+	}
+	if security.ValueInt64() == 0 && pmf.ValueInt64() != 0 {
+		return fmt.Errorf("open security requires pmf_mode = 0 or omission")
+	}
+	if security.ValueInt64() == 3 && (pmf.ValueInt64() < 1 || pmf.ValueInt64() > 3) {
+		return fmt.Errorf("secured SSIDs require pmf_mode between 1 and 3")
+	}
+	return nil
 }
 
 func validateSSIDCreateSecurity(plan WirelessNetworkResourceModel) error {
@@ -194,7 +241,7 @@ func (r *WirelessNetworkResource) prepareSSIDUpdate(ctx context.Context, siteID 
 	if err != nil {
 		return nil, false, err
 	}
-	if err := requireSSIDFields(payload, "SSID", "name band security broadcast enable11r pmfMode guestNetEnable wlanScheduleEnable macFilterEnable vlanSetting rateLimit ssidRateLimit rateAndBeaconCtrl multiCastSetting"); err != nil {
+	if err := requireSSIDFields(payload, "SSID", "name band security broadcast enable11r guestNetEnable wlanScheduleEnable macFilterEnable vlanSetting rateLimit ssidRateLimit rateAndBeaconCtrl multiCastSetting"); err != nil {
 		return nil, false, err
 	}
 	for _, enabled := range []struct{ name, required string }{{"wlanScheduleEnable", "action scheduleId"}, {"macFilterEnable", "policy macFilterId"}} {
@@ -258,8 +305,17 @@ func (r *WirelessNetworkResource) prepareSSIDUpdate(ctx context.Context, siteID 
 		}
 	}
 	oldSecurity := payload["security"].(float64)
+	if oldSecurity == 3 {
+		if err := requireSSIDFields(payload, "SSID", "pmfMode"); err != nil {
+			return nil, false, err
+		}
+	}
 	if oldSecurity != 0 && oldSecurity != 3 {
 		return nil, false, fmt.Errorf("only open (0) and WPA-Personal (3) SSIDs can be safely updated")
+	}
+	// Compare the writable form, excluding inapplicable open-network PMF.
+	if oldSecurity == 0 {
+		delete(payload, "pmfMode")
 	}
 	before, _ := json.Marshal(payload)
 	if !plan.Name.IsNull() && !plan.Name.IsUnknown() {
@@ -286,6 +342,10 @@ func (r *WirelessNetworkResource) prepareSSIDUpdate(ctx context.Context, siteID 
 		if !plan.Passphrase.IsNull() {
 			return nil, false, fmt.Errorf("remove passphrase when selecting open security")
 		}
+		if err := validateSSIDPMF(types.Int64Value(0), plan.PmfMode); err != nil {
+			return nil, false, err
+		}
+		delete(payload, "pmfMode")
 		delete(payload, "pskSetting")
 	} else if oldSecurity == 3 {
 		psk, _ := payload["pskSetting"].(map[string]any)
@@ -299,6 +359,18 @@ func (r *WirelessNetworkResource) prepareSSIDUpdate(ctx context.Context, siteID 
 		}
 	} else {
 		payload["pskSetting"] = map[string]any{"versionPsk": float64(2), "encryptionPsk": float64(3), "gikRekeyPskEnable": false}
+	}
+	if security == 3 {
+		if oldSecurity == 0 && (plan.PmfMode.IsNull() || plan.PmfMode.IsUnknown()) {
+			payload["pmfMode"] = float64(2)
+		}
+		pmf, ok := payload["pmfMode"].(float64)
+		if !ok {
+			return nil, false, fmt.Errorf("missing secured SSID PMF mode")
+		}
+		if err := validateSSIDPMF(types.Int64Value(3), types.Int64Value(int64(pmf))); err != nil {
+			return nil, false, err
+		}
 	}
 	if err := r.applySSIDVLAN(ctx, siteID, payload, plan.VlanID); err != nil {
 		return nil, false, err

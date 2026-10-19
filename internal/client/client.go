@@ -160,7 +160,7 @@ type WirelessNetwork struct {
 	PSKSetting         *PSKSetting  `json:"pskSetting,omitempty"`
 	VlanSetting        *VlanSetting `json:"vlanSetting,omitempty"`
 	Enable11r          bool         `json:"enable11r"`
-	PmfMode            int          `json:"pmfMode"`
+	PmfMode            int          `json:"pmfMode,omitempty"`
 	WlanScheduleEnable bool         `json:"wlanScheduleEnable"`
 	MacFilterEnable    bool         `json:"macFilterEnable"`
 	RateLimit          *RateLimit   `json:"rateLimit"`

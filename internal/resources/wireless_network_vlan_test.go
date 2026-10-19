@@ -54,7 +54,7 @@ func TestWirelessNetworkVLANState(t *testing.T) {
 		for _, operation := range []string{"refresh", "import", "data source"} {
 			t.Run(tc.name+"/"+operation, func(t *testing.T) {
 				ctx := context.Background()
-				ssid := map[string]any{"id": "ssid", "wlanId": "group", "name": "Observed", "band": 3, "security": 0, "broadcast": true, "enable11r": false, "pmfMode": 2}
+				ssid := map[string]any{"id": "ssid", "wlanId": "group", "name": "Observed", "band": 3, "security": 0, "broadcast": true, "enable11r": false, "pmfMode": 0}
 				if tc.setting != "" {
 					ssid["vlanSetting"] = json.RawMessage(tc.setting)
 				}
@@ -114,7 +114,7 @@ func TestWirelessNetworkVLANState(t *testing.T) {
 				r := &WirelessNetworkResource{client: c}
 				var schema resource.SchemaResponse
 				r.Schema(ctx, resource.SchemaRequest{}, &schema)
-				old := WirelessNetworkResourceModel{ID: types.StringValue("ssid"), SiteID: types.StringValue("site"), WlanGroupID: types.StringValue("group"), Name: types.StringValue("Original"), Band: types.Int64Value(3), Security: types.Int64Value(0), Broadcast: types.BoolValue(true), Enable11r: types.BoolValue(false), PmfMode: types.Int64Value(2), VlanID: types.Int64Value(20), Passphrase: types.StringNull()}
+				old := WirelessNetworkResourceModel{ID: types.StringValue("ssid"), SiteID: types.StringValue("site"), WlanGroupID: types.StringValue("group"), Name: types.StringValue("Original"), Band: types.Int64Value(3), Security: types.Int64Value(0), Broadcast: types.BoolValue(true), Enable11r: types.BoolValue(false), PmfMode: types.Int64Value(0), VlanID: types.Int64Value(20), Passphrase: types.StringNull()}
 				state := tfsdk.State{Schema: schema.Schema}
 				if ds := state.Set(ctx, &old); ds.HasError() {
 					t.Fatal(ds)
@@ -185,7 +185,7 @@ func TestWirelessNetworkVLANWriteReadback(t *testing.T) {
 				ctx := context.Background()
 				var writes atomic.Int32
 				// Complete pre-update snapshot required by D1's preservation contract.
-				current := json.RawMessage(`{"id":"ssid","name":"Original","band":3,"security":0,"broadcast":true,"enable11r":false,"pmfMode":2,"guestNetEnable":false,"wlanScheduleEnable":false,"macFilterEnable":false,"rateLimit":{"downLimitEnable":false,"upLimitEnable":false},"ssidRateLimit":{"downLimitEnable":false,"upLimitEnable":false},"rateAndBeaconCtrl":{},"multiCastSetting":{},"vlanSetting":{"mode":0}}`)
+				current := json.RawMessage(`{"id":"ssid","name":"Original","band":3,"security":0,"broadcast":true,"enable11r":false,"pmfMode":0,"guestNetEnable":false,"wlanScheduleEnable":false,"macFilterEnable":false,"rateLimit":{"downLimitEnable":false,"upLimitEnable":false},"ssidRateLimit":{"downLimitEnable":false,"upLimitEnable":false},"rateAndBeaconCtrl":{},"multiCastSetting":{},"vlanSetting":{"mode":0}}`)
 				const collection = "/controller/api/v2/sites/site/setting/wlans/group/ssids"
 				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 					w.Header().Set("Content-Type", "application/json")
@@ -223,7 +223,7 @@ func TestWirelessNetworkVLANWriteReadback(t *testing.T) {
 				r := &WirelessNetworkResource{client: c}
 				var schema resource.SchemaResponse
 				r.Schema(ctx, resource.SchemaRequest{}, &schema)
-				old := WirelessNetworkResourceModel{ID: types.StringValue("ssid"), SiteID: types.StringValue("site"), WlanGroupID: types.StringValue("group"), Name: types.StringValue("Original"), Band: types.Int64Value(3), Security: types.Int64Value(0), Broadcast: types.BoolValue(true), Enable11r: types.BoolValue(false), PmfMode: types.Int64Value(2), VlanID: types.Int64Null(), Passphrase: types.StringNull()}
+				old := WirelessNetworkResourceModel{ID: types.StringValue("ssid"), SiteID: types.StringValue("site"), WlanGroupID: types.StringValue("group"), Name: types.StringValue("Original"), Band: types.Int64Value(3), Security: types.Int64Value(0), Broadcast: types.BoolValue(true), Enable11r: types.BoolValue(false), PmfMode: types.Int64Value(0), VlanID: types.Int64Null(), Passphrase: types.StringNull()}
 				plan := old
 				plan.Name = types.StringValue("Changed")
 				plan.VlanID = types.Int64Value(20)

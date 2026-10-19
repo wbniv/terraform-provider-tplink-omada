@@ -100,7 +100,7 @@ func (r *WirelessNetworkResource) Schema(_ context.Context, _ resource.SchemaReq
 				Computed:    true,
 			},
 			"pmf_mode": schema.Int64Attribute{
-				Description: "Protected Management Frames mode: 1=disabled, 2=optional, 3=required. Defaults to 2 on creation; omission preserves existing settings. Verify mode meanings for your controller version.",
+				Description: "Protected Management Frames on controller 6.1: 0=inapplicable for open security, 1=required, 2=capable/optional, 3=disabled. Omit or use 0 for open SSIDs. Secured creation or an open-to-secured transition defaults to 2; otherwise omission preserves the existing secured mode.",
 				Optional:    true,
 				Computed:    true,
 			},

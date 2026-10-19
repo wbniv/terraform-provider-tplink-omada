@@ -29,6 +29,7 @@ func TestAccWirelessNetworkPreservation(t *testing.T) {
 			}
 			if mode == "open" {
 				current["security"] = float64(0)
+				current["pmfMode"] = float64(0)
 				delete(current, "pskSetting")
 			}
 			protected := map[string]any{}
@@ -102,6 +103,9 @@ func TestAccWirelessNetworkPreservation(t *testing.T) {
 					}
 					// Model a full-object PATCH: omitted writable settings would be lost.
 					body["id"], body["wlanId"] = "ssid", "group"
+					if body["security"] == float64(0) {
+						body["pmfMode"] = float64(0)
+					}
 					current = body
 					// Exercise empty-success readback on every update.
 				case r.Method == http.MethodDelete && r.URL.Path == collection+"/ssid":
@@ -154,16 +158,20 @@ resource "omada_wireless_network" "test" {
 			if mode == "open" || mode == "unmanaged" {
 				initial = 0
 			}
-			changes := secret + "\nband = 3\nbroadcast = true\nenable_11r = false\npmf_mode = 2"
+			initialPMF, changedPMF := "3", "2"
+			if mode == "open" {
+				initialPMF, changedPMF = "0", "0"
+			}
+			changes := secret + "\nband = 3\nbroadcast = true\nenable_11r = false\npmf_mode = " + changedPMF
 			steps := []resource.TestStep{
 				{Config: config("Original", secret, true) + `import {
   to = omada_wireless_network.test
   id = "site/group/ssid"
-}`, Check: check(initial, map[string]string{"band": "1", "broadcast": "false", "enable_11r": "true", "pmf_mode": "3", "vlan_id": "20"})},
-				{Config: config("Renamed", secret, true), Check: check(initial+1, map[string]string{"name": "Renamed", "band": "1", "broadcast": "false", "enable_11r": "true", "pmf_mode": "3"})},
+}`, Check: check(initial, map[string]string{"band": "1", "broadcast": "false", "enable_11r": "true", "pmf_mode": initialPMF, "vlan_id": "20"})},
+				{Config: config("Renamed", secret, true), Check: check(initial+1, map[string]string{"name": "Renamed", "band": "1", "broadcast": "false", "enable_11r": "true", "pmf_mode": initialPMF})},
 				{Config: config("Renamed", secret, true), PlanOnly: true, ExpectNonEmptyPlan: false},
-				{Config: config("Renamed", changes, true), Check: check(initial+2, map[string]string{"band": "3", "broadcast": "true", "enable_11r": "false", "pmf_mode": "2"})},
-				{Config: config("Again", secret, true), Check: check(initial+3, map[string]string{"band": "3", "broadcast": "true", "enable_11r": "false", "pmf_mode": "2"})},
+				{Config: config("Renamed", changes, true), Check: check(initial+2, map[string]string{"band": "3", "broadcast": "true", "enable_11r": "false", "pmf_mode": changedPMF})},
+				{Config: config("Again", secret, true), Check: check(initial+3, map[string]string{"band": "3", "broadcast": "true", "enable_11r": "false", "pmf_mode": changedPMF})},
 				{Config: config("Again", secret, true), PlanOnly: true, ExpectNonEmptyPlan: false},
 			}
 			if mode != "open" && mode != "unmanaged" {

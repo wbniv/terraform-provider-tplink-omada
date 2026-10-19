@@ -44,6 +44,7 @@ func TestAccWirelessNetworkVLANState(t *testing.T) {
 				t.Fatal(err)
 			}
 			current["security"] = float64(0)
+			current["pmfMode"] = float64(0)
 			delete(current, "pskSetting")
 			var mu sync.Mutex
 			writes := 0

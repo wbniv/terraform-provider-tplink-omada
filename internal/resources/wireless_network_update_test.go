@@ -28,6 +28,7 @@ func TestWirelessNetworkPreservation(t *testing.T) {
 		vlan                      int
 	}{
 		{name: "rename"},
+		{name: "invalid secured PMF", edit: func(p, s *WirelessNetworkResourceModel) { p.PmfMode = types.Int64Value(0) }, wantError: "between 1 and 3", noWrite: true},
 		{name: "6.1 response metadata", mutate: func(raw map[string]any) {
 			raw["vlanEnable"] = true
 			raw["vlanId"] = float64(20)
@@ -299,6 +300,11 @@ func TestWirelessNetworkCreateValidation(t *testing.T) {
 		edit func(*WirelessNetworkResourceModel)
 		want string
 	}{
+		{"invalid open PMF", func(p *WirelessNetworkResourceModel) {
+			p.Security = types.Int64Value(0)
+			p.Passphrase = types.StringNull()
+		}, "open security requires"},
+		{"invalid secured PMF", func(p *WirelessNetworkResourceModel) { p.PmfMode = types.Int64Value(0) }, "between 1 and 3"},
 		{"missing password", func(p *WirelessNetworkResourceModel) { p.Passphrase = types.StringNull() }, "configure passphrase"},
 		{"empty password", func(p *WirelessNetworkResourceModel) { p.Passphrase = types.StringValue("") }, "configure passphrase"},
 		{"unsupported security", func(p *WirelessNetworkResourceModel) { p.Security = types.Int64Value(2) }, "only open"},
@@ -367,5 +373,70 @@ func TestSSIDController61Snapshot(t *testing.T) {
 				t.Fatal("accepted unverified field")
 			}
 		})
+	}
+}
+
+func TestSSIDPMFSecurityContract(t *testing.T) {
+	for _, tc := range []struct {
+		security, pmf int64
+		valid         bool
+	}{
+		{0, 0, true}, {0, 1, false}, {0, 2, false}, {0, 3, false}, {3, 0, false}, {3, 1, true}, {3, 2, true}, {3, 3, true}, {3, 4, false},
+	} {
+		if err := validateSSIDPMF(types.Int64Value(tc.security), types.Int64Value(tc.pmf)); (err == nil) != tc.valid {
+			t.Errorf("security=%d pmf=%d err=%v", tc.security, tc.pmf, err)
+		}
+	}
+	for _, security := range []types.Int64{types.Int64Null(), types.Int64Unknown()} {
+		if err := validateSSIDPMF(security, types.Int64Value(2)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	data, err := json.Marshal(client.WirelessNetwork{Security: 0, PmfMode: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wire map[string]any
+	if err := json.Unmarshal(data, &wire); err != nil {
+		t.Fatal(err)
+	}
+	if _, present := wire["pmfMode"]; present {
+		t.Fatal("open create includes PMF")
+	}
+}
+
+func TestSSIDPMFSnapshotAbsence(t *testing.T) {
+	data, err := os.ReadFile("../testdata/wireless_network_6_1.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, security := range []int64{0, 3} {
+		var raw map[string]any
+		if err := json.Unmarshal(data, &raw); err != nil {
+			t.Fatal(err)
+		}
+		raw["security"] = float64(security)
+		delete(raw, "pmfMode")
+		if security == 0 {
+			delete(raw, "pskSetting")
+		}
+		plan := WirelessNetworkResourceModel{Name: types.StringValue("Renamed"), Security: types.Int64Value(security), PmfMode: types.Int64Value(0)}
+		r := WirelessNetworkResource{}
+		payload, changed, err := r.prepareSSIDUpdate(context.Background(), "site", raw, plan, plan, false)
+		if security == 3 {
+			if err == nil || !strings.Contains(err.Error(), "missing SSID.pmfMode") {
+				t.Fatalf("secured snapshot: %v", err)
+			}
+		} else {
+			if err != nil || !changed {
+				t.Fatalf("open snapshot: changed=%v err=%v", changed, err)
+			}
+			if _, ok := payload["pmfMode"]; ok {
+				t.Fatal("open PATCH includes PMF")
+			}
+			if _, ok := payload["pskSetting"]; ok {
+				t.Fatal("open PATCH includes PSK")
+			}
+		}
 	}
 }
