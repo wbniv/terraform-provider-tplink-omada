@@ -28,6 +28,11 @@ func TestWirelessNetworkPreservation(t *testing.T) {
 		vlan                      int
 	}{
 		{name: "rename"},
+		{name: "6.1 response metadata", mutate: func(raw map[string]any) {
+			raw["vlanEnable"] = true
+			raw["vlanId"] = float64(20)
+			raw["deviceType"] = float64(1)
+		}},
 		{name: "direct array", array: true},
 		{name: "partial PATCH result", response: "partial"},
 		{name: "full PATCH result", response: "full"},
@@ -240,6 +245,11 @@ func TestWirelessNetworkPreservation(t *testing.T) {
 			if tc.mutate != nil {
 				tc.mutate(original)
 			}
+			for _, key := range []string{"vlanEnable", "vlanId", "deviceType"} {
+				if _, ok := sent[key]; ok {
+					t.Errorf("response/create-only field sent in PATCH: %s", key)
+				}
+			}
 			for _, key := range []string{"guestNetEnable", "wlanScheduleEnable", "action", "scheduleId", "macFilterEnable", "policy", "macFilterId", "rateLimit", "ssidRateLimit", "rateAndBeaconCtrl", "multiCastSetting", "mloEnable", "prohibitWifiShare"} {
 				if !reflect.DeepEqual(sent[key], original[key]) {
 					t.Errorf("unrelated field changed: %s", key)
@@ -311,6 +321,50 @@ func TestWirelessNetworkCreateValidation(t *testing.T) {
 			r.Create(ctx, resource.CreateRequest{Plan: planned}, &resp)
 			if !resp.Diagnostics.HasError() || !strings.Contains(fmt.Sprint(resp.Diagnostics), tc.want) {
 				t.Errorf("diagnostics: %v", resp.Diagnostics)
+			}
+		})
+	}
+}
+
+// A sanitized real 6.1 response must remain readable without allowing arbitrary
+// new fields through the full-object update contract.
+func TestSSIDController61Snapshot(t *testing.T) {
+	for _, fixture := range []string{"wireless_network_6_1.json", "wireless_network_6_1_vlan.json"} {
+		t.Run(fixture, func(t *testing.T) {
+			data, err := os.ReadFile("../testdata/" + fixture)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var raw map[string]any
+			if err := json.Unmarshal(data, &raw); err != nil {
+				t.Fatal(err)
+			}
+			copied, err := copySSIDFields(raw, ssidWritableFields, "SSID")
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, key := range []string{"vlanEnable", "vlanId", "deviceType", "site", "id", "idInt", "resource", "index", "portalEnable", "accessEnable"} {
+				if _, ok := copied[key]; ok {
+					t.Errorf("response/create-only field copied: %s", key)
+				}
+			}
+			if _, ok := copied["pskSetting"].(map[string]any)["securityKey"]; ok {
+				t.Fatal("response credential copied")
+			}
+			for _, key := range []string{"currentVlanId", "currentVlanIds"} {
+				if _, ok := copied["vlanSetting"].(map[string]any)[key]; ok {
+					t.Errorf("VLAN response summary copied: %s", key)
+				}
+				delete(raw["vlanSetting"].(map[string]any), key)
+			}
+			for _, key := range []string{"vlanSetting", "rateLimit", "ssidRateLimit", "multiCastSetting", "rateAndBeaconCtrl", "mloEnable", "prohibitWifiShare"} {
+				if !reflect.DeepEqual(raw[key], copied[key]) {
+					t.Errorf("lost writable settings: %s", key)
+				}
+			}
+			raw["unverifiedFeature"] = true
+			if _, err := copySSIDFields(raw, ssidWritableFields, "SSID"); err == nil {
+				t.Fatal("accepted unverified field")
 			}
 		})
 	}

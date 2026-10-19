@@ -91,6 +91,9 @@ var ssidRateFields = ssidFields{
 var ssidWritableFields = ssidFields{
 	"id": "ignore", "idInt": "ignore", "index": "ignore", "site": "ignore", "resource": "ignore",
 	"portalEnable": "ignore", "accessEnable": "ignore",
+	// 6.1: vlanEnable/vlanId are derived from vlanSetting. deviceType is create-only
+	// in the controller UI; omitting it on PATCH preserves the existing target.
+	"vlanEnable": "ignore", "vlanId": "ignore", "deviceType": "ignore",
 	"wlanId": "string", "name": "string", "band": "number", "security": "number",
 	"broadcast": "bool", "enable11r": "bool", "pmfMode": "number", "guestNetEnable": "bool",
 	"wlanScheduleEnable": "bool", "action": "number", "scheduleId": "string",
