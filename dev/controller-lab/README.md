@@ -36,7 +36,7 @@ LAB_EVIDENCE_DIR=/home/will/terraform-provider-tplink-omada/docs/investigations 
 dev/controller-lab/run.sh test
 ```
 
-This adds the exact D1–D3 stack and the three recorded integration patches to the disposable build copy. The checkout needs those Git commits; `LAB_EVIDENCE_DIR` needs the pagination/HTTP evidence patches. Without this option, the runner tests its current checkout alone. The acceptance selection includes D1–D3 mock SSID scenarios when integrated, and a real secured-SSID lifecycle. Open-network PMF defaults and real SSID update-field compatibility are tracked separately. Set `LAB_ACCEPTANCE_RUN` and `LAB_CLIENT_RUN` to Go test regular expressions for focused reruns; defaults run the full lab selection.
+This adds the exact D1–D3 stack and the three recorded integration patches to the disposable build copy. The checkout needs those Git commits; `LAB_EVIDENCE_DIR` needs the pagination/HTTP evidence patches. Without this option, the runner tests its current checkout alone. The acceptance selection includes D1–D3 mock SSID scenarios when integrated, and a real secured-SSID lifecycle. Open-network PMF defaults remain open. The L7 overlay excludes verified response/create-only fields; its tests cover secured rename, password rotation, and custom/default VLAN transitions with controller readback. Set `LAB_ACCEPTANCE_RUN` and `LAB_CLIENT_RUN` to Go test regular expressions for focused reruns; defaults run the full lab selection.
 
 **Known failures are reported as failures.** The initial G1-based run discovered WLAN pagination, certificate upload, session recovery, and IP-group compatibility issues. Do not interpret a completed test command as a passing compatibility declaration.
 
@@ -57,3 +57,5 @@ Inspect logs before copying them into `docs/investigations/`. Never publish `cre
 `test` removes its runner on exit, including failures. `down` removes the controller, relay, owned networks/volumes, and private credential/response files; it preserves logs for review. After saving sanitized evidence, remove the remaining `.controller-lab/` directory. Docker images remain reusable cache. Do not run a broad Docker prune.
 
 Passing controller tests does not validate physical adoption, AP radios, switch-port behavior, traffic forwarding, or delivery of credentials to hardware. Record those as separate open gates.
+
+For an uncommitted SSID follow-up, set `LAB_SSID_PATCH` to a Git patch in addition to `LAB_SSID_INTEGRATION=1`. The harness copies it into the private runtime directory and applies it after D1–D3 and the client integration patches. Save the exact patch and compiled source hashes with the test evidence. Each test invocation clears the previous build/acceptance/client logs and status file so an interrupted build cannot retain stale successful results.

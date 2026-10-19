@@ -123,6 +123,21 @@ resource "omada_wireless_network" "lab" {
 }
 `, os.Getenv("OMADA_TEST_SITE_ID"), os.Getenv("OMADA_TEST_SITE_ID"), name, group)
  }
+ var preserved map[string]any
+ observe := func(compare bool) resource.TestCheckFunc {
+  return func(state *terraform.State) error {
+   attrs := state.RootModule().Resources["omada_wireless_network.lab"].Primary.Attributes
+   c, err := client.NewClient(os.Getenv("OMADA_URL"), os.Getenv("OMADA_USERNAME"), os.Getenv("OMADA_PASSWORD"), true)
+   if err != nil { return err }
+   raw, err := c.GetWirelessNetworkRaw(context.Background(), attrs["site_id"], attrs["wlan_group_id"], attrs["id"])
+   if err != nil { return err }
+   current := map[string]any{}
+   for _, key := range []string{"deviceType", "vlanEnable", "vlanSetting", "rateLimit", "ssidRateLimit", "multiCastSetting", "rateAndBeaconCtrl", "mloEnable", "prohibitWifiShare", "guestNetEnable"} { current[key] = raw[key] }
+   if compare && !reflect.DeepEqual(preserved, current) { return fmt.Errorf("SSID update changed unrelated settings") }
+   preserved = current
+   return nil
+  }
+ }
  custom := "wlan_group_id = omada_wlan_group.lab.id"
  resource.Test(t, resource.TestCase{
   PreCheck: func() { testAccPreCheck(t) }, ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -132,9 +147,63 @@ resource "omada_wireless_network" "lab" {
     attrs := state.RootModule().Resources["omada_wireless_network.lab"].Primary.Attributes
     return attrs["site_id"] + "/" + attrs["wlan_group_id"] + "/" + attrs["id"], nil
    }},
-   {Config: config("L1 Custom", custom), Check: resource.TestCheckResourceAttrPair("omada_wireless_network.lab", "wlan_group_id", "omada_wlan_group.lab", "id")},
+   {Config: config("L1 Custom", custom), Check: resource.ComposeTestCheckFunc(resource.TestCheckResourceAttrPair("omada_wireless_network.lab", "wlan_group_id", "omada_wlan_group.lab", "id"), observe(false))},
    {Config: config("L1 Custom", custom), PlanOnly: true},
-   {Config: config("L1 Updated", custom), Check: resource.TestCheckResourceAttr("omada_wireless_network.lab", "name", "L1 Updated")},
+   {Config: config("L1 Updated", custom), Check: resource.ComposeTestCheckFunc(resource.TestCheckResourceAttr("omada_wireless_network.lab", "name", "L1 Updated"), observe(true))},
+   {Config: config("L1 Updated", custom), PlanOnly: true},
+  },
+ })
+}
+
+func TestControllerLabSSIDUpdateVariants(t *testing.T) {
+ if os.Getenv("OMADA_CONTROLLER_LAB") != "1" { t.Skip("disposable controller lab only") }
+ if os.Getenv("OMADA_URL") != "https://controller:8043" { t.Fatal("refusing a target outside the isolated lab") }
+ config := func(password string, vlan bool) string {
+  setting := ""
+  if vlan { setting = "vlan_id = omada_network.lab.vlan_id" }
+  return fmt.Sprintf(`
+resource "omada_network" "lab" {
+ site_id = %q
+ name = "L7 VLAN"
+ purpose = "vlan"
+ vlan_id = 197
+}
+resource "omada_wireless_network" "lab" {
+ site_id = %q
+ name = "L7 Variants"
+ security = 3
+ passphrase = %q
+ pmf_mode = 2
+ %s
+}
+`, os.Getenv("OMADA_TEST_SITE_ID"), os.Getenv("OMADA_TEST_SITE_ID"), password, setting)
+ }
+ var originalID string
+ check := func(vlan string, enabled bool) resource.TestCheckFunc {
+  return func(state *terraform.State) error {
+   attrs := state.RootModule().Resources["omada_wireless_network.lab"].Primary.Attributes
+   if originalID != "" && attrs["id"] != originalID { return fmt.Errorf("update unexpectedly replaced SSID") }
+   originalID = attrs["id"]
+   if attrs["vlan_id"] != vlan { return fmt.Errorf("unexpected VLAN state") }
+   c, err := client.NewClient(os.Getenv("OMADA_URL"), os.Getenv("OMADA_USERNAME"), os.Getenv("OMADA_PASSWORD"), true)
+   if err != nil { return err }
+   raw, err := c.GetWirelessNetworkRaw(context.Background(), attrs["site_id"], attrs["wlan_group_id"], attrs["id"])
+   if err != nil { return err }
+   psk, ok := raw["pskSetting"].(map[string]any)
+   if !ok || psk["securityKey"] != attrs["passphrase"] { return fmt.Errorf("controller credential readback did not match configured synthetic password") }
+   if raw["vlanEnable"] != enabled { return fmt.Errorf("VLAN summary does not match authoritative setting") }
+   return nil
+  }
+ }
+ resource.Test(t, resource.TestCase{
+  PreCheck: func() { testAccPreCheck(t) }, ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+  Steps: []resource.TestStep{
+   {Config: config("L7-synthetic-password", false), Check: check("", false)},
+   {Config: config("L7-rotated-password", false), Check: resource.ComposeTestCheckFunc(check("", false), resource.TestCheckResourceAttr("omada_wireless_network.lab", "passphrase", "L7-rotated-password"))},
+   {Config: config("L7-rotated-password", true), Check: check("197", true)},
+   {Config: config("L7-rotated-password", true), PlanOnly: true},
+   {Config: config("L7-rotated-password", false), Check: check("", false)},
+   {Config: config("L7-rotated-password", false), PlanOnly: true},
   },
  })
 }

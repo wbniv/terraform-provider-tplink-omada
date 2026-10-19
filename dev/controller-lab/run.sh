@@ -27,7 +27,14 @@ case "${1:-}" in
       echo "Runner $runner already exists; inspect it before retrying." >&2
       exit 2
     fi
+    # A failed build must not leave a previous run's successful test status.
+    rm -f "$runtime/build.log" "$runtime/acceptance.log" "$runtime/client-probes.log" "$runtime/test-status.txt"
     extra_mounts=()
+    rm -f "$runtime/ssid-followup.patch"
+    if [[ -n ${LAB_SSID_PATCH:-} ]]; then
+      [[ ${LAB_SSID_INTEGRATION:-0} == 1 ]] || { echo 'LAB_SSID_PATCH requires LAB_SSID_INTEGRATION=1.' >&2; exit 2; }
+      cp "$LAB_SSID_PATCH" "$runtime/ssid-followup.patch"
+    fi
     if [[ ${LAB_SSID_INTEGRATION:-0} == 1 ]]; then
       : "${LAB_EVIDENCE_DIR:?Set LAB_EVIDENCE_DIR to the docs checkout docs/investigations directory}"
       # Exact D1-D3 stack; G1 supersedes its raw-SSID decoder hunk.
@@ -47,6 +54,9 @@ case "${1:-}" in
         git apply /evidence/pagination-fix/ssid-client-integration.patch
         git apply /evidence/http-response-fix/ssid-diagnostic-assertions.patch
         git apply /evidence/pagination-fix/ssid-pagination-fixtures.patch
+        if [[ -f /run/lab/ssid-followup.patch ]]; then
+          git apply /run/lab/ssid-followup.patch
+        fi
       fi
       cp dev/controller-lab/client_test.go.txt internal/client/controller_lab_test.go
       cp dev/controller-lab/provider_test.go.txt internal/provider/controller_lab_test.go
@@ -88,7 +98,7 @@ case "${1:-}" in
 from pathlib import Path
 import sys
 root = Path(sys.argv[1])
-for name in ('credentials.json', 'runner.env', 'last-response.json', 'd-other.patch'):
+for name in ('credentials.json', 'runner.env', 'last-response.json', 'd-other.patch', 'ssid-followup.patch'):
     (root / name).unlink(missing_ok=True)
 PY
     ;;

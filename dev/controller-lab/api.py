@@ -116,7 +116,7 @@ def initialize(api):
             raise RuntimeError("Refusing initialization of an existing account without lab credentials")
         private_json(path, {"controller_id": api.controller_id, "username": "lab-admin",
                             "password": "Lab-" + secrets.token_urlsafe(24),
-                            "device_username": "lab-device", "device_password": "Device-A7-" + secrets.token_hex(8)})
+                            "device_username": "lab-device", "device_password": "Aa7!" + secrets.token_hex(5)})
     credentials = api.credentials()
     if not info.get("registeredRoot"):
         api.request("/api/v2/anon/register", "POST", {
