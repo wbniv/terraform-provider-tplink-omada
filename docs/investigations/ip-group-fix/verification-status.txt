@@ -1,0 +1,7 @@
+combined_lab_wrapper_exit=1
+combined_acceptance_exit=1
+combined_client_exit=0
+live_terraform_lifecycle=pass
+focused_recovery_exit=0
+production_sources_match_combined_build=true
+cleanup_exit=0

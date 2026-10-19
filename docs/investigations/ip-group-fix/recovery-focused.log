@@ -1,0 +1,10 @@
+go version go1.25.6 linux/amd64
+Terraform v1.15.8
+on linux_amd64
+b414606e1e869529edcba0c33df1b1b16aac607720d5913e7c949ced913ab222  internal/provider/ip_group_recovery_test.go
+6f7a629a6638a72cb13c4a968188d89c2c33d25ba8c5e34e1a6c3e91d7e82c61  internal/client/ip_groups.go
+c71e88f76d208f3f3cae90adbcfd71b6e37db9bb0ce2a8020f8ece66bd1f10c9  internal/resources/ip_group.go
+=== RUN   TestAccIPGroupCreateReadbackFailure
+--- PASS: TestAccIPGroupCreateReadbackFailure (1.76s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	1.776s

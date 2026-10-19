@@ -41,10 +41,22 @@ Locally verified on `fix/controller-session-recovery`, based on L2 (`4c21666`); 
 
 ### L4 — IP-group endpoint mismatch
 
+Locally verified on `fix/ip-group-protocol`, based on L3 (`58610fd`); committed as `a2b1baa`. [L4 evidence](../investigations/ip-group-fix/README.md). Five live Terraform steps, three mock failure-recovery steps, Go/race gates, all 16 supported groups, and disabled ACL references pass. The schema now requires identical nonempty port lists on every entry.
+
 - [x] Observe provider route `/setting/firewall/ipGroups` rejected with `-1600`.
 - [x] Locate `/setting/profiles/groups` and `/setting/profiles/groups/0` in the bundled UI and verify successful real responses.
-- [ ] Inventory group types, identities, payloads, protected defaults, and pagination semantics before choosing a replacement route.
-- [ ] Test complete IP-group CRUD/import and ACL references; retain compatibility declarations per supported controller version.
+- [x] Inventory group types, identities, payloads, protected defaults, and pagination semantics before choosing a replacement route.
+- [x] Test complete IP-group CRUD/import and disabled ACL references on 6.1.0.19; traffic enforcement and other versions remain separate gates. ACL creation response handling is tracked as L8.
+
+### L8 — ACL creation acknowledges success without an identity
+
+Discovered during L4 on 6.1.0.19: disabled gateway ACL creation succeeds and stores valid IP-group references, but returns no `result`. `CreateACLRule` currently decodes that empty result and fails. [L4 evidence](../investigations/ip-group-fix/README.md).
+
+- [x] Reproduce successful raw creation, readback of both group references, and deletion on the disposable controller.
+- [ ] Capture the creation response contract and choose a complete, unique readback strategy for the new rule; reject missing or ambiguous matches.
+- [ ] Cover accepted writes followed by failed readback without inventing an ID or blindly repeating a mutation; make uncertain outcomes explicit and document recovery.
+- [ ] Verify Terraform ACL create, stable plan, update, import, and destroy with synthetic group references; retain rule identity/order and unrelated fields.
+- [ ] Keep actual traffic enforcement and other controller versions as separate compatibility gates.
 
 ### L5 — Empty device inventory becomes Terraform null
 

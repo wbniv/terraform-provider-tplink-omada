@@ -1,0 +1,7 @@
+=== RUN   TestControllerLabIPGroups
+    controller_lab_test.go:335: controller IP/Port group capacity reached after 16 synthetic groups
+    controller_lab_test.go:346: all 16 synthetic type-1 groups returned
+    controller_lab_test.go:360: page 2 with size 1 still returns the complete group collection
+    controller_lab_test.go:390: disabled ACL references survive group rename and port update; traffic enforcement not tested
+--- PASS: TestControllerLabIPGroups (2.00s)
+PASS

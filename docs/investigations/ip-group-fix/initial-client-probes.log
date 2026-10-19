@@ -1,0 +1,4 @@
+=== RUN   TestControllerLabIPGroups
+    controller_lab_test.go:334: API error -33725 (controller rejected the operation)
+--- FAIL: TestControllerLabIPGroups (2.14s)
+FAIL

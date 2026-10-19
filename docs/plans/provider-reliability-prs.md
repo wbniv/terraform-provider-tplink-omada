@@ -22,7 +22,7 @@ This is the working record for fixing the [code-review findings](../investigatio
 - [x] Inspect repository contribution standards: `.github/PULL_REQUEST_TEMPLATE.md` requires conventional commits, formatting/vet/tests, documentation where applicable, and a real-controller test declaration.
 - [x] Check project AI attribution policy: no explicit policy found in tracked contribution files at the reviewed baseline. Will's attribution preference still applies if attribution is included or required later; verify tool/model/reasoning metadata before writing it.
 - [x] Run the first real-controller round on Software Controller 6.1.0.19 with zero adopted devices; see the [lab report](../investigations/software-controller-lab/README.md). Network/profile CRUD, site credential rotation, and a 102-network inventory pass.
-- [ ] Complete the remaining [controller compatibility follow-ups](controller-compatibility.md): IP groups and empty lists. L7 is pushed as `ce80af6`; its secured SSID fields, 24 mock scenarios, and both live scenarios pass; [evidence](../investigations/ssid-controller-fields/README.md). Physical provisioning, radios, and switch ports remain separate gates.
+- [ ] Complete the remaining [controller compatibility follow-ups](controller-compatibility.md): ACL creation acknowledgments (L8) and empty lists (L5). L7 is pushed as `ce80af6`; its secured SSID fields, 24 mock scenarios, and both live scenarios pass; [evidence](../investigations/ssid-controller-fields/README.md). Physical provisioning, radios, and switch ports remain separate gates.
 - [x] Complete the lab/README/plan updates and local commits: Go vendoring `5555332`, lab/Omada LFS manifest `0d26e72`. Go vet/unit/build pass without external network access. Live failures remain visible.
 - [x] Publish the lab/vendoring commits to the recreated standalone repository and verify the Omada LFS object with a fresh download/checksum. All original branches/tags are preserved; Actions are enabled again.
 - [ ] Publish PRs after the local changes and review packages are ready and publication is authorized. No GitHub review/comment/PR has been posted by this work.
@@ -32,6 +32,9 @@ This is the working record for fixing the [code-review findings](../investigatio
 - [x] Locally verify L2 on `fix/controller-certificate-protocol`: uploads, nested activation, stored identity readback, five Terraform steps, Go gates, and TLS fingerprint after restart pass. [L2 evidence](../investigations/certificate-protocol-fix/README.md). Committed as `4c21666`; upstream publication remains pending.
 
 - [x] Locally verify L3 on `fix/controller-session-recovery`: six live recovery cases, client race detector, Go gates, and five Terraform certificate steps pass. [L3 evidence](../investigations/session-recovery-fix/README.md). Committed as `58610fd`; upstream publication remains pending; natural expiry and other controller versions remain verification limits.
+
+- [x] Locally verify L4 on `fix/ip-group-protocol`: IP/Port CRUD/import/destroy, complete 16-group inventory, ACL references, and readback-failure recovery pass; Go/race/build gates pass. [L4 evidence](../investigations/ip-group-fix/README.md). Committed as `a2b1baa`; upstream publication remains pending. Port lists are now required and shared across entries.
+- [ ] Complete L8: accepted ACL creation returns an empty acknowledgment that the current Terraform ACL resource cannot decode. Plan and reproduction are in [controller compatibility follow-ups](controller-compatibility.md).
 
 ## Commits and fork branches — 2026-10-19
 

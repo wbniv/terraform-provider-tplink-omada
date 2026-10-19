@@ -1,0 +1,1202 @@
+diff --git a/dev/controller-lab/README.md b/dev/controller-lab/README.md
+index db59e16..98d9ecc 100644
+--- a/dev/controller-lab/README.md
++++ b/dev/controller-lab/README.md
+@@ -83,3 +83,15 @@ LAB_CLIENT_RUN='^TestControllerLabReauthentication$' dev/controller-lab/run.sh t
+ ```
+ 
+ The raw probe disables redirect following for every opener and records only sanitized response shapes. Live cases cover missing cookies, invalid tokens, logout, multipart replay, and eight concurrent reads. The client now also runs under Go's race detector during the normal lab build gates. The new HTTP 302 recovery rule is limited to controller 6.1.0.19 and the exact same-origin login destination, with one shared reauthentication attempt and at most one replay per request. No redirected API request is followed. Natural timeout and other controller versions need separate verification.
++
++## IP/Port group check (L4)
++
++```sh
++python3 dev/controller-lab/ip-group-probe.py
++LAB_ACCEPTANCE_RUN='^TestControllerLabIPGroup$|^TestAccIPGroupCreateReadbackFailure$' \
++LAB_CLIENT_RUN='^TestControllerLabIPGroups$' dev/controller-lab/run.sh test
++```
++
++The raw probe inventories group types and response formats, then creates and removes synthetic groups and a disabled ACL. The live tests verify the Terraform lifecycle and data source, listing the complete supported group population (up to the controller quota or 101 fixtures), and retained ACL references after a group update. A mock Terraform scenario checks accepted creation followed by readback failure and recovery. All temporary groups and ACLs are cleaned up. These tests do not verify traffic enforcement.
++
++ACL creation's empty acknowledgment is a separate L8 finding: the raw client proves references can be stored, but the existing Terraform ACL create decoder still needs correction.
+diff --git a/dev/controller-lab/client_test.go.txt b/dev/controller-lab/client_test.go.txt
+index d3008a1..1418ea9 100644
+--- a/dev/controller-lab/client_test.go.txt
++++ b/dev/controller-lab/client_test.go.txt
+@@ -280,3 +280,38 @@ func TestControllerLabCertificateWireShape(t *testing.T) {
+ 		})
+ 	}
+ }
++
++func TestControllerLabIPGroups(t *testing.T){
++ c,ctx,site:=labClient(t)
++ before,err:=c.ListIPGroups(ctx,site);if err!=nil{t.Fatal(err)}
++ var ids []string
++ var aclID string
++ t.Cleanup(func(){
++  cleanup,cancel:=context.WithTimeout(context.Background(),2*time.Minute);defer cancel()
++  if aclID!="" {if err:=c.DeleteACLRule(cleanup,site,aclID);err!=nil{t.Error(err)}}
++  for _,id:=range ids{if err:=c.DeleteIPGroup(cleanup,site,id);err!=nil{t.Error(err)}}
++  after,err:=c.ListIPGroups(cleanup,site);if err!=nil || len(after)!=len(before){t.Errorf("group cleanup count mismatch: %v",err)}
++ })
++ for i:=0;i<101;i++{
++  group,err:=c.CreateIPGroup(ctx,site,&IPGroup{Name:fmt.Sprintf("L4 collection %03d",i),Type:1,IPList:[]IPGroupEntry{{IP:"192.0.2.0/24",PortList:[]string{"80"}}}})
++  if err!=nil {if isAPIError(err,-33725) && len(ids)>1 {t.Logf("controller IP/Port group capacity reached after %d synthetic groups",len(ids));break};t.Fatalf("creating group %d: %v",i,err)};ids=append(ids,group.ID)
++ }
++ groups,err:=c.ListIPGroups(ctx,site);if err!=nil || len(groups)!=len(before)+len(ids){t.Fatalf("incomplete group collection: count=%d err=%v",len(groups),err)}
++ t.Logf("all %d synthetic type-1 groups returned",len(ids))
++ response,err:=c.doSiteRequestWithParams(ctx,site,http.MethodGet,ipGroupsRoute+"/1","&currentPage=2&currentPageSize=1",nil);if err!=nil{t.Fatal(err)}
++ var envelope struct{Data []json.RawMessage `json:"data"`};if err:=json.Unmarshal(response.Result,&envelope);err!=nil{t.Fatal(err)}
++ if len(envelope.Data)!=len(groups){t.Fatal("profile-group envelope was unexpectedly paginated")}
++ t.Log("page 2 with size 1 still returns the complete group collection")
++ rule:=&ACLRule{Name:"L4 Group Reference",Type:0,Status:false,Policy:1,Protocols:[]int{6},SourceType:2,SourceIDs:[]string{ids[0]},DestinationType:2,DestinationIDs:[]string{ids[0]},Direction:ACLDirection{LanToWan:true}}
++ // ACL creation returns an empty success envelope on 6.1.0.19. The generic
++ // CreateACLRule decoder is separately tracked as L8; use the raw client here.
++ if _,err:=c.doSiteRequest(ctx,site,http.MethodPost,"/setting/firewall/acls",rule);err!=nil{t.Fatal(err)}
++ rules,err:=c.ListACLRules(ctx,site,0);if err!=nil{t.Fatal(err)}
++ for _,r:=range rules{if r.Name==rule.Name{aclID=r.ID}}
++ if aclID==""{t.Fatal("ACL reference was not stored")}
++ group,err:=c.UpdateIPGroup(ctx,site,ids[0],&IPGroup{Name:"L4 referenced rename",Type:1,IPList:[]IPGroupEntry{{IP:"192.0.2.0/24",PortList:[]string{"443"}}}})
++ if err!=nil || group.ID!=ids[0]{t.Fatalf("referenced group update: %v",err)}
++ stored,err:=c.GetACLRule(ctx,site,aclID,0);if err!=nil{t.Fatal(err)}
++ if len(stored.SourceIDs)!=1 || stored.SourceIDs[0]!=ids[0] || len(stored.DestinationIDs)!=1 || stored.DestinationIDs[0]!=ids[0]{t.Fatal("ACL lost group references")}
++ t.Log("disabled ACL references survive group rename and port update; traffic enforcement not tested")
++}
+diff --git a/dev/controller-lab/provider_test.go.txt b/dev/controller-lab/provider_test.go.txt
+index 4e29455..badacdd 100644
+--- a/dev/controller-lab/provider_test.go.txt
++++ b/dev/controller-lab/provider_test.go.txt
+@@ -290,3 +290,45 @@ func TestControllerLabCertificateResource(t *testing.T) {
+   {ResourceName:"omada_controller_certificate.lab",ImportState:true,ImportStateVerify:true,ImportStateVerifyIgnore:[]string{"certificate_pem","private_key_pem"}},
+  }})
+ }
++
++func TestControllerLabIPGroup(t *testing.T) {
++ if os.Getenv("OMADA_CONTROLLER_LAB")!="1"{t.Skip("disposable lab only")}
++ if os.Getenv("OMADA_URL")!="https://controller:8043"{t.Fatal("refusing non-lab target")}
++ site:=os.Getenv("OMADA_TEST_SITE_ID")
++ config:=func(name,ports string)string{return fmt.Sprintf(`
++resource "omada_ip_group" "lab" {
++ site_id = %q
++ name = %q
++ ip_list = [
++  {ip = "192.0.2.0/24", port_list = %s},
++  {ip = "198.51.100.10/32", port_list = %s}
++ ]
++}
++data "omada_ip_groups" "lab" {
++ site_id = %q
++ depends_on = [omada_ip_group.lab]
++}
++`,site,name,ports,ports,site)}
++ first:=config("L4 Terraform",`["80", "7000-7100"]`)
++ second:=config("L4 Terraform renamed",`["443", "8443"]`)
++ var id string
++ check:=func(s *terraform.State)error{
++  attrs:=s.RootModule().Resources["omada_ip_group.lab"].Primary.Attributes
++  if attrs["id"]=="" || (id!="" && id!=attrs["id"]) {return fmt.Errorf("IP group identity changed")};id=attrs["id"]
++  c,err:=client.NewClient(os.Getenv("OMADA_URL"),os.Getenv("OMADA_USERNAME"),os.Getenv("OMADA_PASSWORD"),true);if err!=nil{return err}
++  g,err:=c.GetIPGroup(context.Background(),site,id);if err!=nil{return err}
++  if g.Name!=attrs["name"] || len(g.IPList)!=2 || g.IPList[0].PortList[0]!=attrs["ip_list.0.port_list.0"] {return fmt.Errorf("controller IP group differs from state")}
++  return resource.TestCheckResourceAttr("data.omada_ip_groups.lab","ip_groups.#","1")(s)
++ }
++ resource.Test(t,resource.TestCase{PreCheck:func(){testAccPreCheck(t)},ProtoV6ProviderFactories:testAccProtoV6ProviderFactories,
++ CheckDestroy:func(s *terraform.State)error{
++  c,err:=client.NewClient(os.Getenv("OMADA_URL"),os.Getenv("OMADA_USERNAME"),os.Getenv("OMADA_PASSWORD"),true);if err!=nil{return err}
++  groups,err:=c.ListIPGroups(context.Background(),site);if err!=nil{return err};for _,g:=range groups{if g.ID==id{return fmt.Errorf("IP group survived destroy")}};return nil
++ },Steps:[]resource.TestStep{
++  {Config:first,Check:check},
++  {Config:first,PlanOnly:true},
++  {Config:second,Check:check},
++  {Config:second,PlanOnly:true},
++  {ResourceName:"omada_ip_group.lab",ImportState:true,ImportStateIdFunc:func(s *terraform.State)(string,error){return site+"/"+id,nil},ImportStateVerify:true,ImportStateVerifyIgnore:[]string{"ip_list.1.ip"}},
++ }})
++}
+diff --git a/docs/data-sources/ip_groups.md b/docs/data-sources/ip_groups.md
+index ebfb5dd..4d917e3 100644
+--- a/docs/data-sources/ip_groups.md
++++ b/docs/data-sources/ip_groups.md
+@@ -3,15 +3,17 @@
+ page_title: "omada_ip_groups Data Source - omada"
+ subcategory: ""
+ description: |-
+-  Lists all IP/Port groups on the Omada Controller for the given site. Requires a gateway device adopted into the site.
++  Lists all IP/Port groups on the Omada Controller for the given site. Lists IPv4 IP/Port groups (type 1); no adopted gateway is needed to read controller configuration.
+ ---
+ 
+ # omada_ip_groups (Data Source)
+ 
+-Lists all IP/Port groups on the Omada Controller for the given site. Requires a gateway device adopted into the site.
++Lists all IP/Port groups on the Omada Controller for the given site. Lists IPv4 IP/Port groups (type 1); no adopted gateway is needed to read controller configuration.
+ 
+ 
+ 
++Reads use the type-1 IPv4 IP/Port collection. Other profile types are excluded. Port-mask groups and groups with ports but no IP entries cannot be represented by the current schema and return a diagnostic. Ports shown on each IP entry are the shared group-wide port list.
++
+ <!-- schema generated by tfplugindocs -->
+ ## Schema
+ 
+diff --git a/docs/resources/ip_group.md b/docs/resources/ip_group.md
+index b739874..f842108 100644
+--- a/docs/resources/ip_group.md
++++ b/docs/resources/ip_group.md
+@@ -3,15 +3,25 @@
+ page_title: "omada_ip_group Resource - omada"
+ subcategory: ""
+ description: |-
+-  Manages an IP/Port group on the Omada Controller. IP groups are used as source or destination in firewall ACL rules for port-based filtering. Requires a gateway device adopted into the site.
++  Manages an IP/Port group on the Omada Controller. IP groups are used as source or destination in firewall ACL rules for port-based filtering. Controller configuration is supported without an adopted gateway; traffic enforcement requires hardware.
+ ---
+ 
+ # omada_ip_group (Resource)
+ 
+-Manages an IP/Port group on the Omada Controller. IP groups are used as source or destination in firewall ACL rules for port-based filtering. Requires a gateway device adopted into the site.
++Manages an IP/Port group on the Omada Controller. IP groups are used as source or destination in firewall ACL rules for port-based filtering. Controller configuration is supported without an adopted gateway; traffic enforcement requires hardware.
+ 
+ 
+ 
++## Controller compatibility
++
++Verified with Software Controller 6.1.0.19. This resource manages IPv4 IP/Port groups (type 1). IPv4 IP-only, IPv6, MAC, domain, port-only (no IP entries), and port-mask groups are outside this resource's scope.
++
++Omada applies one shared port list to the entire group. Each `ip_list` entry must specify the same nonempty `port_list`; use separate groups when IPs need different port sets. Omitting ports or sending different lists is rejected. This corrects the earlier optional/per-entry port description, which the verified controller cannot implement.
++
++Bare IPv4 addresses mean /32. Explicit /32 notation is retained during refresh; import uses bare addresses for /32 entries. Existing group and unchanged-subnet descriptions are preserved during updates. Built-in groups cannot be modified or deleted.
++
++Import with `siteID/groupID`. The ID comes from the controller's `groupId` field. Successful writes are followed by readback; if creation succeeds but readback fails, the returned ID is retained in Terraform state for recovery.
++
+ <!-- schema generated by tfplugindocs -->
+ ## Schema
+ 
+@@ -33,6 +43,4 @@ Required:
+ 
+ - `ip` (String) IP address or CIDR subnet (e.g., '192.168.1.100' or '192.168.1.0/24').
+ 
+-Optional:
+-
+-- `port_list` (List of String) List of port numbers or ranges as strings (e.g., '80', '7000-7100').
++- `port_list` (List of String) Nonempty port numbers or ranges; every IP entry must use the same list because Omada applies ports to the whole group.
+diff --git a/internal/client/client.go b/internal/client/client.go
+index 61de774..53dbb29 100644
+--- a/internal/client/client.go
++++ b/internal/client/client.go
+@@ -687,7 +687,7 @@ func (c *Client) DeleteNetwork(ctx context.Context, siteID, networkID string) er
+ 
+ // ListWlanGroups returns all WLAN groups.
+ func (c *Client) ListWlanGroups(ctx context.Context, siteID string) ([]WlanGroup, error) {
+-	return listCollection[WlanGroup](ctx, c, c.siteURL(siteID, "/setting/wlans"), "id", wlanGroupCollection)
++	return listCollection[WlanGroup](ctx, c, c.siteURL(siteID, "/setting/wlans"), "id", completeDataCollection)
+ }
+ 
+ // GetDefaultWlanGroupID returns the first WLAN group's ID (usually "Default").
+@@ -1653,78 +1653,6 @@ func (c *Client) DeleteACLRule(ctx context.Context, siteID, ruleID string) error
+ 	return err
+ }
+ 
+-// --- IP Groups ---
+-
+-// IPGroupEntry represents a single IP + port combination within an IP group.
+-type IPGroupEntry struct {
+-	IP       string   `json:"ip"`
+-	PortList []string `json:"portList,omitempty"` // port numbers/ranges as strings (e.g., "80", "7000-7100")
+-}
+-
+-// IPGroup represents an IP/Port group used in ACL rules.
+-type IPGroup struct {
+-	ID     string         `json:"id,omitempty"`
+-	Name   string         `json:"name"`
+-	Type   int            `json:"type"` // 1=IP/Port group
+-	IPList []IPGroupEntry `json:"ipList"`
+-}
+-
+-// ListIPGroups returns all IP groups for a site.
+-// Note: requires a gateway device adopted into the site.
+-func (c *Client) ListIPGroups(ctx context.Context, siteID string) ([]IPGroup, error) {
+-	return listAll[IPGroup](ctx, c, c.siteURL(siteID, "/setting/firewall/ipGroups"), "id")
+-}
+-
+-// GetIPGroup returns a single IP group by ID.
+-func (c *Client) GetIPGroup(ctx context.Context, siteID, groupID string) (*IPGroup, error) {
+-	groups, err := c.ListIPGroups(ctx, siteID)
+-	if err != nil {
+-		return nil, err
+-	}
+-	for _, g := range groups {
+-		if g.ID == groupID {
+-			return &g, nil
+-		}
+-	}
+-	return nil, fmt.Errorf("IP group %q not found", groupID)
+-}
+-
+-// CreateIPGroup creates a new IP group.
+-func (c *Client) CreateIPGroup(ctx context.Context, siteID string, group *IPGroup) (*IPGroup, error) {
+-	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPost, "/setting/firewall/ipGroups", group)
+-	if err != nil {
+-		return nil, err
+-	}
+-
+-	var created IPGroup
+-	if err := json.Unmarshal(resp.Result, &created); err != nil {
+-		return nil, fmt.Errorf("decoding created IP group: %w", err)
+-	}
+-	return &created, nil
+-}
+-
+-// UpdateIPGroup updates an existing IP group.
+-func (c *Client) UpdateIPGroup(ctx context.Context, siteID, groupID string, group *IPGroup) (*IPGroup, error) {
+-	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPatch, fmt.Sprintf("/setting/firewall/ipGroups/%s", groupID), group)
+-	if err != nil {
+-		return nil, err
+-	}
+-	if isEmptyResult(resp.Result) {
+-		return c.GetIPGroup(ctx, siteID, groupID)
+-	}
+-	var updated IPGroup
+-	if err := json.Unmarshal(resp.Result, &updated); err != nil {
+-		return nil, fmt.Errorf("decoding updated IP group: %w", err)
+-	}
+-	return &updated, nil
+-}
+-
+-// DeleteIPGroup deletes an IP group.
+-func (c *Client) DeleteIPGroup(ctx context.Context, siteID, groupID string) error {
+-	_, err := c.doSiteRequest(ctx, siteID, http.MethodDelete, fmt.Sprintf("/setting/firewall/ipGroups/%s", groupID), nil)
+-	return err
+-}
+-
+ // --- mDNS Reflector ---
+ 
+ // MDNSNetworkSetting holds the network references for an mDNS rule.
+diff --git a/internal/client/client_test.go b/internal/client/client_test.go
+index 130a3f0..2fdb1bc 100644
+--- a/internal/client/client_test.go
++++ b/internal/client/client_test.go
+@@ -819,242 +819,6 @@ func TestDeleteACLRule(t *testing.T) {
+ // IP Groups Tests
+ // =============================================================================
+ 
+-func TestListIPGroups(t *testing.T) {
+-	groups := []IPGroup{
+-		{ID: "ipg-1", Name: "DNS Servers", Type: 1, IPList: []IPGroupEntry{
+-			{IP: "8.8.8.8", PortList: []string{"53"}},
+-			{IP: "1.1.1.1", PortList: []string{"53"}},
+-		}},
+-		{ID: "ipg-2", Name: "Web Servers", Type: 1, IPList: []IPGroupEntry{
+-			{IP: "10.0.0.0/24", PortList: []string{"80", "443"}},
+-		}},
+-	}
+-
+-	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+-		"/sites/site-1/setting/firewall/ipGroups": func(w http.ResponseWriter, r *http.Request) {
+-			if r.Method != http.MethodGet {
+-				t.Errorf("expected GET, got %s", r.Method)
+-			}
+-			json.NewEncoder(w).Encode(APIResponse{
+-				ErrorCode: 0,
+-				Result:    paginatedResponse(t, groups),
+-			})
+-		},
+-	})
+-	defer server.Close()
+-	c := newTestClient(t, server)
+-
+-	got, err := c.ListIPGroups(context.Background(), "site-1")
+-	if err != nil {
+-		t.Fatalf("ListIPGroups: %v", err)
+-	}
+-	if len(got) != 2 {
+-		t.Fatalf("got %d groups, want 2", len(got))
+-	}
+-	if got[0].Name != "DNS Servers" {
+-		t.Errorf("groups[0].Name = %q, want %q", got[0].Name, "DNS Servers")
+-	}
+-	if len(got[0].IPList) != 2 {
+-		t.Errorf("groups[0].IPList length = %d, want 2", len(got[0].IPList))
+-	}
+-	if got[0].IPList[0].IP != "8.8.8.8" {
+-		t.Errorf("groups[0].IPList[0].IP = %q, want %q", got[0].IPList[0].IP, "8.8.8.8")
+-	}
+-	if got[0].IPList[0].PortList[0] != "53" {
+-		t.Errorf("groups[0].IPList[0].PortList[0] = %q, want %q", got[0].IPList[0].PortList[0], "53")
+-	}
+-}
+-
+-func TestListIPGroups_Empty(t *testing.T) {
+-	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+-		"/sites/site-1/setting/firewall/ipGroups": func(w http.ResponseWriter, r *http.Request) {
+-			json.NewEncoder(w).Encode(APIResponse{
+-				ErrorCode: 0,
+-				Result:    paginatedResponse(t, []IPGroup{}),
+-			})
+-		},
+-	})
+-	defer server.Close()
+-	c := newTestClient(t, server)
+-
+-	got, err := c.ListIPGroups(context.Background(), "site-1")
+-	if err != nil {
+-		t.Fatalf("ListIPGroups (empty): %v", err)
+-	}
+-	if len(got) != 0 {
+-		t.Errorf("got %d groups, want 0", len(got))
+-	}
+-}
+-
+-func TestGetIPGroup_Found(t *testing.T) {
+-	groups := []IPGroup{
+-		{ID: "ipg-1", Name: "DNS Servers", Type: 1},
+-		{ID: "ipg-2", Name: "Web Servers", Type: 1},
+-	}
+-
+-	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+-		"/sites/site-1/setting/firewall/ipGroups": func(w http.ResponseWriter, r *http.Request) {
+-			json.NewEncoder(w).Encode(APIResponse{
+-				ErrorCode: 0,
+-				Result:    paginatedResponse(t, groups),
+-			})
+-		},
+-	})
+-	defer server.Close()
+-	c := newTestClient(t, server)
+-
+-	got, err := c.GetIPGroup(context.Background(), "site-1", "ipg-2")
+-	if err != nil {
+-		t.Fatalf("GetIPGroup: %v", err)
+-	}
+-	if got.Name != "Web Servers" {
+-		t.Errorf("Name = %q, want %q", got.Name, "Web Servers")
+-	}
+-}
+-
+-func TestGetIPGroup_NotFound(t *testing.T) {
+-	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+-		"/sites/site-1/setting/firewall/ipGroups": func(w http.ResponseWriter, r *http.Request) {
+-			json.NewEncoder(w).Encode(APIResponse{
+-				ErrorCode: 0,
+-				Result:    paginatedResponse(t, []IPGroup{}),
+-			})
+-		},
+-	})
+-	defer server.Close()
+-	c := newTestClient(t, server)
+-
+-	_, err := c.GetIPGroup(context.Background(), "site-1", "nonexistent")
+-	if err == nil {
+-		t.Fatal("expected error for non-existent IP group, got nil")
+-	}
+-	if !strings.Contains(err.Error(), "not found") {
+-		t.Errorf("error = %q, expected to contain 'not found'", err.Error())
+-	}
+-}
+-
+-func TestCreateIPGroup(t *testing.T) {
+-	created := IPGroup{
+-		ID: "ipg-new", Name: "New Group", Type: 1,
+-		IPList: []IPGroupEntry{{IP: "192.168.1.0/24", PortList: []string{"80"}}},
+-	}
+-
+-	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+-		"/sites/site-1/setting/firewall/ipGroups": func(w http.ResponseWriter, r *http.Request) {
+-			if r.Method != http.MethodPost {
+-				t.Errorf("expected POST, got %s", r.Method)
+-			}
+-			json.NewEncoder(w).Encode(APIResponse{
+-				ErrorCode: 0,
+-				Result:    mustMarshal(t, created),
+-			})
+-		},
+-	})
+-	defer server.Close()
+-	c := newTestClient(t, server)
+-
+-	input := &IPGroup{
+-		Name: "New Group", Type: 1,
+-		IPList: []IPGroupEntry{{IP: "192.168.1.0/24", PortList: []string{"80"}}},
+-	}
+-	got, err := c.CreateIPGroup(context.Background(), "site-1", input)
+-	if err != nil {
+-		t.Fatalf("CreateIPGroup: %v", err)
+-	}
+-	if got.ID != "ipg-new" {
+-		t.Errorf("ID = %q, want %q", got.ID, "ipg-new")
+-	}
+-	if got.IPList[0].IP != "192.168.1.0/24" {
+-		t.Errorf("IPList[0].IP = %q, want %q", got.IPList[0].IP, "192.168.1.0/24")
+-	}
+-}
+-
+-func TestUpdateIPGroup(t *testing.T) {
+-	updated := IPGroup{
+-		ID: "ipg-1", Name: "Updated Group", Type: 1,
+-		IPList: []IPGroupEntry{{IP: "10.0.0.0/8"}},
+-	}
+-
+-	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+-		"/sites/site-1/setting/firewall/ipGroups/ipg-1": func(w http.ResponseWriter, r *http.Request) {
+-			if r.Method != http.MethodPatch {
+-				t.Errorf("expected PATCH, got %s", r.Method)
+-			}
+-			json.NewEncoder(w).Encode(APIResponse{
+-				ErrorCode: 0,
+-				Result:    mustMarshal(t, updated),
+-			})
+-		},
+-	})
+-	defer server.Close()
+-	c := newTestClient(t, server)
+-
+-	input := &IPGroup{Name: "Updated Group", Type: 1, IPList: []IPGroupEntry{{IP: "10.0.0.0/8"}}}
+-	got, err := c.UpdateIPGroup(context.Background(), "site-1", "ipg-1", input)
+-	if err != nil {
+-		t.Fatalf("UpdateIPGroup: %v", err)
+-	}
+-	if got.Name != "Updated Group" {
+-		t.Errorf("Name = %q, want %q", got.Name, "Updated Group")
+-	}
+-}
+-
+-func TestUpdateIPGroup_EmptyResult(t *testing.T) {
+-	groups := []IPGroup{
+-		{ID: "ipg-1", Name: "Refreshed Group", Type: 1, IPList: []IPGroupEntry{{IP: "10.0.0.0/8"}}},
+-	}
+-
+-	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+-		"/sites/site-1/setting/firewall/ipGroups/ipg-1": func(w http.ResponseWriter, r *http.Request) {
+-			if r.Method == http.MethodPatch {
+-				json.NewEncoder(w).Encode(APIResponse{
+-					ErrorCode: 0,
+-					Result:    json.RawMessage(`{}`),
+-				})
+-				return
+-			}
+-		},
+-		"/sites/site-1/setting/firewall/ipGroups": func(w http.ResponseWriter, r *http.Request) {
+-			json.NewEncoder(w).Encode(APIResponse{
+-				ErrorCode: 0,
+-				Result:    paginatedResponse(t, groups),
+-			})
+-		},
+-	})
+-	defer server.Close()
+-	c := newTestClient(t, server)
+-
+-	input := &IPGroup{Name: "Refreshed Group", Type: 1}
+-	got, err := c.UpdateIPGroup(context.Background(), "site-1", "ipg-1", input)
+-	if err != nil {
+-		t.Fatalf("UpdateIPGroup (empty result): %v", err)
+-	}
+-	if got.Name != "Refreshed Group" {
+-		t.Errorf("Name = %q, want %q", got.Name, "Refreshed Group")
+-	}
+-}
+-
+-func TestDeleteIPGroup(t *testing.T) {
+-	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+-		"/sites/site-1/setting/firewall/ipGroups/ipg-1": func(w http.ResponseWriter, r *http.Request) {
+-			if r.Method != http.MethodDelete {
+-				t.Errorf("expected DELETE, got %s", r.Method)
+-			}
+-			json.NewEncoder(w).Encode(APIResponse{
+-				ErrorCode: 0,
+-				Result:    json.RawMessage(`{}`),
+-			})
+-		},
+-	})
+-	defer server.Close()
+-	c := newTestClient(t, server)
+-
+-	err := c.DeleteIPGroup(context.Background(), "site-1", "ipg-1")
+-	if err != nil {
+-		t.Fatalf("DeleteIPGroup: %v", err)
+-	}
+-}
+-
+ // =============================================================================
+ // mDNS Reflector Tests
+ // =============================================================================
+diff --git a/internal/client/pagination.go b/internal/client/pagination.go
+index 246c5a3..53f0b5c 100644
+--- a/internal/client/pagination.go
++++ b/internal/client/pagination.go
+@@ -13,8 +13,8 @@ type collectionPolicy int
+ 
+ const (
+ 	pagedCollection collectionPolicy = iota
+-	// WLAN groups on 6.1 return a complete data envelope without page metadata.
+-	wlanGroupCollection
++	// WLAN and profile-group endpoints on 6.1 return complete data envelopes.
++	completeDataCollection
+ )
+ 
+ const maxCollectionPages = 10000
+@@ -55,7 +55,7 @@ func listCollection[T any](ctx context.Context, c *Client, requestURL, identityK
+ 		if err != nil {
+ 			return nil, err
+ 		}
+-		if policy == wlanGroupCollection && !direct {
++		if policy == completeDataCollection && !direct {
+ 			fields, err := collectionObject(resp.Result)
+ 			if err != nil {
+ 				return nil, err
+diff --git a/internal/client/pagination_test.go b/internal/client/pagination_test.go
+index bc4feb6..9188d6b 100644
+--- a/internal/client/pagination_test.go
++++ b/internal/client/pagination_test.go
+@@ -39,7 +39,7 @@ func TestPaginationCollections(t *testing.T) {
+ 			v, e := c.ListACLRules(ctx, "site", 2)
+ 			return len(v), e
+ 		}},
+-		{"IP groups", "/sites/site/setting/firewall/ipGroups", "id", func(ctx context.Context, c *Client) (int, error) {
++		{"IP groups", "/sites/site/setting/profiles/groups/1", "groupId", func(ctx context.Context, c *Client) (int, error) {
+ 			v, e := c.ListIPGroups(ctx, "site")
+ 			return len(v), e
+ 		}},
+@@ -76,12 +76,18 @@ func TestPaginationCollections(t *testing.T) {
+ 					if mode == "capped pages" || mode == "no metadata" {
+ 						size = 73
+ 					}
+-					if mode == "direct array" || (endpoint.name == "groups" && mode == "no metadata") {
++					if mode == "direct array" || ((endpoint.name == "groups" || endpoint.name == "IP groups") && mode == "no metadata") {
+ 						size = total
+ 					}
+ 					rows := []map[string]any{}
+ 					for i := (page - 1) * size; i < min(page*size, total); i++ {
+-						rows = append(rows, map[string]any{endpoint.key: fmt.Sprintf("row-%03d", i)})
++						row := map[string]any{endpoint.key: fmt.Sprintf("row-%03d", i)}
++						if endpoint.name == "IP groups" {
++							row["type"] = 1
++							row["portList"] = []string{"80"}
++							row["ipList"] = []any{map[string]any{"ip": "192.0.2.1", "mask": 32}}
++						}
++						rows = append(rows, row)
+ 					}
+ 					var result any = map[string]any{"totalRows": total, "currentPage": page, "currentSize": size, "data": rows, "extraCapability": true}
+ 					if mode == "direct array" {
+@@ -107,7 +113,7 @@ func TestPaginationCollections(t *testing.T) {
+ 				if mode == "empty" {
+ 					want, requests = 0, 1
+ 				}
+-				if mode == "direct array" || (endpoint.name == "groups" && mode == "no metadata") {
++				if mode == "direct array" || ((endpoint.name == "groups" || endpoint.name == "IP groups") && mode == "no metadata") {
+ 					requests = 1
+ 				}
+ 				if err != nil || n != want || calls != requests {
+diff --git a/internal/resources/data_sources.go b/internal/resources/data_sources.go
+index 38adc5b..a213202 100644
+--- a/internal/resources/data_sources.go
++++ b/internal/resources/data_sources.go
+@@ -937,8 +937,7 @@ func (d *IPGroupsDataSource) Metadata(_ context.Context, req datasource.Metadata
+ 
+ func (d *IPGroupsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+ 	resp.Schema = schema.Schema{
+-		Description: "Lists all IP/Port groups on the Omada Controller for the given site. " +
+-			"Requires a gateway device adopted into the site.",
++		Description: "Lists IPv4 IP/Port groups (type 1) for the site. Controller configuration does not require an adopted gateway.",
+ 		Attributes: map[string]schema.Attribute{
+ 			"site_id": siteIDDataSourceSchema(),
+ 			"ip_groups": schema.ListNestedAttribute{
+diff --git a/internal/resources/ip_group.go b/internal/resources/ip_group.go
+index 09f29b3..210ddcc 100644
+--- a/internal/resources/ip_group.go
++++ b/internal/resources/ip_group.go
+@@ -48,7 +48,7 @@ func (r *IPGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, re
+ 	resp.Schema = schema.Schema{
+ 		Description: "Manages an IP/Port group on the Omada Controller. " +
+ 			"IP groups are used as source or destination in firewall ACL rules for port-based filtering. " +
+-			"Requires a gateway device adopted into the site.",
++			"Controller configuration is supported without an adopted gateway; traffic enforcement requires hardware.",
+ 		Attributes: map[string]schema.Attribute{
+ 			"id": schema.StringAttribute{
+ 				Description: "The unique identifier of the IP group.",
+@@ -76,8 +76,8 @@ func (r *IPGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, re
+ 							Required:    true,
+ 						},
+ 						"port_list": schema.ListAttribute{
+-							Description: "List of port numbers or ranges as strings (e.g., '80', '7000-7100').",
+-							Optional:    true,
++							Description: "Nonempty port numbers or ranges; every IP entry must use the same list because Omada applies ports to the whole group.",
++							Required:    true,
+ 							ElementType: types.StringType,
+ 						},
+ 					},
+@@ -124,6 +124,11 @@ func (r *IPGroupResource) Create(ctx context.Context, req resource.CreateRequest
+ 
+ 	created, err := r.client.CreateIPGroup(ctx, siteID, group)
+ 	if err != nil {
++		if created != nil && created.ID != "" {
++			plan.ID = types.StringValue(created.ID)
++			plan.Type = types.Int64Value(1)
++			resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
++		}
+ 		resp.Diagnostics.AddError("Error creating IP group", err.Error())
+ 		return
+ 	}
+@@ -252,11 +257,15 @@ func (r *IPGroupResource) setStateFromAPI(ctx context.Context, model *IPGroupRes
+ 	model.Name = types.StringValue(group.Name)
+ 	model.Type = types.Int64Value(int64(group.Type))
+ 
++	previous := model.IPList
+ 	model.IPList = make([]IPGroupEntryModel, len(group.IPList))
+ 	for i, entry := range group.IPList {
+ 		model.IPList[i] = IPGroupEntryModel{
+ 			IP: types.StringValue(entry.IP),
+ 		}
++		if i < len(previous) && previous[i].IP.ValueString() == entry.IP+"/32" {
++			model.IPList[i].IP = previous[i].IP
++		}
+ 		if len(entry.PortList) > 0 {
+ 			portList, _ := types.ListValueFrom(ctx, types.StringType, entry.PortList)
+ 			model.IPList[i].PortList = portList
+diff --git a/dev/controller-lab/ip-group-probe.py b/dev/controller-lab/ip-group-probe.py
+new file mode 100644
+index 0000000..10da860
+--- /dev/null
++++ b/dev/controller-lab/ip-group-probe.py
+@@ -0,0 +1,38 @@
++#!/usr/bin/env python3
++"""Inspect profile-group wire formats on the disposable controller only."""
++import json
++from api import LabAPI
++api=LabAPI();api.discover();api.login()
++base='/api/v2/sites/'+api.credentials()['site_id']+'/setting/profiles/groups'
++for suffix in ('','/0','/1','/2'):
++ for page in (1,2):
++  result=api.request(base+suffix+f'?currentPage={page}&currentPageSize=1')['result']
++  print(json.dumps({'route':suffix or 'all','page':page,'result':result}))
++for g in api.request(base+'/1')['result']['data']:
++ if g['name'] in ('L4 Probe ports','L4 Probe all','L4 Probe ports renamed','L4 Probe all renamed'):
++  api.request(base+'/1/'+g['groupId'],'DELETE')
++created=[]
++try:
++ for ports in (['80','7000-7100'],[]):
++  payload={'name':'L4 Probe '+('ports' if ports else 'all'),'type':1,'ipList':[{'ip':'192.0.2.0','mask':24},{'ip':'198.51.100.10','mask':32}],'portType':0,'portList':ports}
++  result=api.request(base,'POST',payload,allow_error=True)
++  print(json.dumps({'create':payload,'response':result}))
++  if result.get('errorCode')==0:
++   gid=result['result'];created.append(gid)
++   changed=dict(payload,name=payload['name']+' renamed')
++   print(json.dumps({'update':api.request(base+'/1/'+gid,'PATCH',changed,allow_error=True)}))
++ for page in (1,2):
++  print(json.dumps({'populated_page':page,'result':api.request(base+f'/1?currentPage={page}&currentPageSize=1')['result']}))
++ if created:
++  aclbase='/api/v2/sites/'+api.credentials()['site_id']+'/setting/firewall/acls'
++  rule={'name':'L4 Reference','type':0,'status':False,'policy':1,'protocols':[6],'sourceType':2,'sourceIds':[created[0]],'destinationType':2,'destinationIds':[created[0]],'direction':{'lanToWan':True,'lanToLan':False}}
++  result=api.request(aclbase,'POST',rule,allow_error=True)
++  print(json.dumps({'acl_reference_create':result}))
++  if result.get('errorCode')==0:
++   rows=api.request(aclbase+'?type=0&currentPage=1&currentPageSize=100')['result']['data']
++   for rule in rows:
++    if rule['name']=='L4 Reference':
++     print(json.dumps({'acl_reference_read':rule}))
++     print(json.dumps({'acl_reference_delete':api.request(aclbase+'/'+rule['id'],'DELETE',allow_error=True)}))
++finally:
++ for gid in created:print(json.dumps({'delete':api.request(base+'/1/'+gid,'DELETE',allow_error=True)}))
+diff --git a/internal/client/ip_groups.go b/internal/client/ip_groups.go
+new file mode 100644
+index 0000000..05e9048
+--- /dev/null
++++ b/internal/client/ip_groups.go
+@@ -0,0 +1,215 @@
++package client
++
++import (
++	"context"
++	"encoding/json"
++	"fmt"
++	"net/http"
++	"net/netip"
++	"net/url"
++	"slices"
++	"strconv"
++	"strings"
++)
++
++// IPGroupEntry retains the Terraform representation. The controller stores
++// subnet masks separately and one common port list for the whole group.
++type IPGroupEntry struct {
++	IP          string   `json:"ip"`
++	PortList    []string `json:"portList,omitempty"`
++	Description string   `json:"-"`
++}
++type IPGroup struct {
++	ID          string         `json:"id,omitempty"`
++	Name        string         `json:"name"`
++	Type        int            `json:"type"`
++	IPList      []IPGroupEntry `json:"ipList"`
++	Description string         `json:"-"`
++	BuiltIn     bool           `json:"-"`
++}
++type ipSubnetWire struct {
++	IP          string `json:"ip"`
++	Mask        *int   `json:"mask"`
++	Description string `json:"description,omitempty"`
++}
++type ipGroupWire struct {
++	ID           string            `json:"groupId,omitempty"`
++	Name         string            `json:"name"`
++	Type         int               `json:"type"`
++	IPList       []ipSubnetWire    `json:"ipList"`
++	PortType     int               `json:"portType"`
++	PortList     []string          `json:"portList"`
++	PortMaskList []json.RawMessage `json:"portMaskList,omitempty"`
++	Description  string            `json:"description,omitempty"`
++	BuiltIn      bool              `json:"buildIn,omitempty"`
++}
++
++const ipGroupsRoute = "/setting/profiles/groups"
++
++func ipPrefix(value string) (netip.Prefix, error) {
++	if strings.Contains(value, "/") {
++		p, err := netip.ParsePrefix(value)
++		if err != nil || !p.Addr().Is4() {
++			return netip.Prefix{}, fmt.Errorf("IP group entries must be IPv4 addresses or CIDR subnets")
++		}
++		return p, nil
++	}
++	ip, err := netip.ParseAddr(value)
++	if err != nil || !ip.Is4() {
++		return netip.Prefix{}, fmt.Errorf("IP group entries must be IPv4 addresses or CIDR subnets")
++	}
++	return netip.PrefixFrom(ip, 32), nil
++}
++func groupToWire(group *IPGroup) (*ipGroupWire, error) {
++	if group == nil || group.Type != 1 {
++		return nil, fmt.Errorf("only IPv4 IP/Port groups (type 1) are supported")
++	}
++	if strings.TrimSpace(group.Name) == "" || len(group.IPList) == 0 {
++		return nil, fmt.Errorf("IP/Port group requires a name and at least one IP entry")
++	}
++	ports := group.IPList[0].PortList
++	if len(ports) == 0 {
++		return nil, fmt.Errorf("IP/Port groups require a nonempty port_list on every IP entry")
++	}
++	for _, port := range ports {
++		parts := strings.Split(port, "-")
++		if len(parts) > 2 {
++			return nil, fmt.Errorf("invalid IP group port range")
++		}
++		last := -1
++		for _, part := range parts {
++			n, err := strconv.Atoi(part)
++			if err != nil || n < 0 || n > 65535 || n < last {
++				return nil, fmt.Errorf("IP group ports must be numbers or ascending ranges from 0 to 65535")
++			}
++			last = n
++		}
++	}
++	result := &ipGroupWire{Name: group.Name, Type: 1, PortList: slices.Clone(ports), IPList: make([]ipSubnetWire, 0, len(group.IPList)), Description: group.Description}
++	for _, entry := range group.IPList {
++		if !slices.Equal(ports, entry.PortList) {
++			return nil, fmt.Errorf("Omada applies ports to the whole group: every IP entry must have the same port_list")
++		}
++		prefix, err := ipPrefix(entry.IP)
++		if err != nil {
++			return nil, err
++		}
++		bits := prefix.Bits()
++		result.IPList = append(result.IPList, ipSubnetWire{IP: prefix.Addr().String(), Mask: &bits, Description: entry.Description})
++	}
++	return result, nil
++}
++func groupFromWire(w ipGroupWire) (*IPGroup, error) {
++	if w.ID == "" || w.Type != 1 || w.PortType != 0 || len(w.PortMaskList) > 0 || len(w.IPList) == 0 || len(w.PortList) == 0 {
++		return nil, &ProtocolError{reason: "unsupported IP/Port group identity, type, empty entries/ports or port-mask mode"}
++	}
++	group := &IPGroup{ID: w.ID, Name: w.Name, Type: w.Type, IPList: make([]IPGroupEntry, 0, len(w.IPList)), Description: w.Description, BuiltIn: w.BuiltIn}
++	for _, entry := range w.IPList {
++		ip, err := netip.ParseAddr(entry.IP)
++		if err != nil || !ip.Is4() || entry.Mask == nil || *entry.Mask < 0 || *entry.Mask > 32 {
++			return nil, &ProtocolError{reason: "invalid IPv4 group subnet"}
++		}
++		value := ip.String()
++		if *entry.Mask != 32 {
++			value = netip.PrefixFrom(ip, *entry.Mask).String()
++		}
++		group.IPList = append(group.IPList, IPGroupEntry{IP: value, PortList: slices.Clone(w.PortList), Description: entry.Description})
++	}
++	return group, nil
++}
++
++// ListIPGroups lists type-1 IPv4 IP/Port groups; other profile types are separate APIs.
++func (c *Client) ListIPGroups(ctx context.Context, siteID string) ([]IPGroup, error) {
++	rows, err := listCollection[ipGroupWire](ctx, c, c.siteURL(siteID, ipGroupsRoute+"/1"), "groupId", completeDataCollection)
++	if err != nil {
++		return nil, err
++	}
++	groups := make([]IPGroup, 0, len(rows))
++	for _, row := range rows {
++		group, err := groupFromWire(row)
++		if err != nil {
++			return nil, err
++		}
++		groups = append(groups, *group)
++	}
++	return groups, nil
++}
++func (c *Client) GetIPGroup(ctx context.Context, siteID, groupID string) (*IPGroup, error) {
++	groups, err := c.ListIPGroups(ctx, siteID)
++	if err != nil {
++		return nil, err
++	}
++	for _, group := range groups {
++		if group.ID == groupID {
++			return &group, nil
++		}
++	}
++	return nil, fmt.Errorf("IP group %q not found", groupID)
++}
++func (c *Client) CreateIPGroup(ctx context.Context, siteID string, group *IPGroup) (*IPGroup, error) {
++	if c.readOnly {
++		return nil, ErrReadOnly
++	}
++	payload, err := groupToWire(group)
++	if err != nil {
++		return nil, err
++	}
++	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPost, ipGroupsRoute, payload)
++	if err != nil {
++		return nil, err
++	}
++	var id string
++	if json.Unmarshal(resp.Result, &id) != nil || strings.TrimSpace(id) == "" {
++		return nil, &ProtocolError{reason: "created IP group response requires a nonempty string identity"}
++	}
++	created, err := c.GetIPGroup(ctx, siteID, id)
++	if err != nil {
++		return &IPGroup{ID: id}, fmt.Errorf("IP group was created but readback failed: %w", err)
++	}
++	return created, nil
++}
++func (c *Client) UpdateIPGroup(ctx context.Context, siteID, groupID string, group *IPGroup) (*IPGroup, error) {
++	if c.readOnly {
++		return nil, ErrReadOnly
++	}
++	payload, err := groupToWire(group)
++	if err != nil {
++		return nil, err
++	}
++	existing, err := c.GetIPGroup(ctx, siteID, groupID)
++	if err != nil {
++		return nil, err
++	}
++	if existing.BuiltIn {
++		return nil, fmt.Errorf("built-in IP groups cannot be modified")
++	}
++	payload.Description = existing.Description
++	for i := range payload.IPList {
++		for _, entry := range existing.IPList {
++			old, _ := ipPrefix(entry.IP)
++			if old.Addr().String() == payload.IPList[i].IP && old.Bits() == *payload.IPList[i].Mask {
++				payload.IPList[i].Description = entry.Description
++				break
++			}
++		}
++	}
++	_, err = c.doSiteRequest(ctx, siteID, http.MethodPatch, ipGroupsRoute+"/1/"+url.PathEscape(groupID), payload)
++	if err != nil {
++		return nil, err
++	}
++	return c.GetIPGroup(ctx, siteID, groupID)
++}
++func (c *Client) DeleteIPGroup(ctx context.Context, siteID, groupID string) error {
++	if c.readOnly {
++		return ErrReadOnly
++	}
++	existing, err := c.GetIPGroup(ctx, siteID, groupID)
++	if err != nil {
++		return err
++	}
++	if existing.BuiltIn {
++		return fmt.Errorf("built-in IP groups cannot be deleted")
++	}
++	_, err = c.doSiteRequest(ctx, siteID, http.MethodDelete, ipGroupsRoute+"/1/"+url.PathEscape(groupID), nil)
++	return err
++}
+diff --git a/internal/client/ip_groups_test.go b/internal/client/ip_groups_test.go
+new file mode 100644
+index 0000000..9697946
+--- /dev/null
++++ b/internal/client/ip_groups_test.go
+@@ -0,0 +1,178 @@
++package client
++
++import (
++	"context"
++	"encoding/json"
++	"fmt"
++	"net/http"
++	"strings"
++	"testing"
++)
++
++const ipGroupFixture = `{"groupId":"group-1","name":"Fixture","type":1,"resource":0,"description":"keep group note","ipList":[{"ip":"192.0.2.0","mask":24,"description":"keep subnet note"},{"ip":"198.51.100.10","mask":32}],"portType":0,"portList":["80","7000-7100"],"portMaskList":[],"count":4}`
++
++func fixtureGroup() *IPGroup {
++	return &IPGroup{Name: "Fixture", Type: 1, IPList: []IPGroupEntry{{IP: "192.0.2.0/24", PortList: []string{"80", "7000-7100"}}, {IP: "198.51.100.10", PortList: []string{"80", "7000-7100"}}}}
++}
++func TestIPGroupLifecycle(t *testing.T) {
++	deleted := false
++	patches := 0
++	server := mockOmadaServer(t, map[string]http.HandlerFunc{
++		"/sites/site/setting/profiles/groups/1": func(w http.ResponseWriter, r *http.Request) {
++			if r.Method != "GET" {
++				t.Errorf("unexpected method %s", r.Method)
++			}
++			if deleted {
++				fmt.Fprint(w, `{"errorCode":0,"result":{"data":[]}}`)
++			} else {
++				fmt.Fprintf(w, `{"errorCode":0,"result":{"data":[%s]}}`, ipGroupFixture)
++			}
++		},
++		"/sites/site/setting/profiles/groups": func(w http.ResponseWriter, r *http.Request) {
++			if r.Method != "POST" {
++				t.Errorf("unexpected method %s", r.Method)
++			}
++			checkGroupPayload(t, r, false)
++			fmt.Fprint(w, `{"errorCode":0,"result":"group-1"}`)
++		},
++		"/sites/site/setting/profiles/groups/1/group-1": func(w http.ResponseWriter, r *http.Request) {
++			switch r.Method {
++			case "PATCH":
++				patches++
++				checkGroupPayload(t, r, true)
++			case "DELETE":
++				deleted = true
++			default:
++				t.Errorf("unexpected method %s", r.Method)
++			}
++			fmt.Fprint(w, `{"errorCode":0}`)
++		},
++	})
++	defer server.Close()
++	c := newTestClient(t, server)
++	ctx := context.Background()
++	group, err := c.CreateIPGroup(ctx, "site", fixtureGroup())
++	if err != nil {
++		t.Fatal(err)
++	}
++	if group.ID != "group-1" || group.IPList[0].IP != "192.0.2.0/24" || group.IPList[1].IP != "198.51.100.10" || len(group.IPList[1].PortList) != 2 {
++		t.Fatalf("incorrect group mapping: %+v", group)
++	}
++	if _, err = c.UpdateIPGroup(ctx, "site", group.ID, fixtureGroup()); err != nil {
++		t.Fatal(err)
++	}
++	if patches != 1 {
++		t.Fatal("missing update")
++	}
++	if err = c.DeleteIPGroup(ctx, "site", group.ID); err != nil {
++		t.Fatal(err)
++	}
++	groups, err := c.ListIPGroups(ctx, "site")
++	if err != nil || len(groups) != 0 || groups == nil {
++		t.Fatalf("empty collection: %v %v", groups, err)
++	}
++	if _, err = c.GetIPGroup(ctx, "site", group.ID); err == nil {
++		t.Fatal("deleted group found")
++	}
++}
++func checkGroupPayload(t *testing.T, r *http.Request, update bool) {
++	t.Helper()
++	var body map[string]json.RawMessage
++	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
++		t.Fatal(err)
++	}
++	if string(body["type"]) != "1" || string(body["portType"]) != "0" || string(body["portList"]) != `["80","7000-7100"]` {
++		t.Error("wrong group-wide ports/type")
++	}
++	for _, k := range []string{"groupId", "id", "buildIn", "resource", "count", "site"} {
++		if _, ok := body[k]; ok {
++			t.Errorf("sent response-only field %s", k)
++		}
++	}
++	var rows []map[string]json.RawMessage
++	if err := json.Unmarshal(body["ipList"], &rows); err != nil {
++		t.Fatal(err)
++	}
++	if len(rows) != 2 || string(rows[0]["ip"]) != `"192.0.2.0"` || string(rows[0]["mask"]) != "24" || string(rows[1]["mask"]) != "32" {
++		t.Fatal("wrong subnet encoding")
++	}
++	for _, row := range rows {
++		if _, ok := row["portList"]; ok {
++			t.Error("sent per-entry ports")
++		}
++	}
++	if update && (string(body["description"]) != `"keep group note"` || string(rows[0]["description"]) != `"keep subnet note"`) {
++		t.Error("lost descriptions on update")
++	}
++}
++func TestIPGroupValidation(t *testing.T) {
++	for _, mode := range []string{"empty IPs", "empty ports", "different ports", "bad IP", "IPv6", "descending ports", "out of range", "wrong type"} {
++		t.Run(mode, func(t *testing.T) {
++			g := fixtureGroup()
++			switch mode {
++			case "empty IPs":
++				g.IPList = nil
++			case "empty ports":
++				g.IPList[0].PortList = nil
++			case "different ports":
++				g.IPList[1].PortList = []string{"443"}
++			case "bad IP":
++				g.IPList[0].IP = "192.0.2.0/99"
++			case "IPv6":
++				g.IPList[0].IP = "::1"
++			case "descending ports":
++				g.IPList[0].PortList = []string{"90-80"}
++			case "out of range":
++				g.IPList[0].PortList = []string{"65536"}
++			case "wrong type":
++				g.Type = 0
++			}
++			c := &Client{}
++			if _, err := c.CreateIPGroup(context.Background(), "site", g); err == nil {
++				t.Fatal("invalid input reached network")
++			}
++			if _, err := c.UpdateIPGroup(context.Background(), "site", "group", g); err == nil {
++				t.Fatal("invalid update reached network")
++			}
++		})
++	}
++}
++func TestIPGroupCreateIdentity(t *testing.T) {
++	for _, result := range []string{`null`, `{}`, `""`, `" "`, `7`, `{"groupId":"group-1"}`} {
++		t.Run(result, func(t *testing.T) {
++			server := mockOmadaServer(t, map[string]http.HandlerFunc{"/sites/site/setting/profiles/groups": func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, `{"errorCode":0,"result":%s}`, result) }})
++			defer server.Close()
++			if _, err := newTestClient(t, server).CreateIPGroup(context.Background(), "site", fixtureGroup()); err == nil {
++				t.Fatal("invalid created identity accepted")
++			}
++		})
++	}
++}
++func TestIPGroupProtectedAndUnsupported(t *testing.T) {
++	for _, mode := range []string{"built-in", "port masks", "wrong type", "missing subnet mask"} {
++		t.Run(mode, func(t *testing.T) {
++			fixture := ipGroupFixture
++			switch mode {
++			case "built-in":
++				fixture = strings.Replace(fixture, `"resource":0`, `"resource":0,"buildIn":true`, 1)
++			case "port masks":
++				fixture = strings.Replace(fixture, `"portType":0`, `"portType":1`, 1)
++			case "wrong type":
++				fixture = strings.Replace(fixture, `"type":1`, `"type":0`, 1)
++			case "missing subnet mask":
++				fixture = strings.Replace(fixture, `"mask":24,`, "", 1)
++			}
++			server := mockOmadaServer(t, map[string]http.HandlerFunc{"/sites/site/setting/profiles/groups/1": func(w http.ResponseWriter, r *http.Request) {
++				fmt.Fprintf(w, `{"errorCode":0,"result":{"data":[%s]}}`, fixture)
++			}})
++			defer server.Close()
++			c := newTestClient(t, server)
++			if _, err := c.UpdateIPGroup(context.Background(), "site", "group-1", fixtureGroup()); err == nil {
++				t.Fatal("unsupported group update accepted")
++			}
++			if err := c.DeleteIPGroup(context.Background(), "site", "group-1"); err == nil {
++				t.Fatal("unsupported group delete accepted")
++			}
++		})
++	}
++}
+diff --git a/internal/provider/ip_group_recovery_test.go b/internal/provider/ip_group_recovery_test.go
+new file mode 100644
+index 0000000..3e432e5
+--- /dev/null
++++ b/internal/provider/ip_group_recovery_test.go
+@@ -0,0 +1,98 @@
++package provider
++
++import (
++	"encoding/json"
++	"fmt"
++	"net/http"
++	"net/http/httptest"
++	"regexp"
++	"sync"
++	"testing"
++
++	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
++	"github.com/hashicorp/terraform-plugin-testing/terraform"
++)
++
++func TestAccIPGroupCreateReadbackFailure(t *testing.T) {
++	var mu sync.Mutex
++	exists, failRead := false, false
++	creates, deletes := 0, 0
++	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		mu.Lock()
++		defer mu.Unlock()
++		var result any
++		switch r.URL.Path {
++		case "/api/info":
++			result = map[string]any{"omadacId": "controller"}
++		case "/controller/api/v2/login":
++			result = map[string]any{"token": "fixture"}
++		case "/controller/api/v2/sites/site/setting/profiles/groups":
++			if r.Method != "POST" {
++				t.Errorf("unexpected method %s", r.Method)
++			}
++			if exists {
++				t.Error("retried creation without cleaning up the recorded group")
++				w.WriteHeader(409)
++				return
++			}
++			creates++
++			exists = true
++			failRead = creates == 1
++			result = "group-1"
++		case "/controller/api/v2/sites/site/setting/profiles/groups/1":
++			if failRead {
++				failRead = false
++				w.WriteHeader(503)
++				return
++			}
++			data := []any{}
++			if exists {
++				data = append(data, map[string]any{"groupId": "group-1", "name": "Recovery", "type": 1, "portType": 0, "portList": []string{"80"}, "ipList": []any{map[string]any{"ip": "192.0.2.1", "mask": 32}}})
++			}
++			result = map[string]any{"data": data}
++		case "/controller/api/v2/sites/site/setting/profiles/groups/1/group-1":
++			if r.Method != "DELETE" {
++				t.Errorf("unexpected method %s", r.Method)
++			}
++			deletes++
++			exists = false
++		default:
++			t.Errorf("unexpected route %s", r.URL.Path)
++			w.WriteHeader(404)
++			return
++		}
++		json.NewEncoder(w).Encode(map[string]any{"errorCode": 0, "result": result})
++	}))
++	defer server.Close()
++	config := fmt.Sprintf(`provider "omada" {
++ url = %q
++ username = "fixture"
++ password = "fixture"
++}
++resource "omada_ip_group" "test" {
++ site_id = "site"
++ name = "Recovery"
++ ip_list = [{ip = "192.0.2.1", port_list = ["80"]}]
++}`, server.URL)
++	resource.Test(t, resource.TestCase{ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
++		CheckDestroy: func(*terraform.State) error {
++			mu.Lock()
++			defer mu.Unlock()
++			if exists {
++				return fmt.Errorf("orphan group survived destroy")
++			}
++			return nil
++		},
++		Steps: []resource.TestStep{
++			{Config: config, ExpectError: regexp.MustCompile("readback failed")},
++			{Config: config, Check: func(s *terraform.State) error {
++				mu.Lock()
++				defer mu.Unlock()
++				if creates != 2 || deletes != 1 {
++					return fmt.Errorf("recovery did not replace the recorded failed create: creates=%d deletes=%d", creates, deletes)
++				}
++				return resource.TestCheckResourceAttr("omada_ip_group.test", "id", "group-1")(s)
++			}},
++			{Config: config, PlanOnly: true},
++		}})
++}
