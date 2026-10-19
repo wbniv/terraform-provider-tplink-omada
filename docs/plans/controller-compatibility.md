@@ -14,7 +14,8 @@ Collection correction implemented; live SSID follow-ups remain: [L1 evidence](..
 - [ ] Test populated variants of collections where only empty real responses have been observed.
 - [x] Add an envelope fixture and verify default/custom lookup; rerun D mock scenarios and real SSID probes.
 - [x] Verify real secured SSID create, import, group replacement, and stable plan.
-- [ ] Finish live SSID update verification after L7 and open-network PMF compatibility after L6.
+- [x] Verify live secured SSID rename, password rotation, and custom/default VLAN transitions with L7.
+- [ ] Finish open-network PMF compatibility under L6.
 - [x] Rerun G1 malformed-page/failure gates and the real 102-network test.
 - [x] Commit the focused L1 correction as `0730101` on `fix/wlan-group-collection`.
 
@@ -58,10 +59,13 @@ An explicit `pmf_mode = 0` create was rejected with API `-1001`. The final L1 li
 
 ### L7 — Real SSID fields exceed the D1 writable contract
 
+Implementation and validation: [L7 investigation](../investigations/ssid-controller-fields/README.md).
+
 - [x] A secured SSID is created, but rename fails with “unsupported SSID field in SSID”; the fail-closed D1 check prevents the PATCH.
-- [ ] Capture sanitized field names/types from the 6.1.0.19 response and compare the controller UI's update payload.
-- [ ] Classify writable, response-only, and conditional fields; extend the contract only with evidence. Preserve unrelated settings and retain rejection of unknown fields.
-- [ ] Add realistic fixtures and complete live rename, security/VLAN updates, import, and stable-plan checks.
+- [x] Capture default/custom VLAN response fixtures and compare the bundled controller UI serializers.
+- [x] Exclude response summaries `vlanEnable`/top-level `vlanId` and create-only `deviceType` from PATCH; keep `vlanSetting` and existing unknown-field rejection.
+- [x] Add default/custom real-response fixtures and pass secured rename, password rotation, VLAN assignment/clearing, import, replacement, and stable-plan checks on 6.1.0.19.
+- [ ] Open/secured transitions remain gated by L6; physical-device validation remains separate.
 
 ## Review screens and flow
 

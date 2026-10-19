@@ -1,0 +1,224 @@
+diff --git a/internal/resources/wireless_network_update.go b/internal/resources/wireless_network_update.go
+index 571f1c0..e125f0d 100644
+--- a/internal/resources/wireless_network_update.go
++++ b/internal/resources/wireless_network_update.go
+@@ -91,6 +91,9 @@ var ssidRateFields = ssidFields{
+ var ssidWritableFields = ssidFields{
+ 	"id": "ignore", "idInt": "ignore", "index": "ignore", "site": "ignore", "resource": "ignore",
+ 	"portalEnable": "ignore", "accessEnable": "ignore",
++	// 6.1: vlanEnable/vlanId are derived from vlanSetting. deviceType is create-only
++	// in the controller UI; omitting it on PATCH preserves the existing target.
++	"vlanEnable": "ignore", "vlanId": "ignore", "deviceType": "ignore",
+ 	"wlanId": "string", "name": "string", "band": "number", "security": "number",
+ 	"broadcast": "bool", "enable11r": "bool", "pmfMode": "number", "guestNetEnable": "bool",
+ 	"wlanScheduleEnable": "bool", "action": "number", "scheduleId": "string",
+diff --git a/internal/resources/wireless_network_update_test.go b/internal/resources/wireless_network_update_test.go
+index 46a7bcd..7f5b95c 100644
+--- a/internal/resources/wireless_network_update_test.go
++++ b/internal/resources/wireless_network_update_test.go
+@@ -28,6 +28,11 @@ func TestWirelessNetworkPreservation(t *testing.T) {
+ 		vlan                      int
+ 	}{
+ 		{name: "rename"},
++		{name: "6.1 response metadata", mutate: func(raw map[string]any) {
++			raw["vlanEnable"] = true
++			raw["vlanId"] = float64(20)
++			raw["deviceType"] = float64(1)
++		}},
+ 		{name: "direct array", array: true},
+ 		{name: "partial PATCH result", response: "partial"},
+ 		{name: "full PATCH result", response: "full"},
+@@ -240,6 +245,11 @@ func TestWirelessNetworkPreservation(t *testing.T) {
+ 			if tc.mutate != nil {
+ 				tc.mutate(original)
+ 			}
++			for _, key := range []string{"vlanEnable", "vlanId", "deviceType"} {
++				if _, ok := sent[key]; ok {
++					t.Errorf("response/create-only field sent in PATCH: %s", key)
++				}
++			}
+ 			for _, key := range []string{"guestNetEnable", "wlanScheduleEnable", "action", "scheduleId", "macFilterEnable", "policy", "macFilterId", "rateLimit", "ssidRateLimit", "rateAndBeaconCtrl", "multiCastSetting", "mloEnable", "prohibitWifiShare"} {
+ 				if !reflect.DeepEqual(sent[key], original[key]) {
+ 					t.Errorf("unrelated field changed: %s", key)
+@@ -315,3 +325,47 @@ func TestWirelessNetworkCreateValidation(t *testing.T) {
+ 		})
+ 	}
+ }
++
++// A sanitized real 6.1 response must remain readable without allowing arbitrary
++// new fields through the full-object update contract.
++func TestSSIDController61Snapshot(t *testing.T) {
++	for _, fixture := range []string{"wireless_network_6_1.json", "wireless_network_6_1_vlan.json"} {
++		t.Run(fixture, func(t *testing.T) {
++			data, err := os.ReadFile("../testdata/" + fixture)
++			if err != nil {
++				t.Fatal(err)
++			}
++			var raw map[string]any
++			if err := json.Unmarshal(data, &raw); err != nil {
++				t.Fatal(err)
++			}
++			copied, err := copySSIDFields(raw, ssidWritableFields, "SSID")
++			if err != nil {
++				t.Fatal(err)
++			}
++			for _, key := range []string{"vlanEnable", "vlanId", "deviceType", "site", "id", "idInt", "resource", "index", "portalEnable", "accessEnable"} {
++				if _, ok := copied[key]; ok {
++					t.Errorf("response/create-only field copied: %s", key)
++				}
++			}
++			if _, ok := copied["pskSetting"].(map[string]any)["securityKey"]; ok {
++				t.Fatal("response credential copied")
++			}
++			for _, key := range []string{"currentVlanId", "currentVlanIds"} {
++				if _, ok := copied["vlanSetting"].(map[string]any)[key]; ok {
++					t.Errorf("VLAN response summary copied: %s", key)
++				}
++				delete(raw["vlanSetting"].(map[string]any), key)
++			}
++			for _, key := range []string{"vlanSetting", "rateLimit", "ssidRateLimit", "multiCastSetting", "rateAndBeaconCtrl", "mloEnable", "prohibitWifiShare"} {
++				if !reflect.DeepEqual(raw[key], copied[key]) {
++					t.Errorf("lost writable settings: %s", key)
++				}
++			}
++			raw["unverifiedFeature"] = true
++			if _, err := copySSIDFields(raw, ssidWritableFields, "SSID"); err == nil {
++				t.Fatal("accepted unverified field")
++			}
++		})
++	}
++}
+diff --git a/internal/testdata/wireless_network_6_1.json b/internal/testdata/wireless_network_6_1.json
+new file mode 100644
+index 0000000..f676fd5
+--- /dev/null
++++ b/internal/testdata/wireless_network_6_1.json
+@@ -0,0 +1,55 @@
++{
++  "id": "fixture-ssid",
++  "idInt": 1,
++  "index": 1,
++  "name": "L7 Contract Probe",
++  "site": "fixture-site",
++  "wlanId": "fixture-group",
++  "band": 3,
++  "guestNetEnable": false,
++  "security": 3,
++  "broadcast": true,
++  "vlanEnable": false,
++  "portalEnable": false,
++  "accessEnable": false,
++  "rateLimit": {
++    "downLimitEnable": false,
++    "upLimitEnable": false
++  },
++  "ssidRateLimit": {
++    "downLimitEnable": false,
++    "upLimitEnable": false
++  },
++  "pskSetting": {
++    "versionPsk": 2,
++    "encryptionPsk": 3,
++    "gikRekeyPskEnable": false,
++    "securityKey": "REDACTED"
++  },
++  "wlanScheduleEnable": false,
++  "macFilterEnable": false,
++  "rateAndBeaconCtrl": {
++    "rate2gCtrlEnable": false,
++    "rate5gCtrlEnable": false,
++    "manageRateControl2gEnable": false,
++    "manageRateControl5gEnable": false,
++    "rate6gCtrlEnable": false
++  },
++  "enable11r": false,
++  "pmfMode": 2,
++  "multiCastSetting": {
++    "multiCastEnable": true,
++    "channelUtil": 100,
++    "arpCastEnable": true,
++    "ipv6CastEnable": true,
++    "filterEnable": false
++  },
++  "mloEnable": false,
++  "deviceType": 3,
++  "prohibitWifiShare": false,
++  "resource": 0,
++  "vlanSetting": {
++    "mode": 0,
++    "customConfig": {}
++  }
++}
+diff --git a/internal/testdata/wireless_network_6_1_vlan.json b/internal/testdata/wireless_network_6_1_vlan.json
+new file mode 100644
+index 0000000..5e977a8
+--- /dev/null
++++ b/internal/testdata/wireless_network_6_1_vlan.json
+@@ -0,0 +1,67 @@
++{
++  "id": "fixture-ssid",
++  "idInt": 1,
++  "index": 1,
++  "name": "L7 Contract Probe",
++  "site": "fixture-site",
++  "wlanId": "fixture-group",
++  "band": 3,
++  "guestNetEnable": false,
++  "security": 3,
++  "broadcast": true,
++  "vlanEnable": true,
++  "vlanId": 198,
++  "portalEnable": false,
++  "accessEnable": false,
++  "rateLimit": {
++    "downLimitEnable": false,
++    "upLimitEnable": false
++  },
++  "ssidRateLimit": {
++    "downLimitEnable": false,
++    "upLimitEnable": false
++  },
++  "pskSetting": {
++    "versionPsk": 2,
++    "encryptionPsk": 3,
++    "gikRekeyPskEnable": false,
++    "securityKey": "REDACTED"
++  },
++  "wlanScheduleEnable": false,
++  "macFilterEnable": false,
++  "rateAndBeaconCtrl": {
++    "rate2gCtrlEnable": false,
++    "rate5gCtrlEnable": false,
++    "manageRateControl2gEnable": false,
++    "manageRateControl5gEnable": false,
++    "rate6gCtrlEnable": false
++  },
++  "enable11r": false,
++  "pmfMode": 2,
++  "multiCastSetting": {
++    "multiCastEnable": true,
++    "channelUtil": 100,
++    "arpCastEnable": true,
++    "ipv6CastEnable": true,
++    "filterEnable": false
++  },
++  "mloEnable": false,
++  "deviceType": 3,
++  "prohibitWifiShare": false,
++  "resource": 0,
++  "vlanSetting": {
++    "mode": 1,
++    "customConfig": {
++      "customMode": 0,
++      "lanNetworkId": "fixture-network",
++      "lanNetworkVlanIds": {
++        "fixture-network": [
++          198
++        ]
++      },
++      "bridgeVlan": 198
++    },
++    "currentVlanId": 198,
++    "currentVlanIds": "198"
++  }
++}

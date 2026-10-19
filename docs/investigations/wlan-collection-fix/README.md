@@ -42,3 +42,7 @@ An intermediate import attempt incorrectly used the bare SSID ID. The final test
 The production correction is limited to WLAN-group discovery. L2–L7 and G2 remain open. No physical AP or switch behavior is claimed. Existing metadata-free paged collection tests for other endpoints remain unchanged.
 
 - [x] Removed disposable containers, owned networks/volumes, and private runtime files after preserving evidence.
+
+## L7 follow-up
+
+The [SSID field correction](../ssid-controller-fields/README.md) now passes the previously blocked secured rename, as well as password rotation, custom/default VLAN updates, and stable plans. L6 open-network PMF behavior remains unresolved; the failures above are the historical L1 results.

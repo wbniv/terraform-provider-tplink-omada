@@ -1,0 +1,13 @@
+=== RUN   TestControllerLabSSIDUpdateVariants
+    controller_lab_test.go:198: Step 5/6 error: Error running apply: exit status 1
+        
+        Error: Cannot safely update wireless network
+        
+          with omada_wireless_network.lab,
+          on terraform_plugin_test.tf line 18, in resource "omada_wireless_network" "lab":
+          18: resource "omada_wireless_network" "lab" {
+        
+        unsupported SSID field in SSID; update the provider's writable-field contract
+        before retrying
+--- FAIL: TestControllerLabSSIDUpdateVariants (16.16s)
+FAIL

@@ -1,0 +1,6 @@
+acceptance_exit=0
+client_exit=0
+wrapper_exit=2
+post_test_error=running shell script edited during execution
+final_bash_syntax_check=pass
+cleanup_exit=0
