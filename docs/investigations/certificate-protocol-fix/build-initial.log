@@ -1,0 +1,15 @@
+go version go1.25.6 linux/amd64
+Terraform v1.15.8
+on linux_amd64
+?   	github.com/terraform-provider-tplink-omada	[no test files]
+--- FAIL: TestResponseValidation (0.11s)
+    --- FAIL: TestResponseValidation/multipart (0.02s)
+        --- FAIL: TestResponseValidation/multipart/success (0.00s)
+            response_behavior_test.go:89: success=false, want true
+        --- FAIL: TestResponseValidation/multipart/created (0.00s)
+            response_behavior_test.go:89: success=false, want true
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/client	8.671s
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	0.045s
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.367s
+FAIL

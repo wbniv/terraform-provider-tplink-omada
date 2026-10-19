@@ -1,0 +1,2 @@
+acceptance_exit=0
+client_exit=1

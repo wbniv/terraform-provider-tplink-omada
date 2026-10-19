@@ -1,0 +1,442 @@
+diff --git a/dev/controller-lab/README.md b/dev/controller-lab/README.md
+index 93ed55c..49c5f67 100644
+--- a/dev/controller-lab/README.md
++++ b/dev/controller-lab/README.md
+@@ -61,3 +61,15 @@ Passing controller tests does not validate physical adoption, AP radios, switch-
+ For an uncommitted SSID follow-up, set `LAB_SSID_PATCH` to a Git patch in addition to `LAB_SSID_INTEGRATION=1`. The harness copies it into the private runtime directory and applies it after D1–D3 and the client integration patches. Save the exact patch and compiled source hashes with the test evidence. Each test invocation clears the previous build/acceptance/client logs and status file so an interrupted build cannot retain stale successful results.
+ 
+ Device passwords are generated with the wizard's verified constraints: strong character classes, length 10–64, and no adjacent identical characters. The earlier shorter hexadecimal candidates could violate the repeated-character rule.
++
++## Certificate protocol check (L2)
++
++Run the focused lifecycle, then explicitly restart the disposable controller and verify its TLS certificate:
++
++```sh
++LAB_ACCEPTANCE_RUN='^TestControllerLabCertificateResource$' \
++LAB_CLIENT_RUN='^TestControllerLabCertificate$' dev/controller-lab/run.sh test
++python3 dev/controller-lab/verify-certificate.py
++```
++
++The Terraform scenario covers create, a stable plan, rotation, another stable plan, and import. The client probe records only a public certificate fingerprint. The restart verifier compares that fingerprint with a fresh TLS handshake and checks stored identity persistence. Software Controller 6.1.0.19 converts PEM uploads to JKS identities and requires a restart to serve the certificate; the production provider reports this requirement and leaves restart scheduling to the operator. Run this sequence before `down`.
+diff --git a/dev/controller-lab/client_test.go.txt b/dev/controller-lab/client_test.go.txt
+index 35a97ff..a485b00 100644
+--- a/dev/controller-lab/client_test.go.txt
++++ b/dev/controller-lab/client_test.go.txt
+@@ -6,6 +6,7 @@ import (
+ 	"bytes"
+ 	"context"
+ 	"crypto/rand"
++"crypto/sha256"
+ 	"crypto/rsa"
+ 	"crypto/tls"
+ 	"crypto/x509"
+@@ -168,7 +169,7 @@ func TestControllerLabCertificate(t *testing.T) {
+ 	if err != nil || keyID == "" {
+ 		t.Fatalf("key upload: id_present=%v error=%v", keyID != "", err)
+ 	}
+-	if err := c.ActivateCertificate(ctx, certID, keyID); err != nil {
++	if err := c.ActivateCertificate(ctx, certID, keyID, "lab.pem", "lab-key.pem"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	checkLabCertificate(t, c, ctx, certID, keyID, der)
+@@ -197,16 +198,17 @@ func checkLabCertificate(t *testing.T, c *Client, ctx context.Context, certID, k
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if setting.CertID != certID || setting.KeyID != keyID {
++	if setting.CertID == "" || setting.KeyID == "" {
+ 		t.Errorf("certificate readback does not match uploaded IDs: certificate_match=%v key_match=%v", setting.CertID == certID, setting.KeyID == keyID)
+ 	}
++	t.Logf("expected_certificate_sha256=%x", sha256.Sum256(der))
+ 	connection, err := tls.DialWithDialer(&net.Dialer{Timeout: 10 * time.Second}, "tcp", "controller:8043", &tls.Config{InsecureSkipVerify: true}) // isolated self-signed lab
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	defer connection.Close()
+ 	if string(connection.ConnectionState().PeerCertificates[0].Raw) != string(der) {
+-		t.Error("new TLS connection does not serve the uploaded certificate")
++		t.Log("TLS still presents the previous certificate; controller restart required")
+ 	}
+ }
+ 
+diff --git a/dev/controller-lab/provider_test.go.txt b/dev/controller-lab/provider_test.go.txt
+index 23f5121..4e29455 100644
+--- a/dev/controller-lab/provider_test.go.txt
++++ b/dev/controller-lab/provider_test.go.txt
+@@ -2,6 +2,13 @@ package provider
+ 
+ import (
+ 	"context"
++"crypto/rand"
++"crypto/rsa"
++"crypto/x509"
++"crypto/x509/pkix"
++"encoding/pem"
++"math/big"
++"time"
+ 	"fmt"
+ 	"os"
+ 	"reflect"
+@@ -251,3 +258,35 @@ resource "omada_wireless_network" "lab" {
+   },
+  })
+ }
++
++
++func TestControllerLabCertificateResource(t *testing.T) {
++ if os.Getenv("OMADA_CONTROLLER_LAB") != "1" { t.Skip("disposable lab only") }
++ if os.Getenv("OMADA_URL") != "https://controller:8043" { t.Fatal("refusing non-lab target") }
++ config := func(serial int64) string {
++  key, err := rsa.GenerateKey(rand.Reader, 2048); if err != nil { t.Fatal(err) }
++  template := &x509.Certificate{SerialNumber:big.NewInt(serial), Subject:pkix.Name{CommonName:"controller"}, DNSNames:[]string{"controller"}, NotBefore:time.Now().Add(-time.Hour), NotAfter:time.Now().Add(24*time.Hour), KeyUsage:x509.KeyUsageDigitalSignature|x509.KeyUsageKeyEncipherment, ExtKeyUsage:[]x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}}
++  der, err := x509.CreateCertificate(rand.Reader,template,template,&key.PublicKey,key); if err != nil { t.Fatal(err) }
++  cert := pem.EncodeToMemory(&pem.Block{Type:"CERTIFICATE",Bytes:der})
++  private := pem.EncodeToMemory(&pem.Block{Type:"RSA PRIVATE KEY",Bytes:x509.MarshalPKCS1PrivateKey(key)})
++  return fmt.Sprintf(`resource "omada_controller_certificate" "lab" {
++ certificate_pem = %q
++ private_key_pem = %q
++}`,cert,private)
++ }
++ first,second := config(10),config(11)
++ check := func(state *terraform.State) error {
++  c,err:=client.NewClient(os.Getenv("OMADA_URL"),os.Getenv("OMADA_USERNAME"),os.Getenv("OMADA_PASSWORD"),true);if err != nil{return err}
++  setting,err:=c.GetControllerCertificateSetting(context.Background());if err != nil{return err}
++  attrs:=state.RootModule().Resources["omada_controller_certificate.lab"].Primary.Attributes
++  if setting.CertID=="" || setting.KeyID=="" || attrs["cert_id"]!=setting.CertID || attrs["key_id"]!=setting.KeyID {return fmt.Errorf("stored certificate identities differ from Terraform state")}
++  return nil
++ }
++ resource.Test(t,resource.TestCase{PreCheck:func(){testAccPreCheck(t)},ProtoV6ProviderFactories:testAccProtoV6ProviderFactories,Steps:[]resource.TestStep{
++  {Config:first,Check:check},
++  {Config:first,PlanOnly:true},
++  {Config:second,Check:check},
++  {Config:second,PlanOnly:true},
++  {ResourceName:"omada_controller_certificate.lab",ImportState:true,ImportStateVerify:true,ImportStateVerifyIgnore:[]string{"certificate_pem","private_key_pem"}},
++ }})
++}
+diff --git a/docs/resources/controller_certificate.md b/docs/resources/controller_certificate.md
+index 62e2b53..907ae1c 100644
+--- a/docs/resources/controller_certificate.md
++++ b/docs/resources/controller_certificate.md
+@@ -10,6 +10,11 @@ description: |-
+ 
+ Manages the TLS certificate for the Omada SDN Controller.
+ 
++## Software Controller 6.1.0.19
++
++After applying a certificate, restart the controller for its HTTPS listener to serve it. The provider saves the configuration and reports a warning; it does not restart the controller. Schedule the restart and verify the new certificate before relying on it for TLS trust.
++
++The controller converts PEM uploads to stored JKS identities. Computed `cert_id` and `key_id` reflect settings readback and may differ from upload IDs. Destroying this resource only removes Terraform state; it leaves the controller certificate configured.
+ 
+ 
+ <!-- schema generated by tfplugindocs -->
+@@ -22,6 +27,6 @@ Manages the TLS certificate for the Omada SDN Controller.
+ 
+ ### Read-Only
+ 
+-- `cert_id` (String) The certificate ID returned by the controller after upload (computed).
++- `cert_id` (String) The certificate ID stored by the controller after activation (computed).
+ - `id` (String) The unique identifier of the controller certificate resource. Always set to 'controller-cert'.
+-- `key_id` (String) The private key ID returned by the controller after upload (computed).
++- `key_id` (String) The private key ID stored by the controller after activation (computed).
+diff --git a/internal/client/auth_test.go b/internal/client/auth_test.go
+index e678b91..c412234 100644
+--- a/internal/client/auth_test.go
++++ b/internal/client/auth_test.go
+@@ -26,7 +26,7 @@ func TestCertificateOperations(t *testing.T) {
+ 			return c.UploadKey(ctx, []byte("test PEM\n"), "test.pem")
+ 		}},
+ 		{"activate", "/controller/setting", http.MethodPatch, "", func(ctx context.Context, c *Client) (string, error) {
+-			return "", c.ActivateCertificate(ctx, "cert", "key")
++			return "", c.ActivateCertificate(ctx, "cert", "key", "cert.pem", "key.pem")
+ 		}},
+ 		{"read", "/controller/setting", http.MethodGet, "cert/key", func(ctx context.Context, c *Client) (string, error) {
+ 			setting, err := c.GetControllerCertificateSetting(ctx)
+@@ -63,13 +63,13 @@ func TestCertificateOperations(t *testing.T) {
+ 						defer file.Close()
+ 						defer r.MultipartForm.RemoveAll()
+ 						data, err := io.ReadAll(file)
+-						if err != nil || string(data) != "test PEM\n" || header.Filename != "test.pem" || r.FormValue("data") != "{}" {
++						if err != nil || string(data) != "test PEM\n" || header.Filename != "test.pem" || r.FormValue("data") != map[string]string{"certificate": `{"cerName":"test.pem"}`, "key": `{"keyName":"test.pem"}`}[op.name] {
+ 							t.Errorf("multipart file or metadata changed: filename=%q data=%q err=%v", header.Filename, data, err)
+ 						}
+ 					}
+ 					if op.method == http.MethodPatch {
+ 						data, err := io.ReadAll(r.Body)
+-						if err != nil || string(data) != `{"cerId":"cert","keyId":"key"}` {
++						if err != nil || string(data) != `{"certificate":{"cerName":"cert.pem","keyName":"key.pem","enable":true,"cerType":"PEM","cerId":"cert","keyId":"key"}}` {
+ 							t.Errorf("activation body = %s, err=%v", data, err)
+ 						}
+ 					}
+@@ -84,7 +84,11 @@ func TestCertificateOperations(t *testing.T) {
+ 					if got := r.Header.Get("Csrf-Token"); got != expectedToken {
+ 						t.Errorf("token = %q, want %q", got, expectedToken)
+ 					}
+-					fmt.Fprint(w, `{"errorCode":0,"result":{"id":"uploaded","cerId":"cert","keyId":"key"}}`)
++					if op.method == http.MethodPost {
++						fmt.Fprint(w, `{"errorCode":0,"result":{"cerId":"uploaded","keyId":"uploaded"}}`)
++					} else {
++						fmt.Fprint(w, `{"errorCode":0,"result":{"certificate":{"cerId":"cert","keyId":"key"}}}`)
++					}
+ 				}))
+ 				defer server.Close()
+ 				c := &Client{baseURL: server.URL, omadacID: "controller", token: initialToken, httpClient: server.Client()}
+@@ -334,7 +338,53 @@ func TestCertificateWritesReadOnly(t *testing.T) {
+ 	if _, err := c.UploadKey(context.Background(), []byte("pem"), "key.pem"); !errors.Is(err, ErrReadOnly) {
+ 		t.Errorf("key upload: %v", err)
+ 	}
+-	if err := c.ActivateCertificate(context.Background(), "cert", "key"); !errors.Is(err, ErrReadOnly) {
++	if err := c.ActivateCertificate(context.Background(), "cert", "key", "cert.pem", "key.pem"); !errors.Is(err, ErrReadOnly) {
+ 		t.Errorf("activation: %v", err)
+ 	}
+ }
++
++func TestUploadIdentityValidation(t *testing.T) {
++	for _, kind := range []string{"certificate", "key"} {
++		wrongField := `{"keyId":"wrong-endpoint"}`
++		if kind == "key" {
++			wrongField = `{"cerId":"wrong-endpoint"}`
++		}
++		for _, result := range []string{wrongField, `{}`, `null`, `{"id":"generic"}`, `{"cerId":"","keyId":""}`, `{"cerId":" ","keyId":" "}`, `{"cerId":7,"keyId":7}`} {
++			t.Run(kind+result, func(t *testing.T) {
++				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++					fmt.Fprintf(w, `{"errorCode":0,"result":%s}`, result)
++				}))
++				defer server.Close()
++				c := &Client{baseURL: server.URL, omadacID: "controller", token: "valid", httpClient: server.Client()}
++				id, err := c.uploadControllerFile(context.Background(), kind, []byte("pem"), "file.pem")
++				if err == nil || id != "" {
++					t.Fatalf("invalid upload identity accepted: %q, %v", id, err)
++				}
++			})
++		}
++	}
++}
++
++func TestCertificateReadMissingSection(t *testing.T) {
++	for _, result := range []string{`{}`, `null`, `{"certificate":null}`, `{"cerId":"flat","keyId":"flat"}`} {
++		t.Run(result, func(t *testing.T) {
++			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++				fmt.Fprintf(w, `{"errorCode":0,"result":%s}`, result)
++			}))
++			defer server.Close()
++			c := &Client{baseURL: server.URL, omadacID: "controller", token: "valid", httpClient: server.Client()}
++			if _, err := c.GetControllerCertificateSetting(context.Background()); err == nil {
++				t.Fatal("missing certificate section accepted")
++			}
++		})
++	}
++}
++
++func TestCertificateActivationRequiresIDs(t *testing.T) {
++	c := &Client{}
++	for _, ids := range [][2]string{{"", "key"}, {"cert", ""}, {" ", "key"}} {
++		if err := c.ActivateCertificate(context.Background(), ids[0], ids[1], "cert.pem", "key.pem"); err == nil {
++			t.Fatal("activation accepted empty identity")
++		}
++	}
++}
+diff --git a/internal/client/client.go b/internal/client/client.go
+index 7ce505d..fba56b3 100644
+--- a/internal/client/client.go
++++ b/internal/client/client.go
+@@ -2036,8 +2036,8 @@ type ControllerCertificate struct {
+ 
+ // UploadCertificateResponse holds the response when uploading a certificate or key.
+ type UploadCertificateResponse struct {
+-	ID   string `json:"id"`
+-	Name string `json:"name"`
++	CertID string `json:"cerId"`
++	KeyID  string `json:"keyId"`
+ }
+ 
+ // UploadCertificate uploads a PEM-encoded certificate file to the controller.
+@@ -2064,7 +2064,15 @@ func (c *Client) uploadControllerFile(ctx context.Context, kind string, data []b
+ 	if _, err := part.Write(data); err != nil {
+ 		return "", fmt.Errorf("writing file to form: %w", err)
+ 	}
+-	if err := writer.WriteField("data", "{}"); err != nil {
++	metadataField := "cerName"
++	if kind == "key" {
++		metadataField = "keyName"
++	}
++	metadata, err := json.Marshal(map[string]string{metadataField: fileName})
++	if err != nil {
++		return "", fmt.Errorf("encoding upload metadata: %w", err)
++	}
++	if err := writer.WriteField("data", string(metadata)); err != nil {
+ 		return "", fmt.Errorf("writing form field: %w", err)
+ 	}
+ 	if err := writer.Close(); err != nil {
+@@ -2079,33 +2087,43 @@ func (c *Client) uploadControllerFile(ctx context.Context, kind string, data []b
+ 	if err := json.Unmarshal(apiResp.Result, &uploadResp); err != nil {
+ 		return "", fmt.Errorf("parsing upload response: %w", err)
+ 	}
+-	return uploadResp.ID, nil
++	id := uploadResp.CertID
++	if kind == "key" {
++		id = uploadResp.KeyID
++	}
++	if strings.TrimSpace(id) == "" {
++		return "", fmt.Errorf("uploading %s: response missing nonempty identity", kind)
++	}
++	return id, nil
+ }
+ 
+ // ActivateCertificate activates the certificate on the controller.
+ // This sends a PATCH to /controller/setting with the certificate and key IDs.
+ type CertificateSettings struct {
+-	CertID string `json:"cerId"`
+-	KeyID  string `json:"keyId"`
++	CertName string `json:"cerName"`
++	KeyName  string `json:"keyName"`
++	Enable   bool   `json:"enable"`
++	CertType string `json:"cerType"`
++	CertID   string `json:"cerId"`
++	KeyID    string `json:"keyId"`
+ }
+ 
+ type ControllerSettingUpdate struct {
+-	CertID string `json:"cerId"`
+-	KeyID  string `json:"keyId"`
++	Certificate CertificateSettings `json:"certificate"`
+ }
+ 
+ // ActivateCertificate applies the certificate configuration to the controller.
+-func (c *Client) ActivateCertificate(ctx context.Context, certID, keyID string) error {
++func (c *Client) ActivateCertificate(ctx context.Context, certID, keyID, certName, keyName string) error {
+ 	if c.readOnly {
+ 		return ErrReadOnly
+ 	}
+ 
+ 	url := fmt.Sprintf("%s/%s/api/v2/controller/setting", c.baseURL, c.omadacID)
+ 
+-	updateReq := ControllerSettingUpdate{
+-		CertID: certID,
+-		KeyID:  keyID,
++	if strings.TrimSpace(certID) == "" || strings.TrimSpace(keyID) == "" || strings.TrimSpace(certName) == "" || strings.TrimSpace(keyName) == "" {
++		return fmt.Errorf("activating certificate: certificate and key identities and filenames are required")
+ 	}
++	updateReq := ControllerSettingUpdate{Certificate: CertificateSettings{Enable: true, CertType: "PEM", CertID: certID, KeyID: keyID, CertName: certName, KeyName: keyName}}
+ 
+ 	_, err := c.doRequest(ctx, http.MethodPatch, url, updateReq)
+ 	return err
+@@ -2127,10 +2145,15 @@ func (c *Client) GetControllerCertificateSetting(ctx context.Context) (*Controll
+ 		return nil, err
+ 	}
+ 
+-	var setting ControllerSetting
++	var setting struct {
++		Certificate *ControllerSetting `json:"certificate"`
++	}
+ 	if err := json.Unmarshal(resp.Result, &setting); err != nil {
+ 		return nil, fmt.Errorf("decoding controller setting: %w", err)
+ 	}
+ 
+-	return &setting, nil
++	if setting.Certificate == nil {
++		return nil, fmt.Errorf("decoding controller setting: missing certificate section")
++	}
++	return setting.Certificate, nil
+ }
+diff --git a/internal/client/response_behavior_test.go b/internal/client/response_behavior_test.go
+index 356ea09..960610a 100644
+--- a/internal/client/response_behavior_test.go
++++ b/internal/client/response_behavior_test.go
+@@ -13,7 +13,7 @@ import (
+ )
+ 
+ const responseSecret = "Synthetic-Response-Secret-987!"
+-const responseSuccess = `{"errorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`
++const responseSuccess = `{"errorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`
+ 
+ var responseOperations = []struct {
+ 	name string
+@@ -54,14 +54,14 @@ func TestResponseValidation(t *testing.T) {
+ 		{"server JSON", 500, responseSuccess, false},
+ 		{"proxy HTML", 502, "<html>" + responseSecret + "</html>", false},
+ 		{"proxy text", 503, responseSecret, false},
+-		{"missing code", 200, `{"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`, false},
+-		{"null code", 200, `{"errorCode":null,"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`, false},
++		{"missing code", 200, `{"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`, false},
++		{"null code", 200, `{"errorCode":null,"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`, false},
+ 		{"string code", 200, `{"errorCode":"0","msg":"` + responseSecret + `"}`, false},
+ 		{"fractional code", 200, `{"errorCode":0.5}`, false},
+ 		{"bool code", 200, `{"errorCode":false}`, false},
+-		{"duplicate code", 200, `{"errorCode":-1001,"errorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`, false},
+-		{"duplicate result", 200, `{"errorCode":0,"result":null,"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`, false},
+-		{"wrong case code", 200, `{"ErrorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded"}}`, false},
++		{"duplicate code", 200, `{"errorCode":-1001,"errorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`, false},
++		{"duplicate result", 200, `{"errorCode":0,"result":null,"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`, false},
++		{"wrong case code", 200, `{"ErrorCode":0,"result":{"omadacId":"controller","token":"fresh","id":"uploaded","cerId":"uploaded"}}`, false},
+ 		{"null envelope", 200, "null", false},
+ 		{"array envelope", 200, "[]", false},
+ 		{"empty object", 200, "{}", false},
+diff --git a/internal/resources/controller_certificate.go b/internal/resources/controller_certificate.go
+index 788f18c..37afa70 100644
+--- a/internal/resources/controller_certificate.go
++++ b/internal/resources/controller_certificate.go
+@@ -57,11 +57,11 @@ func (r *ControllerCertificateResource) Schema(_ context.Context, _ resource.Sch
+ 				Sensitive:   true,
+ 			},
+ 			"cert_id": schema.StringAttribute{
+-				Description: "The certificate ID returned by the controller after upload (computed).",
++				Description: "The certificate ID stored by the controller after activation (computed).",
+ 				Computed:    true,
+ 			},
+ 			"key_id": schema.StringAttribute{
+-				Description: "The private key ID returned by the controller after upload (computed).",
++				Description: "The private key ID stored by the controller after activation (computed).",
+ 				Computed:    true,
+ 			},
+ 		},
+@@ -109,15 +109,22 @@ func (r *ControllerCertificateResource) Create(ctx context.Context, req resource
+ 	}
+ 
+ 	// Activate certificate
+-	if err := r.client.ActivateCertificate(ctx, certID, keyID); err != nil {
++	if err := r.client.ActivateCertificate(ctx, certID, keyID, "controller.crt", "controller.key"); err != nil {
+ 		resp.Diagnostics.AddError("Error activating certificate", err.Error())
+ 		return
+ 	}
+ 
++	// The controller may convert PEM to JKS and return new stored identities.
++	setting, err := r.client.GetControllerCertificateSetting(ctx)
++	if err != nil {
++		resp.Diagnostics.AddError("Error reading activated certificate", err.Error())
++		return
++	}
++	resp.Diagnostics.AddWarning("Controller restart required", "Restart the Omada Software Controller to serve the new TLS certificate. The provider does not restart the controller.")
+ 	// Set the state
+ 	plan.ID = types.StringValue("controller-cert")
+-	plan.CertID = types.StringValue(certID)
+-	plan.KeyID = types.StringValue(keyID)
++	plan.CertID = types.StringValue(setting.CertID)
++	plan.KeyID = types.StringValue(setting.KeyID)
+ 
+ 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+ }
+@@ -169,15 +176,21 @@ func (r *ControllerCertificateResource) Update(ctx context.Context, req resource
+ 	}
+ 
+ 	// Activate the new certificate
+-	if err := r.client.ActivateCertificate(ctx, certID, keyID); err != nil {
++	if err := r.client.ActivateCertificate(ctx, certID, keyID, "controller.crt", "controller.key"); err != nil {
+ 		resp.Diagnostics.AddError("Error activating certificate", err.Error())
+ 		return
+ 	}
+ 
++	setting, err := r.client.GetControllerCertificateSetting(ctx)
++	if err != nil {
++		resp.Diagnostics.AddError("Error reading activated certificate", err.Error())
++		return
++	}
++	resp.Diagnostics.AddWarning("Controller restart required", "Restart the Omada Software Controller to serve the new TLS certificate. The provider does not restart the controller.")
+ 	// Update state
+ 	plan.ID = types.StringValue("controller-cert")
+-	plan.CertID = types.StringValue(certID)
+-	plan.KeyID = types.StringValue(keyID)
++	plan.CertID = types.StringValue(setting.CertID)
++	plan.KeyID = types.StringValue(setting.KeyID)
+ 
+ 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+ }

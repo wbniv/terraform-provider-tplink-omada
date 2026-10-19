@@ -1,10 +1,15 @@
 | Date | Change |
 |------|--------|
+| [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/3a9b68d) | docs: record verified SSID PMF compatibility fix |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/d543f6f) | docs: record verified SSID controller compatibility fix |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/ce8edf3) | docs: record WLAN correction and remaining SSID compatibility gaps |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/30d9d92) | docs: record controller lab findings and standalone migration |
 
 <!--history-meta v1
+3a9b68d	author	Will Norris
+3a9b68d	added	9
+3a9b68d	deleted	6
+3a9b68d	files	1
 d543f6f	author	Will Norris
 d543f6f	added	8
 d543f6f	deleted	4

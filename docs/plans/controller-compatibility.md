@@ -21,11 +21,13 @@ Collection correction implemented; live SSID follow-ups remain: [L1 evidence](..
 
 ### L2 — Certificate wire format differs from the mocks
 
+Locally verified on `fix/controller-certificate-protocol`, based on the verified lab stack (`c026124`); committed as `4c21666`. [L2 evidence](../investigations/certificate-protocol-fix/README.md). Five Terraform lifecycle steps, client activation/readback, Go gates, and exact TLS fingerprint after restart pass on 6.1.0.19.
+
 - [x] Reproduce upload rejection `-30021` using the provider's multipart `data={}`.
 - [x] Verify that UI-style `cerName` / `keyName` metadata succeeds and returns `cerId` / `keyId`, with no generic `id`.
-- [ ] Correct metadata and decode endpoint-specific identities; reject successful envelopes with missing/empty IDs.
-- [ ] Verify activation fields, readback, restart requirements, and actual TLS presentation. An accepted upload alone is insufficient.
-- [ ] Retain A's deadlock/retry/concurrency protections and F's status/body protections; rerun their gates plus real certificate lifecycle.
+- [x] Correct metadata and decode endpoint-specific identities; reject successful envelopes with missing/empty IDs.
+- [x] Verify activation fields, readback, restart requirements, and actual TLS presentation. An accepted upload alone is insufficient.
+- [x] Retain A's deadlock/retry/concurrency protections and F's status/body protections; rerun their gates plus real certificate lifecycle.
 
 ### L3 — Lost-session recovery
 
@@ -101,7 +103,7 @@ Next action: G2 only after complete discovery is verified
 | Check | Current review result | Required result |
 | --- | --- | --- |
 | WLAN data-source plan | Discovery fixed; empty-list assertion now exposed | Read complete known-unpaginated group list, then list SSIDs |
-| Certificate apply | Upload rejected before activation | Nonempty certificate/key IDs; verified activation and TLS presentation |
+| Certificate apply | L2 verified: nested PEM activation, stored JKS IDs, explicit restart, exact TLS match | Nonempty certificate/key IDs; verified activation and TLS presentation |
 | Refresh after lost session | HTTP 302 diagnostic | One bounded, verified reauthentication attempt or an explicit unsupported result |
 | IP-group plan | API `-1600` | Correct typed group inventory from a verified route |
 | Empty device count | Null list in Terraform | Empty list, count zero |

@@ -1,0 +1,5 @@
+=== RUN   TestControllerLabCertificate
+    controller_lab_test.go:174: certificate readback does not match uploaded IDs: certificate_match=false key_match=false
+    controller_lab_test.go:174: new TLS connection does not serve the uploaded certificate
+--- FAIL: TestControllerLabCertificate (1.02s)
+FAIL

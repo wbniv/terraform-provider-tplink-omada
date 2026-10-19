@@ -1,0 +1,5 @@
+=== RUN   TestControllerLabCertificate
+    controller_lab_test.go:175: expected_certificate_sha256=8fc529e5887de51e8e2c3075ca816ed67764ce4aedb6384c18653b14f51d07e6
+    controller_lab_test.go:175: TLS still presents the previous certificate; controller restart required
+--- PASS: TestControllerLabCertificate (0.44s)
+PASS

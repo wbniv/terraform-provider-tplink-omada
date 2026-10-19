@@ -1,0 +1,4 @@
+=== RUN   TestControllerLabCertificate
+    controller_lab_test.go:172: API error -30027 (controller rejected the operation)
+--- FAIL: TestControllerLabCertificate (0.44s)
+FAIL

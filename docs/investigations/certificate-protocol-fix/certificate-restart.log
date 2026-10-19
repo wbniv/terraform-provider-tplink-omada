@@ -1,0 +1,4 @@
+omada-provider-lab-controller-1
+certificate_settings_persisted=true
+tls_certificate_sha256=8fc529e5887de51e8e2c3075ca816ed67764ce4aedb6384c18653b14f51d07e6
+tls_matches_uploaded_certificate=true

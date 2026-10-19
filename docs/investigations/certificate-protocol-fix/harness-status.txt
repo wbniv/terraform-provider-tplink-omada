@@ -1,0 +1,5 @@
+wrapper_exit=0
+acceptance_exit=0
+client_exit=0
+restart_verifier_exit=0
+cleanup_exit=0
