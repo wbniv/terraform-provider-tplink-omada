@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import secrets
 import ssl
+import string
 import subprocess
 import time
 import urllib.error
@@ -18,6 +19,16 @@ ROOT = Path(__file__).resolve().parents[2]
 RUNTIME = ROOT / ".controller-lab"
 BASE = "https://127.0.0.1:18043"
 VERSION = "6.1.0.19"
+
+
+def device_password():
+    # The controller wizard rejects adjacent identical characters, as well as
+    # requiring a strong password. Generate valid characters by construction.
+    value = "A7!z"
+    alphabet = string.ascii_letters + string.digits + "-_"
+    for _ in range(24):
+        value += secrets.choice(alphabet.replace(value[-1], ""))
+    return value
 
 
 def private_json(path, value):
@@ -116,7 +127,7 @@ def initialize(api):
             raise RuntimeError("Refusing initialization of an existing account without lab credentials")
         private_json(path, {"controller_id": api.controller_id, "username": "lab-admin",
                             "password": "Lab-" + secrets.token_urlsafe(24),
-                            "device_username": "lab-device", "device_password": "Aa7!" + secrets.token_hex(5)})
+                            "device_username": "lab-device", "device_password": device_password()})
     credentials = api.credentials()
     if not info.get("registeredRoot"):
         api.request("/api/v2/anon/register", "POST", {

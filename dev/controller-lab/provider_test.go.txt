@@ -207,3 +207,47 @@ resource "omada_wireless_network" "lab" {
   },
  })
 }
+
+func TestControllerLabPMF(t *testing.T) {
+ if os.Getenv("OMADA_CONTROLLER_LAB") != "1" { t.Skip("disposable controller lab only") }
+ if os.Getenv("OMADA_URL") != "https://controller:8043" { t.Fatal("refusing a target outside the isolated lab") }
+ config := func(name string, security int, pmf string) string {
+  password := ""
+  if security == 3 { password = `passphrase = "L6-synthetic-password"` }
+  return fmt.Sprintf(`
+resource "omada_wireless_network" "lab" {
+ site_id = %q
+ name = %q
+ security = %d
+ %s
+ %s
+}
+`,os.Getenv("OMADA_TEST_SITE_ID"),name,security,password,pmf)
+ }
+ var id string
+ check := func(security,pmf string) resource.TestCheckFunc {
+  return resource.ComposeTestCheckFunc(
+   resource.TestCheckResourceAttr("omada_wireless_network.lab","security",security),
+   resource.TestCheckResourceAttr("omada_wireless_network.lab","pmf_mode",pmf),
+   func(state *terraform.State) error {
+    current := state.RootModule().Resources["omada_wireless_network.lab"].Primary.ID
+    if id!="" && id!=current { return fmt.Errorf("security/PMF update replaced SSID") }
+    id=current
+    return nil
+   },
+  )
+ }
+ resource.Test(t,resource.TestCase{PreCheck:func(){testAccPreCheck(t)},ProtoV6ProviderFactories:testAccProtoV6ProviderFactories,
+  Steps: []resource.TestStep{
+   {Config:config("L6 Open",0,""),Check:check("0","0")},
+   {Config:config("L6 Open",0,""),PlanOnly:true},
+   {Config:config("L6 Renamed",0,""),Check:check("0","0")},
+   {Config:config("L6 Renamed",3,""),Check:check("3","2")},
+   {Config:config("L6 Renamed",3,"pmf_mode = 1"),Check:check("3","1")},
+   {Config:config("L6 Renamed",3,"pmf_mode = 3"),Check:check("3","3")},
+   {Config:config("L6 Renamed",3,"pmf_mode = 3"),PlanOnly:true},
+   {Config:config("L6 Renamed",0,""),Check:check("0","0")},
+   {Config:config("L6 Renamed",0,""),PlanOnly:true},
+  },
+ })
+}
