@@ -9,7 +9,8 @@ This is the working record for fixing the [code-review findings](../investigatio
 - [x] Implement and locally verify D1, SSID update preservation (F04), on `fix/ssid-update-preservation` in `/home/will/terraform-provider-tplink-omada-ssids`, based on `6bc71b3`. Committed and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774); [evidence and PR notes](../investigations/ssid-fix/README.md).
 - [x] Implement and locally verify D2/F14, mode-aware SSID VLAN state, on `fix/ssid-vlan-state` in `/home/will/terraform-provider-tplink-omada-ssid-vlan`, stacked on D1 `80991a5`. Committed and pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3); [D2 evidence and PR notes](../investigations/ssid-vlan-fix/README.md).
 - [x] Implement and locally verify D3/F13, WLAN-group replacement, on `fix/ssid-group-identity` in `/home/will/terraform-provider-tplink-omada-ssid-group`, stacked on D2 `0bbd076`. Committed and pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e); [D3 evidence and PR notes](../investigations/ssid-group-fix/README.md).
-- [ ] Next implementation: E, credential rotation/state (F05/F06). Hardware/submission gates remain open for D1–D3.
+- [x] Implement and locally verify E, credential rotation/state and settings preservation (F05/F06/F16), on `fix/site-credentials` in `/home/will/terraform-provider-tplink-omada-credentials`, based on A `52ed681`. E is committed and pushed as [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5); [plan](site-credentials.md) and [evidence/PR notes](../investigations/site-credentials-fix/README.md) record 48 direct cases, 12 Terraform scenarios, and combined A + D1–D3 + E verification.
+- [ ] Next implementation: F/F12, HTTP status/envelope validation and bounded, redacted errors. Coordinate with A's request helper and E's acknowledged-write state handling. Hardware/submission gates remain open for A–E.
 - [x] Implement and locally verify C, AP radio preservation (F03), in `/home/will/terraform-provider-tplink-omada-ap-radios` on `fix/ap-radio-updates`, based on `6bc71b3`. [C evidence and review notes](../investigations/ap-radio-fix/README.md).
 - [ ] Finish C's controlled-AP validation and PR-submission review. A, B, and C are committed and pushed to Will's fork; no upstream PR has been opened.
 - [x] Implement and locally verify PR B in worktree `/home/will/terraform-provider-tplink-omada-switch-ports`, branch `fix/switch-port-updates`, based directly on `6bc71b3`. A remains isolated on `fix/client-authentication`. [B evidence and review notes](../investigations/switch-port-fix/README.md).
@@ -24,7 +25,7 @@ This is the working record for fixing the [code-review findings](../investigatio
 
 ## Commits and fork branches — 2026-10-19
 
-Will authorized commit and push. Upstream does not grant this account push access, so the branches are published to [Will's fork](https://github.com/wbniv/terraform-provider-tplink-omada). All six code commits retain the validated file hashes. A–D1 are based directly on `6bc71b3`; D2 stacks on D1 and D3 stacks on D2.
+Will authorized commit and push. Upstream does not grant this account push access, so the branches are published to [Will's fork](https://github.com/wbniv/terraform-provider-tplink-omada). All seven code commits retain the validated file hashes. A–D1 are based directly on `6bc71b3`; D2 stacks on D1, D3 stacks on D2, and E stacks on A.
 
 | Work | Branch | Commit | Scope |
 | --- | --- | --- | --- |
@@ -34,10 +35,13 @@ Will authorized commit and push. Upstream does not grant this account push acces
 | D1 | `fix/ssid-update-preservation` | [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774) | Eleven SSID source/test/fixture/documentation/example/template files |
 | D2 | `fix/ssid-vlan-state` | [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3) | Nine VLAN source/test/documentation/template files; based on D1 |
 | D3 | `fix/ssid-group-identity` | [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e) | Seven group-identity source/test/documentation/template/example files; based on D2 |
+| E | `fix/site-credentials` | [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5) | Fifteen credential/settings source/test/fixture/documentation/template/example files; based on A |
 
 D2 is committed and pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3) on `fork/fix/ssid-vlan-state`, based on D1 `80991a5`. Its nine committed file hashes match the recorded tested sources.
 
 Plans, investigations, and evidence are maintained separately on `docs/provider-reliability-review` in the original checkout, `/home/will/terraform-provider-tplink-omada`. A is retained as a local and remote branch; B, C, D1, D2, and D3 retain their dedicated worktrees. This documentation branch contains baseline production code. Use a fix branch to inspect or run that fix.
+
+E is committed and pushed as [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5) on `fork/fix/site-credentials`, based on A `52ed681`. Its 15 committed file hashes match the tested sources; the remote branch was verified.
 
 - [x] Recheck upstream `main`, open PR heads/checks, and contribution requirements before committing. No explicit AI-attribution requirement was found; no tool/model metadata was guessed.
 - [x] Commit A, B, and C with conventional titles and push those three branches atomically to `fork`.
@@ -56,7 +60,7 @@ These are local work labels, not GitHub issue or PR numbers. Keep each patch rev
 | B | F02 | Preserve switch-port VLAN lists and honor supported writable fields | Stored #23 compatibility verified | Implemented and locally verified; controller test pending |
 | C | F03 | Preserve omitted/unknown AP radio settings through Terraform updates | A compatibility verified | Implemented and locally verified; controller test pending |
 | D | F04, F13, F14 | SSID update preservation, WLAN-group identity, VLAN drift | D1 → D2 → D3; A + D1 + D2 + D3 verified; hardware pending | D1, D2, and D3 pushed |
-| E | F05, F06 | Site and site-settings credential rotation/state | A | Open |
+| E | F05, F06, F16 | Site and site-settings credential ownership/state; preserve unrelated settings | Stacked on A; A + D1–D3 + E verified | Implemented, locally verified, and pushed; hardware pending |
 | F | F12 | HTTP status/envelope validation, typed errors, bounded/redacted diagnostics | Coordinate with A's request helper | Open |
 | G | F09, F10 | Complete pagination and trustworthy missing-resource handling | F before missing-object classification | Open |
 | H | F11 | Explicit handling of same-name network adoption and actual state | G for complete discovery | Open |
@@ -129,7 +133,7 @@ Detailed plan: [SSID preservation, identity, and VLAN state](ssid-reliability.md
 - [x] Preserve guest controls, MAC filtering, schedules, rate limits, multicast, and PSK mode during unrelated changes.
 - [x] Inventory writable fields from the official v5.9 reference and existing v6 model, copy them recursively, exclude known read-only fields, and reject unknown/incomplete snapshots.
 - [ ] Verify the inferred full-object PATCH contract and PMF meanings against a controlled controller; mock tests do not establish firmware compatibility.
-- [ ] Implement a supported WLAN-group move or explicitly require replacement, with a migration/recreation note.
+- [x] Require WLAN-group replacement in D3, with a migration/recreation note.
 - [x] Clear stale custom VLAN state when the controller returns default VLAN mode; share interpretation across refresh/import/data-source/write-readback paths and reject incomplete/unsupported snapshots.
 - [x] Cover import, rename, defaults/unknown values, masked/absent API passphrases, old untrusted state, configured security changes, VLAN writes, failure state, and repeated plans.
 - [x] Cover default/custom VLAN drift, stale fields, import, observed readback, restoration/removal plans, and stable repeated plans in D2.
@@ -139,11 +143,17 @@ Detailed plan: [SSID preservation, identity, and VLAN state](ssid-reliability.md
 
 ### E — Credentials
 
-- [ ] Site credential changes perform the actual update or fail explicitly with a supported migration path.
-- [ ] Successful site-settings rotation keeps the new planned secret; ordinary reads preserve masked secrets correctly.
-- [ ] Test username-only, password-only, combined rotation, imported/null secrets, omitted config, and failed updates.
-- [ ] Do not replace a whole site to rotate a password; prevent conflicting credential ownership between resources.
-- [ ] Verify no logs, test fixtures, or PR evidence contain real credentials.
+Suggested title: `fix(resources)!: make site credential rotation explicit and preserve settings`. [Detailed plan](site-credentials.md); [evidence and migration](../investigations/site-credentials-fix/README.md).
+
+- [x] Reject changed existing-site credentials with migration instructions to settings; validate bootstrap pairs and allow removal of both site inputs without an API write.
+- [x] Keep the accepted planned secret after settings rotation, including successful PATCH followed by failed readback. Never import/refresh API passwords into state.
+- [x] Require both explicitly configured settings inputs; test username-only/password-only/combined changes, imported/null secrets, omitted/partial config, unknown references, and failures/retries.
+- [x] Use settings as the rotation owner, without replacing a site. Document one settings resource per site; cross-resource uniqueness is not enforced.
+- [x] Reproduce and fix F16's unknown unrelated settings being serialized as zero values. Preserve known writable siblings, omit unchanged sections, and reject unknown fields in changed sections before writing.
+- [x] Pass 48 direct cases, 12 Terraform scenarios/65 steps, formatting/vet/build/full unit gates, and combined A + D1–D3 + E full unit/36-scenario acceptance in Docker.
+- [x] Update schemas, docs/templates/examples, and import IDs; record breaking behavior and existing-default caveats. All fixtures and evidence credentials are synthetic.
+- [x] Commit/push E as [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5); retain evidence on `docs/provider-reliability-review`. All 15 committed hashes and the code remote ref are verified.
+- [ ] Complete controlled-controller validation and upstream submission separately.
 
 ### F — Response handling
 
@@ -182,6 +192,7 @@ These were static concerns, not part of the 14 reproduced defects. Establish beh
 - [ ] Default WLAN selection: verify selection uses controller semantics rather than array position.
 - [ ] Provider startup cancellation: propagate context through controller discovery/client construction; PR A fixes login request cancellation but does not change startup signatures.
 - [ ] Partial failure/state: audit operations that make multiple writes before returning an error.
+- [ ] Site create recovery: retain the allocated ID when POST succeeds but the following GET/decoding fails. E validates before creation but does not repair this earlier client failure path; reproduce it separately, as with SSID create recovery.
 - [ ] Switch service settings: `buildSwitchServiceConfig` converts an unknown loopback setting to false; audit this separately from B's port payload changes.
 - [ ] CI: run local mock acceptance tests and targeted race coverage; preserve a separate real-controller compatibility declaration.
 
@@ -193,6 +204,15 @@ These were static concerns, not part of the 14 reproduced defects. Establish beh
 - [ ] Fix planning for an omitted whole list and verify import, repeated empty plans, later removal of configured ports, and unrelated switch changes.
 
 Priority: P2. The provider currently exposes `ports` as Optional+Computed, but this configuration cannot settle to an empty plan in the reproduction. B preserves omitted individual attributes and documents the existing whole-list limitation. This finding was discovered after the original 14-finding report and remains open.
+
+### F16 — Site settings updates zero unknown unrelated values
+
+- [x] Reproduce on A, whose site/settings resource sources match `6bc71b3`: a credential update emits false mesh/failover/roaming values for unknown unconfigured plan attributes.
+- [x] Fix under E by resolving unconfigured unknown values from a fresh snapshot and patching changed sections with preserved writable siblings.
+- [x] Retain [baseline/patch evidence](../investigations/site-credentials-fix/README.md#new-finding-f16-unknown-site-settings-become-destructive-zero-values), including a direct case that keeps the old password unchanged to isolate preservation from F06.
+- [ ] Validate controller acceptance and resulting device behavior on hardware.
+
+Priority: P1. The incorrect request is reproduced; connectivity effects depend on firmware acceptance. This additional finding is fixed in the pushed E commit and does not change the original 14-finding baseline record.
 
 ## Existing upstream PRs
 
@@ -215,7 +235,7 @@ Preserve the earlier [open-PR plan](open-pull-requests.md) and its recorded chec
 - [ ] Complete formatting, vet, build, unit tests, and relevant acceptance/race gates without changing unrelated files.
 - [ ] Review error/cancellation/read-only paths and unintended side effects.
 - [ ] Verify attribution requirements again at submission time; use actual session metadata if attribution is needed, never guessed versions.
-- [ ] Link real upstream issue numbers only after verifying them. F01–F15 are local investigation IDs, not GitHub issues.
+- [ ] Link real upstream issue numbers only after verifying them. F01–F16 are local investigation IDs, not GitHub issues.
 - [ ] Record PR URL, CI run, review requests, follow-up comments, and merge commit when those events occur.
 
 ## Validation ledger
@@ -229,5 +249,6 @@ Preserve the earlier [open-PR plan](open-pull-requests.md) and its recorded chec
 | D1 | Base `6bc71b3`; head `80991a5`; `fix/ssid-update-preservation`, pushed to fork | Go 1.25.6 full gates; 47 lifecycle/validation cases; eight Terraform 1.15.8 scenarios; A + D1 full unit/acceptance checks | Pass on 2026-10-19; matching host/container hashes; baseline 42 update cases and five import scenarios fail; no hardware; [evidence](../investigations/ssid-fix/README.md) |
 | D2 | Base D1 `80991a5`; `fix/ssid-vlan-state`, `0bbd076` | Go 1.25.6 full gates; 95 lifecycle cases; three D2 Terraform scenarios plus all eight D1 scenarios; A + D1 + D2 unit/acceptance checks | Pass on 2026-10-19; host/container hashes match; D1 baseline has 59 lifecycle failures and all three new Terraform failures; no hardware; [evidence](../investigations/ssid-vlan-fix/README.md) |
 | D3 | Base D2 `0bbd076`; `fix/ssid-group-identity`, `ec2d949`, pushed to fork | Go 1.25.6 full gates; 21 direct cases; 13 D3 Terraform scenarios plus all 11 D1/D2 scenarios; A + D1 + D2 + D3 unit/acceptance checks | Pass on 2026-10-19; seven host/container hashes match; D2 baseline has 10 direct-case and nine new Terraform failures; no hardware; [evidence](../investigations/ssid-group-fix/README.md) |
+| E | Base A `52ed681`; `fix/site-credentials`, `8f24c37`, pushed to fork | Go 1.25.6 full gates; 48 direct cases; 12 Terraform 1.15.8 scenarios/65 steps; A + D1–D3 + E full unit/36 scenarios/185 steps | Pass on 2026-10-19; 15 host/container hashes match; A baseline has 44 direct-case and all 12 Terraform-scenario failures; no hardware; [evidence](../investigations/site-credentials-fix/README.md) |
 
 Keep the baseline evidence unchanged. Add patch evidence separately, and distinguish implemented, locally verified, controller-verified, submitted, and merged states.

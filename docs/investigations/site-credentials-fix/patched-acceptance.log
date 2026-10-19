@@ -1,0 +1,28 @@
+=== RUN   TestAccSiteCredentials
+=== RUN   TestAccSiteCredentials/masked
+=== RUN   TestAccSiteCredentials/other_mask
+=== RUN   TestAccSiteCredentials/plaintext
+=== RUN   TestAccSiteCredentials/absent
+=== RUN   TestAccSiteCredentials/adopt
+=== RUN   TestAccSiteCredentials/unknown_credentials
+=== RUN   TestAccSiteCredentials/rejected_PATCH_retry
+=== RUN   TestAccSiteCredentials/accepted_PATCH_read_failure
+=== RUN   TestAccSiteCredentials/site_ownership_migration
+=== RUN   TestAccSiteCredentials/site_bootstrap
+=== RUN   TestAccSiteCredentials/site_unknown_bootstrap
+=== RUN   TestAccSiteCredentials/partial_credentials_rejected
+--- PASS: TestAccSiteCredentials (38.18s)
+    --- PASS: TestAccSiteCredentials/masked (6.60s)
+    --- PASS: TestAccSiteCredentials/other_mask (5.98s)
+    --- PASS: TestAccSiteCredentials/plaintext (5.51s)
+    --- PASS: TestAccSiteCredentials/absent (5.45s)
+    --- PASS: TestAccSiteCredentials/adopt (1.84s)
+    --- PASS: TestAccSiteCredentials/unknown_credentials (1.27s)
+    --- PASS: TestAccSiteCredentials/rejected_PATCH_retry (2.10s)
+    --- PASS: TestAccSiteCredentials/accepted_PATCH_read_failure (2.10s)
+    --- PASS: TestAccSiteCredentials/site_ownership_migration (1.81s)
+    --- PASS: TestAccSiteCredentials/site_bootstrap (1.88s)
+    --- PASS: TestAccSiteCredentials/site_unknown_bootstrap (1.86s)
+    --- PASS: TestAccSiteCredentials/partial_credentials_rejected (1.78s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	38.197s

@@ -1,0 +1,247 @@
+=== RUN   TestSiteSettingsCredentials
+=== RUN   TestSiteSettingsCredentials/password_rotation
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+=== RUN   TestSiteSettingsCredentials/username_rotation
+    site_credentials_test.go:314: unrelated section bandSteering written
+    site_credentials_test.go:314: unrelated section led written
+    site_credentials_test.go:314: unrelated section site written
+    site_credentials_test.go:314: unrelated section advancedFeature written
+    site_credentials_test.go:314: unrelated section lldp written
+    site_credentials_test.go:314: unrelated section airtimeFairness written
+    site_credentials_test.go:314: unrelated section autoUpgrade written
+    site_credentials_test.go:314: unrelated section alert written
+    site_credentials_test.go:314: unrelated section rememberDevice written
+    site_credentials_test.go:314: unrelated section mesh written
+    site_credentials_test.go:314: unrelated section beaconControl written
+    site_credentials_test.go:314: unrelated section bandSteeringForMultiBand written
+    site_credentials_test.go:314: unrelated section roaming written
+    site_credentials_test.go:314: unrelated section speedTest written
+    site_credentials_test.go:314: unrelated section remoteLog written
+=== RUN   TestSiteSettingsCredentials/combined_rotation
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+=== RUN   TestSiteSettingsCredentials/imported_null_password_rotation
+    site_credentials_test.go:314: unrelated section led written
+    site_credentials_test.go:314: unrelated section roaming written
+    site_credentials_test.go:314: unrelated section remoteLog written
+    site_credentials_test.go:314: unrelated section site written
+    site_credentials_test.go:314: unrelated section speedTest written
+    site_credentials_test.go:314: unrelated section advancedFeature written
+    site_credentials_test.go:314: unrelated section bandSteering written
+    site_credentials_test.go:314: unrelated section rememberDevice written
+    site_credentials_test.go:314: unrelated section autoUpgrade written
+    site_credentials_test.go:314: unrelated section lldp written
+    site_credentials_test.go:314: unrelated section bandSteeringForMultiBand written
+    site_credentials_test.go:314: unrelated section mesh written
+    site_credentials_test.go:314: unrelated section alert written
+    site_credentials_test.go:314: unrelated section beaconControl written
+    site_credentials_test.go:314: unrelated section airtimeFairness written
+=== RUN   TestSiteSettingsCredentials/adopt_with_credentials
+    site_credentials_test.go:314: unrelated section bandSteeringForMultiBand written
+    site_credentials_test.go:314: unrelated section led written
+    site_credentials_test.go:314: unrelated section roaming written
+    site_credentials_test.go:314: unrelated section autoUpgrade written
+    site_credentials_test.go:314: unrelated section beaconControl written
+    site_credentials_test.go:314: unrelated section remoteLog written
+    site_credentials_test.go:314: unrelated section airtimeFairness written
+    site_credentials_test.go:314: unrelated section rememberDevice written
+    site_credentials_test.go:314: unrelated section mesh written
+    site_credentials_test.go:314: unrelated section speedTest written
+    site_credentials_test.go:314: unrelated section alert written
+    site_credentials_test.go:314: unrelated section lldp written
+    site_credentials_test.go:314: unrelated section site written
+    site_credentials_test.go:314: unrelated section advancedFeature written
+    site_credentials_test.go:314: unrelated section bandSteering written
+=== RUN   TestSiteSettingsCredentials/adopt_without_credentials
+    site_credentials_test.go:314: unrelated section airtimeFairness written
+    site_credentials_test.go:314: unrelated section roaming written
+    site_credentials_test.go:314: unrelated section site written
+    site_credentials_test.go:314: unrelated section mesh written
+    site_credentials_test.go:314: unrelated section lldp written
+    site_credentials_test.go:314: unrelated section beaconControl written
+    site_credentials_test.go:314: unrelated section bandSteeringForMultiBand written
+    site_credentials_test.go:314: unrelated section rememberDevice written
+    site_credentials_test.go:314: unrelated section speedTest written
+    site_credentials_test.go:314: unrelated section advancedFeature written
+    site_credentials_test.go:314: unrelated section autoUpgrade written
+    site_credentials_test.go:314: unrelated section remoteLog written
+    site_credentials_test.go:314: unrelated section bandSteering written
+    site_credentials_test.go:314: unrelated section alert written
+=== RUN   TestSiteSettingsCredentials/omit_both_on_update
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+=== RUN   TestSiteSettingsCredentials/partial_username_only
+    site_credentials_test.go:256: error=false want=true diagnostics=[]
+=== RUN   TestSiteSettingsCredentials/partial_password_only
+    site_credentials_test.go:256: error=false want=true diagnostics=[]
+=== RUN   TestSiteSettingsCredentials/empty_password
+    site_credentials_test.go:256: error=false want=true diagnostics=[]
+=== RUN   TestSiteSettingsCredentials/adopt_PATCH_rejected
+    site_credentials_test.go:259: credential leaked through diagnostics
+=== RUN   TestSiteSettingsCredentials/adopt_accepted_readback_fails
+    site_credentials_test.go:314: unrelated section autoUpgrade written
+    site_credentials_test.go:314: unrelated section bandSteering written
+    site_credentials_test.go:314: unrelated section led written
+    site_credentials_test.go:314: unrelated section lldp written
+    site_credentials_test.go:314: unrelated section airtimeFairness written
+    site_credentials_test.go:314: unrelated section site written
+    site_credentials_test.go:314: unrelated section mesh written
+    site_credentials_test.go:314: unrelated section remoteLog written
+    site_credentials_test.go:314: unrelated section beaconControl written
+    site_credentials_test.go:314: unrelated section bandSteeringForMultiBand written
+    site_credentials_test.go:314: unrelated section rememberDevice written
+    site_credentials_test.go:314: unrelated section speedTest written
+    site_credentials_test.go:314: unrelated section alert written
+    site_credentials_test.go:314: unrelated section advancedFeature written
+    site_credentials_test.go:314: unrelated section roaming written
+=== RUN   TestSiteSettingsCredentials/readback_account_missing
+    site_credentials_test.go:256: error=false want=true diagnostics=[]
+=== RUN   TestSiteSettingsCredentials/unresolved_password
+    site_credentials_test.go:256: error=false want=true diagnostics=[]
+=== RUN   TestSiteSettingsCredentials/read_fails_before_write
+    site_credentials_test.go:256: error=false want=true diagnostics=[]
+=== RUN   TestSiteSettingsCredentials/PATCH_rejected
+    site_credentials_test.go:259: credential leaked through diagnostics
+=== RUN   TestSiteSettingsCredentials/accepted_PATCH_readback_fails
+    site_credentials_test.go:314: unrelated section beaconControl written
+    site_credentials_test.go:314: unrelated section bandSteeringForMultiBand written
+    site_credentials_test.go:314: unrelated section led written
+    site_credentials_test.go:314: unrelated section autoUpgrade written
+    site_credentials_test.go:314: unrelated section alert written
+    site_credentials_test.go:314: unrelated section lldp written
+    site_credentials_test.go:314: unrelated section airtimeFairness written
+    site_credentials_test.go:314: unrelated section roaming written
+    site_credentials_test.go:314: unrelated section speedTest written
+    site_credentials_test.go:314: unrelated section remoteLog written
+    site_credentials_test.go:314: unrelated section advancedFeature written
+    site_credentials_test.go:314: unrelated section bandSteering written
+    site_credentials_test.go:314: unrelated section site written
+    site_credentials_test.go:314: unrelated section rememberDevice written
+    site_credentials_test.go:314: unrelated section mesh written
+=== RUN   TestSiteSettingsCredentials/readback_username_mismatch
+    site_credentials_test.go:256: error=false want=true diagnostics=[]
+=== RUN   TestSiteSettingsCredentials/PATCH_response_empty
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+=== RUN   TestSiteSettingsCredentials/PATCH_response_plaintext
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+=== RUN   TestSiteSettingsCredentials/PATCH_response_other_mask
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+=== RUN   TestSiteSettingsCredentials/unknown_unrelated_settings
+    site_credentials_test.go:314: unrelated section beaconControl written
+    site_credentials_test.go:314: unrelated section airtimeFairness written
+    site_credentials_test.go:314: unrelated section led written
+    site_credentials_test.go:314: unrelated section alert written
+    site_credentials_test.go:314: unrelated section remoteLog written
+    site_credentials_test.go:314: unrelated section bandSteering written
+    site_credentials_test.go:314: unrelated section roaming written
+    site_credentials_test.go:314: unrelated section mesh written
+    site_credentials_test.go:314: unrelated section speedTest written
+    site_credentials_test.go:314: unrelated section bandSteeringForMultiBand written
+    site_credentials_test.go:314: unrelated section site written
+    site_credentials_test.go:314: unrelated section advancedFeature written
+    site_credentials_test.go:314: unrelated section rememberDevice written
+    site_credentials_test.go:314: unrelated section autoUpgrade written
+    site_credentials_test.go:314: unrelated section lldp written
+    site_credentials_test.go:329: unknown settings were zeroed
+=== RUN   TestSiteSettingsCredentials/unrelated_unknown_section_preserved
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+=== RUN   TestSiteSettingsCredentials/changed_section_preserves_siblings
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+=== RUN   TestSiteSettingsCredentials/changed_section_rejects_unknown_sibling
+    site_credentials_test.go:256: error=false want=true diagnostics=[]
+=== RUN   TestSiteSettingsCredentials/site_read-only_key_excluded
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+=== RUN   TestSiteSettingsCredentials/refresh_mask
+=== RUN   TestSiteSettingsCredentials/refresh_other_mask
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+=== RUN   TestSiteSettingsCredentials/refresh_plaintext
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+=== RUN   TestSiteSettingsCredentials/refresh_absent_password
+=== RUN   TestSiteSettingsCredentials/import_mask
+=== RUN   TestSiteSettingsCredentials/import_plaintext
+    site_credentials_test.go:291: state did not retain the configured/accepted secret ownership
+--- FAIL: TestSiteSettingsCredentials (0.28s)
+    --- FAIL: TestSiteSettingsCredentials/password_rotation (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/username_rotation (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/combined_rotation (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/imported_null_password_rotation (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/adopt_with_credentials (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/adopt_without_credentials (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/omit_both_on_update (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/partial_username_only (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/partial_password_only (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/empty_password (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/adopt_PATCH_rejected (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/adopt_accepted_readback_fails (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/readback_account_missing (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/unresolved_password (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/read_fails_before_write (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/PATCH_rejected (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/accepted_PATCH_readback_fails (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/readback_username_mismatch (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/PATCH_response_empty (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/PATCH_response_plaintext (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/PATCH_response_other_mask (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/unknown_unrelated_settings (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/unrelated_unknown_section_preserved (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/changed_section_preserves_siblings (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/changed_section_rejects_unknown_sibling (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/site_read-only_key_excluded (0.01s)
+    --- PASS: TestSiteSettingsCredentials/refresh_mask (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/refresh_other_mask (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/refresh_plaintext (0.01s)
+    --- PASS: TestSiteSettingsCredentials/refresh_absent_password (0.01s)
+    --- PASS: TestSiteSettingsCredentials/import_mask (0.01s)
+    --- FAIL: TestSiteSettingsCredentials/import_plaintext (0.01s)
+=== RUN   TestSiteCredentialOwnership
+=== RUN   TestSiteCredentialOwnership/password
+    site_credentials_test.go:406: credential change must fail before writes with prior state, got writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialOwnership/username
+    site_credentials_test.go:406: credential change must fail before writes with prior state, got writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialOwnership/both
+    site_credentials_test.go:406: credential change must fail before writes with prior state, got writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialOwnership/imported
+    site_credentials_test.go:406: credential change must fail before writes with prior state, got writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialOwnership/unknown
+    site_credentials_test.go:406: credential change must fail before writes with prior state, got writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialOwnership/partial_removal
+    site_credentials_test.go:406: credential change must fail before writes with prior state, got writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialOwnership/remove_both
+    site_credentials_test.go:415: writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialOwnership/metadata
+--- FAIL: TestSiteCredentialOwnership (0.01s)
+    --- FAIL: TestSiteCredentialOwnership/password (0.00s)
+    --- FAIL: TestSiteCredentialOwnership/username (0.00s)
+    --- FAIL: TestSiteCredentialOwnership/both (0.00s)
+    --- FAIL: TestSiteCredentialOwnership/imported (0.00s)
+    --- FAIL: TestSiteCredentialOwnership/unknown (0.00s)
+    --- FAIL: TestSiteCredentialOwnership/partial_removal (0.00s)
+    --- FAIL: TestSiteCredentialOwnership/remove_both (0.00s)
+    --- PASS: TestSiteCredentialOwnership/metadata (0.00s)
+=== RUN   TestSiteCredentialBootstrapValidation
+=== RUN   TestSiteCredentialBootstrapValidation/both_omitted
+    site_credentials_test.go:477: invalid bootstrap must fail without a write/state; writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialBootstrapValidation/username_omitted
+    site_credentials_test.go:477: invalid bootstrap must fail without a write/state; writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialBootstrapValidation/password_omitted
+    site_credentials_test.go:477: invalid bootstrap must fail without a write/state; writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialBootstrapValidation/empty_username
+    site_credentials_test.go:477: invalid bootstrap must fail without a write/state; writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialBootstrapValidation/empty_password
+    site_credentials_test.go:477: invalid bootstrap must fail without a write/state; writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialBootstrapValidation/unknown_username
+    site_credentials_test.go:477: invalid bootstrap must fail without a write/state; writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialBootstrapValidation/unknown_password
+    site_credentials_test.go:477: invalid bootstrap must fail without a write/state; writes=1 diagnostics=[]
+=== RUN   TestSiteCredentialBootstrapValidation/both_unknown
+    site_credentials_test.go:477: invalid bootstrap must fail without a write/state; writes=1 diagnostics=[]
+--- FAIL: TestSiteCredentialBootstrapValidation (0.01s)
+    --- FAIL: TestSiteCredentialBootstrapValidation/both_omitted (0.00s)
+    --- FAIL: TestSiteCredentialBootstrapValidation/username_omitted (0.00s)
+    --- FAIL: TestSiteCredentialBootstrapValidation/password_omitted (0.00s)
+    --- FAIL: TestSiteCredentialBootstrapValidation/empty_username (0.00s)
+    --- FAIL: TestSiteCredentialBootstrapValidation/empty_password (0.00s)
+    --- FAIL: TestSiteCredentialBootstrapValidation/unknown_username (0.00s)
+    --- FAIL: TestSiteCredentialBootstrapValidation/unknown_password (0.00s)
+    --- FAIL: TestSiteCredentialBootstrapValidation/both_unknown (0.00s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/resources	0.309s
+FAIL

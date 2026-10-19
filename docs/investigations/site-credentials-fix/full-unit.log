@@ -1,0 +1,4 @@
+	github.com/terraform-provider-tplink-omada		coverage: 0.0% of statements
+ok  	github.com/terraform-provider-tplink-omada/internal/client	0.199s	coverage: 39.4% of statements
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	0.020s	coverage: 2.9% of statements
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.302s	coverage: 11.7% of statements

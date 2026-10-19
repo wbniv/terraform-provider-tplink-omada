@@ -20,10 +20,11 @@ The detailed findings and original logs below describe the reviewed baseline. A,
 | D1 — SSID preservation | F04 | Implemented and locally verified on `fix/ssid-update-preservation`, committed and pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774); 47 lifecycle/validation cases and eight Terraform scenarios pass, including A compatibility. [Evidence](ssid-fix/README.md). |
 | D2 — SSID VLAN state | F14 | Implemented and locally verified on `fix/ssid-vlan-state`, based on D1, committed/pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3); 95 lifecycle cases, three new Terraform scenarios, full D1 regression, and A compatibility pass. [Evidence](ssid-vlan-fix/README.md). |
 | D3 — SSID group identity | F13 | Implemented and locally verified on `fix/ssid-group-identity`, based on D2, committed/pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e); 21 direct cases, 13 new Terraform scenarios, full D1/D2 regression and A compatibility pass. [Evidence](ssid-group-fix/README.md). |
-| E–H | F05, F06, F09–F12 | Open; E credential rotation/state is next. Scope and dependencies are recorded in the tracker. |
+| E — Credentials | F05, F06, F16 | Implemented and locally verified on `fix/site-credentials`, based on A, committed/pushed as [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5). All 48 direct cases, 12 Terraform scenarios, full Go gates, and combined A + D1–D3 + E checks pass. [Evidence](site-credentials-fix/README.md). |
+| F–H | F09–F12 | Open; F12 HTTP status/envelope validation is next. Scope and dependencies are recorded in the tracker. |
 | I — Switch planning | F15 | New P2 finding discovered during B: importing with the entire `ports` list omitted leaves a persistent update plan. Reproduced on the baseline and B; root cause and fix remain open. [Probe and logs](switch-port-fix/README.md#new-finding-f15-omitted-whole-ports-list-does-not-settle-after-import). |
 
-F15 is additional to the original 14 findings. B documents the complete-port-list workaround; it does not resolve F15. Formatting, vet, build, and full unit tests pass for A, B, C, D1, D2, and D3 in Go 1.25.6 containers. These results establish local behavior, with hardware compatibility still to be checked.
+F15 and F16 are additional to the original 14 findings. B documents the complete-port-list workaround; it does not resolve F15. F16, discovered during E, concerns unrelated site settings becoming zero values and is fixed locally in E. Formatting, vet, build, and full unit tests pass for A, B, C, D1, D2, D3, and E in Go 1.25.6 containers. These results establish local behavior, with hardware compatibility still to be checked.
 
 ## Findings at a glance
 
@@ -188,6 +189,16 @@ Read sets `vlan_id` when the API reports a nonzero custom VLAN but has no branch
 
 **Repair:** Map the VLAN mode explicitly and set `vlan_id` to null when custom VLAN configuration is absent. Share this mapping between Read and Import. Test custom-to-default, default-to-custom, and custom-to-different-custom transitions.
 
+## Additional finding — 2026-10-19
+
+### F16 — Site settings updates zero unknown unrelated values
+
+**Priority: P1.** Discovered during E. The baseline `planToSiteSettings` builds every settings section and converts unknown Terraform booleans/integers to Go zero values. Updating credentials can therefore emit disabled mesh, automatic failover, and fast roaming even when these settings are enabled remotely and omitted from configuration.
+
+**Evidence:** `TestSiteSettingsCredentials/unknown_unrelated_settings` runs on A `52ed681`, whose site/settings resource sources are unchanged from `6bc71b3`. It keeps the configured password unchanged, isolating the failure from F06. The [baseline log](site-credentials-fix/baseline-lifecycle.log) captures unrelated section writes and reports “unknown settings were zeroed”. All 12 new Terraform scenarios also fail on A; their first failing assertions often concern unrelated writes. [Patched lifecycle](site-credentials-fix/patched-lifecycle.log) and [Terraform evidence](site-credentials-fix/patched-acceptance.log) pass. These prove request/state behavior; device connectivity effects remain inferred.
+
+**Repair status:** Implemented and locally verified under E, committed/pushed as [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5). Resolve unconfigured unknown values from a fresh snapshot; send only changed sections; preserve known writable siblings and reject unrecognized fields in changed sections. Existing schema defaults still require review during import/adoption. [Full scope and limitations](site-credentials-fix/README.md).
+
 ## Broader code critique
 
 The strongest recurring problem is the conversion between three different kinds of data: Terraform's known/null/unknown values, API fields that may be omitted, and Go zero values. Several builders collapse these distinctions. Creation defaults are also reused during updates, causing the provider to overwrite settings outside its schema. Centralize conversion rules, use separate create/update request types where their semantics differ, and test preservation of unrelated settings.
@@ -236,12 +247,12 @@ Run `bash docs/investigations/reproduce.sh` from this checkout to reproduce in a
 - [x] Implement and locally verify F02 switch-port preservation, including real Terraform planning against mock controllers (B).
 - [x] Implement and locally verify F03 AP radio preservation, including default migration and partial-failure state recovery (C).
 - [x] Fix and locally verify F04 SSID preservation alongside F13/F14 identity and VLAN drift (D1–D3), including actual Terraform unknown-value planning tests. D3 is committed/pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e); hardware/upstream gates remain open.
-- [ ] Fix both credential paths, F05/F06, with explicit rotation tests.
+- [x] Fix both credential paths, F05/F06, and newly reproduced F16 settings preservation under E; direct and Terraform regressions pass. E is committed and pushed; hardware/submission gates remain open.
 - [ ] Fix F12's HTTP classification, F09's pagination, then F10's missing-resource handling in that order so absence is trustworthy.
 - [x] Fix F13/F14 locally with import, identity-change, and remote-drift acceptance cases.
 - [ ] Fix F11 network adoption under H.
 - [ ] Investigate and fix F15's persistent plan when the whole switch ports list is omitted (I).
-- [ ] Complete controlled-hardware validation and submission review for A–D3; record publication and merge separately.
+- [ ] Complete controlled-hardware validation and submission review for A–E; record publication and merge separately.
 - [ ] Add local mock acceptance tests to CI alongside a targeted race job. Keep live-controller compatibility testing as a separate gate for payload/API changes.
 
-The original investigation did not change production code. Subsequent A–D3 fixes are isolated in the branches recorded above; their evidence is stored separately from the baseline logs. No review comments or PRs have been posted to GitHub by this work.
+The original investigation did not change production code. Subsequent A–E fixes are isolated in the branches recorded above; their evidence is stored separately from the baseline logs. No review comments or PRs have been posted to GitHub by this work.

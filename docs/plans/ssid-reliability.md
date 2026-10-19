@@ -232,7 +232,8 @@ D1 is complete locally and committed/pushed to Will's fork; hardware testing and
 
 ### Undated — Remaining implementation
 
-- [ ] Continue with credential rotation/state work E (F05/F06) in the parent tracker; retain earlier SSID create-readback recovery as a separate follow-up.
+- [x] Complete local E credential rotation/state and settings-preservation work (F05/F06/F16); see [E plan](site-credentials.md) and [evidence](../investigations/site-credentials-fix/README.md). E is committed/pushed as [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5); combined A + D1–D3 + E verification passes.
+- [ ] Continue with F12 HTTP response validation in the parent tracker; retain earlier SSID create-readback recovery as a separate follow-up.
 
 ### Conditional — Controller access and upstream review
 

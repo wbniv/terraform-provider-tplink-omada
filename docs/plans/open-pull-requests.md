@@ -2,7 +2,7 @@
 
 Reviewed 2026-10-18 against `main` at `6bc71b3`. Metadata refreshed 2026-10-19: `main` remains `6bc71b3`; #23 remains `2ec46a4` with no posted checks; #20 at `e54b759` has successful Lint/Build/Unit Tests; #18 at `272ef99` reports failed Lint/Build and skipped Unit Tests. These are the reported check results, not newly executed CI runs. Recheck again before submission or merge.
 
-Subsequent reliability work is tracked in the [PR tracker](provider-reliability-prs.md): A (authentication), B (switch-port preservation), and C (AP radio preservation) are implemented, locally verified, committed, and pushed to Will's fork as of 2026-10-19; D (SSID preservation/identity/drift) is next. No upstream PR or review comment has been published by this work. B has also been tested with #23's unchanged head; see its [compatibility evidence](../investigations/switch-port-fix/README.md).
+Subsequent reliability work is tracked in the [PR tracker](provider-reliability-prs.md): A (authentication), B (switch-port preservation), C (AP radio preservation), D1–D3 (SSID preservation/identity/drift), and E (credentials/settings preservation) are implemented, locally verified, committed, and pushed to Will's fork as of 2026-10-19. F/F12 (HTTP status/envelope validation) is next. No upstream PR or review comment has been published by this work. B has also been tested with #23's unchanged head; see its [compatibility evidence](../investigations/switch-port-fix/README.md).
 
 Local verification used the `golang:1.25.8` Docker image. `main`, PR #18, and PR #23 each passed `go vet ./...`, `go build ./...`, and `go test ./...`. PR #18 and #23 also had no `gofmt -l .` output. The PR #23 mock-controller acceptance tests passed with Terraform 1.15.8. These local results do not replace GitHub CI or a release workflow run.
 
@@ -54,7 +54,7 @@ The PR changes `go.mod` and `go.sum`, including several indirect dependencies. A
 
 ## Suggested order for the three upstream PRs
 
-This order concerns the upstream dependency/workflow/speed PRs. For the local reliability fixes, the next implementation is D, SSID preservation/identity/drift; A, B, and C await their remaining validation and submission gates.
+This order concerns the upstream dependency/workflow/speed PRs. For the local reliability fixes, the next implementation is F/F12, HTTP status/envelope validation; A–E await their remaining hardware validation and submission gates.
 
 1. Triage and refresh #18 first because its checks fail and its Go version change may affect CI and the other PRs.
 2. Review #23's behavior and migration independently; it fixes user-visible Terraform drift.

@@ -1,0 +1,127 @@
+=== RUN   TestAccSiteCredentials
+=== RUN   TestAccSiteCredentials/masked
+    site_credentials_test.go:87: credential flow changed unrelated section beaconControl
+    site_credentials_test.go:87: credential flow changed unrelated section remoteLog
+    site_credentials_test.go:87: credential flow changed unrelated section lldp
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteering
+    site_credentials_test.go:87: credential flow changed unrelated section rememberDevice
+    site_credentials_test.go:87: credential flow changed unrelated section site
+    site_credentials_test.go:87: credential flow changed unrelated section autoUpgrade
+    site_credentials_test.go:87: credential flow changed unrelated section speedTest
+    site_credentials_test.go:87: credential flow changed unrelated section advancedFeature
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteeringForMultiBand
+    site_credentials_test.go:87: credential flow changed unrelated section airtimeFairness
+    site_credentials_test.go:87: credential flow changed unrelated section roaming
+    site_credentials_test.go:87: credential flow changed unrelated section mesh
+    site_credentials_test.go:87: credential flow changed unrelated section alert
+    site_credentials_test.go:236: Step 2/9 error: Check failed: unrelated settings changed
+=== RUN   TestAccSiteCredentials/other_mask
+    site_credentials_test.go:236: Step 1/9 error: Check failed: omada_site_settings.test: Attribute 'device_account_password' found when not expected
+=== RUN   TestAccSiteCredentials/plaintext
+    site_credentials_test.go:236: Step 1/9 error: Check failed: omada_site_settings.test: Attribute 'device_account_password' found when not expected
+=== RUN   TestAccSiteCredentials/absent
+    site_credentials_test.go:87: credential flow changed unrelated section alert
+    site_credentials_test.go:87: credential flow changed unrelated section lldp
+    site_credentials_test.go:87: credential flow changed unrelated section rememberDevice
+    site_credentials_test.go:87: credential flow changed unrelated section airtimeFairness
+    site_credentials_test.go:87: credential flow changed unrelated section beaconControl
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteeringForMultiBand
+    site_credentials_test.go:87: credential flow changed unrelated section autoUpgrade
+    site_credentials_test.go:87: credential flow changed unrelated section roaming
+    site_credentials_test.go:87: credential flow changed unrelated section site
+    site_credentials_test.go:87: credential flow changed unrelated section mesh
+    site_credentials_test.go:87: credential flow changed unrelated section speedTest
+    site_credentials_test.go:87: credential flow changed unrelated section remoteLog
+    site_credentials_test.go:87: credential flow changed unrelated section advancedFeature
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteering
+    site_credentials_test.go:236: Step 2/9 error: Check failed: unrelated settings changed
+=== RUN   TestAccSiteCredentials/adopt
+    site_credentials_test.go:87: credential flow changed unrelated section autoUpgrade
+    site_credentials_test.go:87: credential flow changed unrelated section alert
+    site_credentials_test.go:87: credential flow changed unrelated section beaconControl
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteeringForMultiBand
+    site_credentials_test.go:87: credential flow changed unrelated section roaming
+    site_credentials_test.go:87: credential flow changed unrelated section rememberDevice
+    site_credentials_test.go:87: credential flow changed unrelated section site
+    site_credentials_test.go:87: credential flow changed unrelated section mesh
+    site_credentials_test.go:87: credential flow changed unrelated section speedTest
+    site_credentials_test.go:87: credential flow changed unrelated section remoteLog
+    site_credentials_test.go:87: credential flow changed unrelated section advancedFeature
+    site_credentials_test.go:87: credential flow changed unrelated section lldp
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteering
+    site_credentials_test.go:87: credential flow changed unrelated section airtimeFairness
+    site_credentials_test.go:236: Step 1/3 error: Check failed: unrelated settings changed
+=== RUN   TestAccSiteCredentials/unknown_credentials
+    site_credentials_test.go:87: credential flow changed unrelated section lldp
+    site_credentials_test.go:87: credential flow changed unrelated section rememberDevice
+    site_credentials_test.go:87: credential flow changed unrelated section site
+    site_credentials_test.go:87: credential flow changed unrelated section alert
+    site_credentials_test.go:87: credential flow changed unrelated section remoteLog
+    site_credentials_test.go:87: credential flow changed unrelated section beaconControl
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteering
+    site_credentials_test.go:87: credential flow changed unrelated section mesh
+    site_credentials_test.go:87: credential flow changed unrelated section speedTest
+    site_credentials_test.go:87: credential flow changed unrelated section airtimeFairness
+    site_credentials_test.go:87: credential flow changed unrelated section autoUpgrade
+    site_credentials_test.go:87: credential flow changed unrelated section advancedFeature
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteeringForMultiBand
+    site_credentials_test.go:87: credential flow changed unrelated section roaming
+    site_credentials_test.go:236: Step 1/2 error: Check failed: unrelated settings changed
+=== RUN   TestAccSiteCredentials/rejected_PATCH_retry
+    site_credentials_test.go:87: credential flow changed unrelated section airtimeFairness
+    site_credentials_test.go:87: credential flow changed unrelated section rememberDevice
+    site_credentials_test.go:87: credential flow changed unrelated section autoUpgrade
+    site_credentials_test.go:87: credential flow changed unrelated section alert
+    site_credentials_test.go:87: credential flow changed unrelated section advancedFeature
+    site_credentials_test.go:87: credential flow changed unrelated section beaconControl
+    site_credentials_test.go:87: credential flow changed unrelated section site
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteering
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteeringForMultiBand
+    site_credentials_test.go:87: credential flow changed unrelated section roaming
+    site_credentials_test.go:87: credential flow changed unrelated section speedTest
+    site_credentials_test.go:87: credential flow changed unrelated section remoteLog
+    site_credentials_test.go:87: credential flow changed unrelated section mesh
+    site_credentials_test.go:87: credential flow changed unrelated section lldp
+    site_credentials_test.go:236: Step 1/4 error: Check failed: unrelated settings changed
+=== RUN   TestAccSiteCredentials/accepted_PATCH_read_failure
+    site_credentials_test.go:87: credential flow changed unrelated section alert
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteering
+    site_credentials_test.go:87: credential flow changed unrelated section bandSteeringForMultiBand
+    site_credentials_test.go:87: credential flow changed unrelated section roaming
+    site_credentials_test.go:87: credential flow changed unrelated section mesh
+    site_credentials_test.go:87: credential flow changed unrelated section speedTest
+    site_credentials_test.go:87: credential flow changed unrelated section advancedFeature
+    site_credentials_test.go:87: credential flow changed unrelated section beaconControl
+    site_credentials_test.go:87: credential flow changed unrelated section rememberDevice
+    site_credentials_test.go:87: credential flow changed unrelated section site
+    site_credentials_test.go:87: credential flow changed unrelated section autoUpgrade
+    site_credentials_test.go:87: credential flow changed unrelated section remoteLog
+    site_credentials_test.go:87: credential flow changed unrelated section lldp
+    site_credentials_test.go:87: credential flow changed unrelated section airtimeFairness
+    site_credentials_test.go:236: Step 1/4 error: Check failed: unrelated settings changed
+=== RUN   TestAccSiteCredentials/site_ownership_migration
+    site_credentials_test.go:236: Step 2/4, expected an error but got none
+=== RUN   TestAccSiteCredentials/site_bootstrap
+    site_credentials_test.go:87: credential flow changed unrelated section site
+    site_credentials_test.go:236: Step 3/4 error: Check failed: removing bootstrap config mutated the site: create=1 delete=0 patch=1
+=== RUN   TestAccSiteCredentials/site_unknown_bootstrap
+    site_credentials_test.go:87: credential flow changed unrelated section site
+    site_credentials_test.go:236: Step 3/4 error: Check failed: removing bootstrap config mutated the site: create=1 delete=0 patch=1
+=== RUN   TestAccSiteCredentials/partial_credentials_rejected
+    site_credentials_test.go:236: Step 2/4, expected an error with pattern, no match on: Expected a non-empty plan, but got an empty refresh plan
+--- FAIL: TestAccSiteCredentials (12.70s)
+    --- FAIL: TestAccSiteCredentials/masked (1.34s)
+    --- FAIL: TestAccSiteCredentials/other_mask (0.62s)
+    --- FAIL: TestAccSiteCredentials/plaintext (0.63s)
+    --- FAIL: TestAccSiteCredentials/absent (1.33s)
+    --- FAIL: TestAccSiteCredentials/adopt (0.68s)
+    --- FAIL: TestAccSiteCredentials/unknown_credentials (1.25s)
+    --- FAIL: TestAccSiteCredentials/rejected_PATCH_retry (0.65s)
+    --- FAIL: TestAccSiteCredentials/accepted_PATCH_read_failure (0.66s)
+    --- FAIL: TestAccSiteCredentials/site_ownership_migration (1.23s)
+    --- FAIL: TestAccSiteCredentials/site_bootstrap (1.50s)
+    --- FAIL: TestAccSiteCredentials/site_unknown_bootstrap (1.48s)
+    --- FAIL: TestAccSiteCredentials/partial_credentials_rejected (1.33s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/provider	12.712s
+FAIL

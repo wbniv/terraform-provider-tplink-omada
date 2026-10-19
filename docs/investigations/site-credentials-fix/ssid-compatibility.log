@@ -1,0 +1,88 @@
+?   	github.com/terraform-provider-tplink-omada	[no test files]
+ok  	github.com/terraform-provider-tplink-omada/internal/client	0.244s
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	0.033s
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.569s
+=== RUN   TestAccSiteCredentials
+=== RUN   TestAccSiteCredentials/masked
+=== RUN   TestAccSiteCredentials/other_mask
+=== RUN   TestAccSiteCredentials/plaintext
+=== RUN   TestAccSiteCredentials/absent
+=== RUN   TestAccSiteCredentials/adopt
+=== RUN   TestAccSiteCredentials/unknown_credentials
+=== RUN   TestAccSiteCredentials/rejected_PATCH_retry
+=== RUN   TestAccSiteCredentials/accepted_PATCH_read_failure
+=== RUN   TestAccSiteCredentials/site_ownership_migration
+=== RUN   TestAccSiteCredentials/site_bootstrap
+=== RUN   TestAccSiteCredentials/site_unknown_bootstrap
+=== RUN   TestAccSiteCredentials/partial_credentials_rejected
+--- PASS: TestAccSiteCredentials (37.75s)
+    --- PASS: TestAccSiteCredentials/masked (5.54s)
+    --- PASS: TestAccSiteCredentials/other_mask (5.67s)
+    --- PASS: TestAccSiteCredentials/plaintext (5.49s)
+    --- PASS: TestAccSiteCredentials/absent (5.62s)
+    --- PASS: TestAccSiteCredentials/adopt (2.05s)
+    --- PASS: TestAccSiteCredentials/unknown_credentials (1.37s)
+    --- PASS: TestAccSiteCredentials/rejected_PATCH_retry (2.39s)
+    --- PASS: TestAccSiteCredentials/accepted_PATCH_read_failure (2.09s)
+    --- PASS: TestAccSiteCredentials/site_ownership_migration (1.84s)
+    --- PASS: TestAccSiteCredentials/site_bootstrap (1.86s)
+    --- PASS: TestAccSiteCredentials/site_unknown_bootstrap (1.98s)
+    --- PASS: TestAccSiteCredentials/partial_credentials_rejected (1.87s)
+=== RUN   TestAccWirelessNetworkCreate
+=== RUN   TestAccWirelessNetworkCreate/defaults
+=== RUN   TestAccWirelessNetworkCreate/explicit
+=== RUN   TestAccWirelessNetworkCreate/unknown_at_plan
+--- PASS: TestAccWirelessNetworkCreate (3.37s)
+    --- PASS: TestAccWirelessNetworkCreate/defaults (1.11s)
+    --- PASS: TestAccWirelessNetworkCreate/explicit (1.14s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_at_plan (1.13s)
+=== RUN   TestAccWirelessNetworkGroupIdentity
+=== RUN   TestAccWirelessNetworkGroupIdentity/import_retains_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_defaults
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_before_destroy
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_changed_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_same_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/site_replacement
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/delete_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/duplicate_name_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_omitted_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_unknown_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password
+--- PASS: TestAccWirelessNetworkGroupIdentity (24.90s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/import_retains_group (3.01s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_defaults (1.75s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings (1.94s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_before_destroy (1.73s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_changed_group (1.78s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_same_group (1.76s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/site_replacement (1.71s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_failure_retry (1.99s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/delete_failure_retry (2.23s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/duplicate_name_retry (2.23s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_omitted_group (1.13s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_unknown_group (1.18s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password (2.45s)
+=== RUN   TestAccWirelessNetworkPreservation
+=== RUN   TestAccWirelessNetworkPreservation/plaintext
+=== RUN   TestAccWirelessNetworkPreservation/masked
+=== RUN   TestAccWirelessNetworkPreservation/absent
+=== RUN   TestAccWirelessNetworkPreservation/open
+=== RUN   TestAccWirelessNetworkPreservation/unmanaged
+--- PASS: TestAccWirelessNetworkPreservation (22.70s)
+    --- PASS: TestAccWirelessNetworkPreservation/plaintext (5.55s)
+    --- PASS: TestAccWirelessNetworkPreservation/masked (5.53s)
+    --- PASS: TestAccWirelessNetworkPreservation/absent (5.62s)
+    --- PASS: TestAccWirelessNetworkPreservation/open (4.64s)
+    --- PASS: TestAccWirelessNetworkPreservation/unmanaged (1.36s)
+=== RUN   TestAccWirelessNetworkVLANState
+=== RUN   TestAccWirelessNetworkVLANState/default_clears_fields
+=== RUN   TestAccWirelessNetworkVLANState/default_retains_stale_fields
+=== RUN   TestAccWirelessNetworkVLANState/import_default
+--- PASS: TestAccWirelessNetworkVLANState (9.84s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_clears_fields (4.27s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_retains_stale_fields (4.18s)
+    --- PASS: TestAccWirelessNetworkVLANState/import_default (1.39s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	98.571s
