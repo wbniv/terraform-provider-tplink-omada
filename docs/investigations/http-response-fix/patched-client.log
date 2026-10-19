@@ -1,0 +1,616 @@
+=== RUN   TestCertificateOperations
+=== RUN   TestCertificateOperations/certificate/token=valid
+=== RUN   TestCertificateOperations/certificate/token=
+=== RUN   TestCertificateOperations/certificate/token=expired
+=== RUN   TestCertificateOperations/key/token=valid
+=== RUN   TestCertificateOperations/key/token=
+=== RUN   TestCertificateOperations/key/token=expired
+=== RUN   TestCertificateOperations/activate/token=valid
+=== RUN   TestCertificateOperations/activate/token=
+=== RUN   TestCertificateOperations/activate/token=expired
+=== RUN   TestCertificateOperations/read/token=valid
+=== RUN   TestCertificateOperations/read/token=
+=== RUN   TestCertificateOperations/read/token=expired
+--- PASS: TestCertificateOperations (0.02s)
+    --- PASS: TestCertificateOperations/certificate/token=valid (0.00s)
+    --- PASS: TestCertificateOperations/certificate/token= (0.00s)
+    --- PASS: TestCertificateOperations/certificate/token=expired (0.00s)
+    --- PASS: TestCertificateOperations/key/token=valid (0.00s)
+    --- PASS: TestCertificateOperations/key/token= (0.00s)
+    --- PASS: TestCertificateOperations/key/token=expired (0.00s)
+    --- PASS: TestCertificateOperations/activate/token=valid (0.00s)
+    --- PASS: TestCertificateOperations/activate/token= (0.00s)
+    --- PASS: TestCertificateOperations/activate/token=expired (0.00s)
+    --- PASS: TestCertificateOperations/read/token=valid (0.00s)
+    --- PASS: TestCertificateOperations/read/token= (0.00s)
+    --- PASS: TestCertificateOperations/read/token=expired (0.00s)
+=== RUN   TestConcurrentSessionExpiry
+--- PASS: TestConcurrentSessionExpiry (0.01s)
+=== RUN   TestConcurrentRequestsAndRefresh
+--- PASS: TestConcurrentRequestsAndRefresh (0.09s)
+=== RUN   TestAuthenticationCancellation
+=== RUN   TestAuthenticationCancellation/cancelLeader=true
+=== RUN   TestAuthenticationCancellation/cancelLeader=false
+--- PASS: TestAuthenticationCancellation (0.05s)
+    --- PASS: TestAuthenticationCancellation/cancelLeader=true (0.00s)
+    --- PASS: TestAuthenticationCancellation/cancelLeader=false (0.05s)
+=== RUN   TestSessionRetryFailures
+=== RUN   TestSessionRetryFailures/login_denied
+=== RUN   TestSessionRetryFailures/empty_token
+=== RUN   TestSessionRetryFailures/expired_again
+--- PASS: TestSessionRetryFailures (0.01s)
+    --- PASS: TestSessionRetryFailures/login_denied (0.00s)
+    --- PASS: TestSessionRetryFailures/empty_token (0.00s)
+    --- PASS: TestSessionRetryFailures/expired_again (0.00s)
+=== RUN   TestCertificateWritesReadOnly
+--- PASS: TestCertificateWritesReadOnly (0.00s)
+=== RUN   TestNewClient_Success
+--- PASS: TestNewClient_Success (0.00s)
+=== RUN   TestNewClient_ControllerInfoError
+--- PASS: TestNewClient_ControllerInfoError (0.00s)
+=== RUN   TestNewClient_LoginError
+--- PASS: TestNewClient_LoginError (0.00s)
+=== RUN   TestGetOmadacID
+--- PASS: TestGetOmadacID (0.00s)
+=== RUN   TestListSites
+--- PASS: TestListSites (0.00s)
+=== RUN   TestResolveSiteID_ByName
+--- PASS: TestResolveSiteID_ByName (0.00s)
+=== RUN   TestResolveSiteID_ByID
+--- PASS: TestResolveSiteID_ByID (0.00s)
+=== RUN   TestResolveSiteID_NotFound
+--- PASS: TestResolveSiteID_NotFound (0.00s)
+=== RUN   TestResolveSiteID_CaseInsensitive
+--- PASS: TestResolveSiteID_CaseInsensitive (0.00s)
+=== RUN   TestListNetworks
+--- PASS: TestListNetworks (0.00s)
+=== RUN   TestCreateNetwork_AdoptExisting
+--- PASS: TestCreateNetwork_AdoptExisting (0.00s)
+=== RUN   TestGlobalURL
+--- PASS: TestGlobalURL (0.00s)
+=== RUN   TestSiteURL
+--- PASS: TestSiteURL (0.00s)
+=== RUN   TestDecodePaginatedData_Paginated
+--- PASS: TestDecodePaginatedData_Paginated (0.00s)
+=== RUN   TestDecodePaginatedData_DirectArray
+--- PASS: TestDecodePaginatedData_DirectArray (0.00s)
+=== RUN   TestIsEmptyResult
+=== RUN   TestIsEmptyResult/nil
+=== RUN   TestIsEmptyResult/empty_bytes
+=== RUN   TestIsEmptyResult/null_string
+=== RUN   TestIsEmptyResult/empty_object
+=== RUN   TestIsEmptyResult/empty_string
+=== RUN   TestIsEmptyResult/empty_array
+=== RUN   TestIsEmptyResult/whitespace
+=== RUN   TestIsEmptyResult/non-empty_object
+=== RUN   TestIsEmptyResult/non-empty_array
+=== RUN   TestIsEmptyResult/non-empty_string
+--- PASS: TestIsEmptyResult (0.00s)
+    --- PASS: TestIsEmptyResult/nil (0.00s)
+    --- PASS: TestIsEmptyResult/empty_bytes (0.00s)
+    --- PASS: TestIsEmptyResult/null_string (0.00s)
+    --- PASS: TestIsEmptyResult/empty_object (0.00s)
+    --- PASS: TestIsEmptyResult/empty_string (0.00s)
+    --- PASS: TestIsEmptyResult/empty_array (0.00s)
+    --- PASS: TestIsEmptyResult/whitespace (0.00s)
+    --- PASS: TestIsEmptyResult/non-empty_object (0.00s)
+    --- PASS: TestIsEmptyResult/non-empty_array (0.00s)
+    --- PASS: TestIsEmptyResult/non-empty_string (0.00s)
+=== RUN   TestIsAgileSeriesError
+=== RUN   TestIsAgileSeriesError/nil_error
+=== RUN   TestIsAgileSeriesError/unrelated_error
+=== RUN   TestIsAgileSeriesError/agile_series_error
+=== RUN   TestIsAgileSeriesError/agile_in_message
+--- PASS: TestIsAgileSeriesError (0.00s)
+    --- PASS: TestIsAgileSeriesError/nil_error (0.00s)
+    --- PASS: TestIsAgileSeriesError/unrelated_error (0.00s)
+    --- PASS: TestIsAgileSeriesError/agile_series_error (0.00s)
+    --- PASS: TestIsAgileSeriesError/agile_in_message (0.00s)
+=== RUN   TestListWlanGroups
+--- PASS: TestListWlanGroups (0.00s)
+=== RUN   TestGetDefaultWlanGroupID
+--- PASS: TestGetDefaultWlanGroupID (0.00s)
+=== RUN   TestGetDefaultWlanGroupID_Empty
+--- PASS: TestGetDefaultWlanGroupID_Empty (0.00s)
+=== RUN   TestNewClient_TrailingSlashNormalization
+--- PASS: TestNewClient_TrailingSlashNormalization (0.00s)
+=== RUN   TestListACLRules
+--- PASS: TestListACLRules (0.00s)
+=== RUN   TestListACLRules_Empty
+--- PASS: TestListACLRules_Empty (0.00s)
+=== RUN   TestGetACLRule_Found
+--- PASS: TestGetACLRule_Found (0.00s)
+=== RUN   TestGetACLRule_NotFound
+--- PASS: TestGetACLRule_NotFound (0.00s)
+=== RUN   TestCreateACLRule
+--- PASS: TestCreateACLRule (0.00s)
+=== RUN   TestUpdateACLRule
+--- PASS: TestUpdateACLRule (0.00s)
+=== RUN   TestUpdateACLRule_EmptyResult
+--- PASS: TestUpdateACLRule_EmptyResult (0.00s)
+=== RUN   TestDeleteACLRule
+--- PASS: TestDeleteACLRule (0.00s)
+=== RUN   TestListIPGroups
+--- PASS: TestListIPGroups (0.00s)
+=== RUN   TestListIPGroups_Empty
+--- PASS: TestListIPGroups_Empty (0.00s)
+=== RUN   TestGetIPGroup_Found
+--- PASS: TestGetIPGroup_Found (0.00s)
+=== RUN   TestGetIPGroup_NotFound
+--- PASS: TestGetIPGroup_NotFound (0.00s)
+=== RUN   TestCreateIPGroup
+--- PASS: TestCreateIPGroup (0.00s)
+=== RUN   TestUpdateIPGroup
+--- PASS: TestUpdateIPGroup (0.00s)
+=== RUN   TestUpdateIPGroup_EmptyResult
+--- PASS: TestUpdateIPGroup_EmptyResult (0.00s)
+=== RUN   TestDeleteIPGroup
+--- PASS: TestDeleteIPGroup (0.00s)
+=== RUN   TestListMDNSRules
+--- PASS: TestListMDNSRules (0.00s)
+=== RUN   TestListMDNSRules_Empty
+--- PASS: TestListMDNSRules_Empty (0.00s)
+=== RUN   TestGetMDNSRule_Found
+--- PASS: TestGetMDNSRule_Found (0.00s)
+=== RUN   TestGetMDNSRule_NotFound
+--- PASS: TestGetMDNSRule_NotFound (0.00s)
+=== RUN   TestCreateMDNSRule
+--- PASS: TestCreateMDNSRule (0.00s)
+=== RUN   TestUpdateMDNSRule
+--- PASS: TestUpdateMDNSRule (0.00s)
+=== RUN   TestDeleteMDNSRule
+--- PASS: TestDeleteMDNSRule (0.00s)
+=== RUN   TestResponseValidation
+=== RUN   TestResponseValidation/delete
+=== RUN   TestResponseValidation/delete/success
+=== RUN   TestResponseValidation/delete/created
+=== RUN   TestResponseValidation/delete/forbidden_JSON
+=== RUN   TestResponseValidation/delete/forbidden_success_envelope
+=== RUN   TestResponseValidation/delete/unauthorized_success_envelope
+=== RUN   TestResponseValidation/delete/missing_route
+=== RUN   TestResponseValidation/delete/rate_limited
+=== RUN   TestResponseValidation/delete/server_JSON
+=== RUN   TestResponseValidation/delete/proxy_HTML
+=== RUN   TestResponseValidation/delete/proxy_text
+=== RUN   TestResponseValidation/delete/missing_code
+=== RUN   TestResponseValidation/delete/null_code
+=== RUN   TestResponseValidation/delete/string_code
+=== RUN   TestResponseValidation/delete/fractional_code
+=== RUN   TestResponseValidation/delete/bool_code
+=== RUN   TestResponseValidation/delete/duplicate_code
+=== RUN   TestResponseValidation/delete/duplicate_result
+=== RUN   TestResponseValidation/delete/wrong_case_code
+=== RUN   TestResponseValidation/delete/null_envelope
+=== RUN   TestResponseValidation/delete/array_envelope
+=== RUN   TestResponseValidation/delete/empty_object
+=== RUN   TestResponseValidation/delete/empty_body
+=== RUN   TestResponseValidation/delete/empty_204
+=== RUN   TestResponseValidation/delete/whitespace
+=== RUN   TestResponseValidation/delete/truncated
+=== RUN   TestResponseValidation/delete/trailing_JSON
+=== RUN   TestResponseValidation/delete/trailing_text
+=== RUN   TestResponseValidation/delete/invalid_message
+=== RUN   TestResponseValidation/delete/API_failure
+=== RUN   TestResponseValidation/delete/large_API_message
+=== RUN   TestResponseValidation/patch
+=== RUN   TestResponseValidation/patch/success
+=== RUN   TestResponseValidation/patch/created
+=== RUN   TestResponseValidation/patch/forbidden_JSON
+=== RUN   TestResponseValidation/patch/forbidden_success_envelope
+=== RUN   TestResponseValidation/patch/unauthorized_success_envelope
+=== RUN   TestResponseValidation/patch/missing_route
+=== RUN   TestResponseValidation/patch/rate_limited
+=== RUN   TestResponseValidation/patch/server_JSON
+=== RUN   TestResponseValidation/patch/proxy_HTML
+=== RUN   TestResponseValidation/patch/proxy_text
+=== RUN   TestResponseValidation/patch/missing_code
+=== RUN   TestResponseValidation/patch/null_code
+=== RUN   TestResponseValidation/patch/string_code
+=== RUN   TestResponseValidation/patch/fractional_code
+=== RUN   TestResponseValidation/patch/bool_code
+=== RUN   TestResponseValidation/patch/duplicate_code
+=== RUN   TestResponseValidation/patch/duplicate_result
+=== RUN   TestResponseValidation/patch/wrong_case_code
+=== RUN   TestResponseValidation/patch/null_envelope
+=== RUN   TestResponseValidation/patch/array_envelope
+=== RUN   TestResponseValidation/patch/empty_object
+=== RUN   TestResponseValidation/patch/empty_body
+=== RUN   TestResponseValidation/patch/empty_204
+=== RUN   TestResponseValidation/patch/whitespace
+=== RUN   TestResponseValidation/patch/truncated
+=== RUN   TestResponseValidation/patch/trailing_JSON
+=== RUN   TestResponseValidation/patch/trailing_text
+=== RUN   TestResponseValidation/patch/invalid_message
+=== RUN   TestResponseValidation/patch/API_failure
+=== RUN   TestResponseValidation/patch/large_API_message
+=== RUN   TestResponseValidation/discovery
+=== RUN   TestResponseValidation/discovery/success
+=== RUN   TestResponseValidation/discovery/created
+=== RUN   TestResponseValidation/discovery/forbidden_JSON
+=== RUN   TestResponseValidation/discovery/forbidden_success_envelope
+=== RUN   TestResponseValidation/discovery/unauthorized_success_envelope
+=== RUN   TestResponseValidation/discovery/missing_route
+=== RUN   TestResponseValidation/discovery/rate_limited
+=== RUN   TestResponseValidation/discovery/server_JSON
+=== RUN   TestResponseValidation/discovery/proxy_HTML
+=== RUN   TestResponseValidation/discovery/proxy_text
+=== RUN   TestResponseValidation/discovery/missing_code
+=== RUN   TestResponseValidation/discovery/null_code
+=== RUN   TestResponseValidation/discovery/string_code
+=== RUN   TestResponseValidation/discovery/fractional_code
+=== RUN   TestResponseValidation/discovery/bool_code
+=== RUN   TestResponseValidation/discovery/duplicate_code
+=== RUN   TestResponseValidation/discovery/duplicate_result
+=== RUN   TestResponseValidation/discovery/wrong_case_code
+=== RUN   TestResponseValidation/discovery/null_envelope
+=== RUN   TestResponseValidation/discovery/array_envelope
+=== RUN   TestResponseValidation/discovery/empty_object
+=== RUN   TestResponseValidation/discovery/empty_body
+=== RUN   TestResponseValidation/discovery/empty_204
+=== RUN   TestResponseValidation/discovery/whitespace
+=== RUN   TestResponseValidation/discovery/truncated
+=== RUN   TestResponseValidation/discovery/trailing_JSON
+=== RUN   TestResponseValidation/discovery/trailing_text
+=== RUN   TestResponseValidation/discovery/invalid_message
+=== RUN   TestResponseValidation/discovery/API_failure
+=== RUN   TestResponseValidation/discovery/large_API_message
+=== RUN   TestResponseValidation/login
+=== RUN   TestResponseValidation/login/success
+=== RUN   TestResponseValidation/login/created
+=== RUN   TestResponseValidation/login/forbidden_JSON
+=== RUN   TestResponseValidation/login/forbidden_success_envelope
+=== RUN   TestResponseValidation/login/unauthorized_success_envelope
+=== RUN   TestResponseValidation/login/missing_route
+=== RUN   TestResponseValidation/login/rate_limited
+=== RUN   TestResponseValidation/login/server_JSON
+=== RUN   TestResponseValidation/login/proxy_HTML
+=== RUN   TestResponseValidation/login/proxy_text
+=== RUN   TestResponseValidation/login/missing_code
+=== RUN   TestResponseValidation/login/null_code
+=== RUN   TestResponseValidation/login/string_code
+=== RUN   TestResponseValidation/login/fractional_code
+=== RUN   TestResponseValidation/login/bool_code
+=== RUN   TestResponseValidation/login/duplicate_code
+=== RUN   TestResponseValidation/login/duplicate_result
+=== RUN   TestResponseValidation/login/wrong_case_code
+=== RUN   TestResponseValidation/login/null_envelope
+=== RUN   TestResponseValidation/login/array_envelope
+=== RUN   TestResponseValidation/login/empty_object
+=== RUN   TestResponseValidation/login/empty_body
+=== RUN   TestResponseValidation/login/empty_204
+=== RUN   TestResponseValidation/login/whitespace
+=== RUN   TestResponseValidation/login/truncated
+=== RUN   TestResponseValidation/login/trailing_JSON
+=== RUN   TestResponseValidation/login/trailing_text
+=== RUN   TestResponseValidation/login/invalid_message
+=== RUN   TestResponseValidation/login/API_failure
+=== RUN   TestResponseValidation/login/large_API_message
+=== RUN   TestResponseValidation/multipart
+=== RUN   TestResponseValidation/multipart/success
+=== RUN   TestResponseValidation/multipart/created
+=== RUN   TestResponseValidation/multipart/forbidden_JSON
+=== RUN   TestResponseValidation/multipart/forbidden_success_envelope
+=== RUN   TestResponseValidation/multipart/unauthorized_success_envelope
+=== RUN   TestResponseValidation/multipart/missing_route
+=== RUN   TestResponseValidation/multipart/rate_limited
+=== RUN   TestResponseValidation/multipart/server_JSON
+=== RUN   TestResponseValidation/multipart/proxy_HTML
+=== RUN   TestResponseValidation/multipart/proxy_text
+=== RUN   TestResponseValidation/multipart/missing_code
+=== RUN   TestResponseValidation/multipart/null_code
+=== RUN   TestResponseValidation/multipart/string_code
+=== RUN   TestResponseValidation/multipart/fractional_code
+=== RUN   TestResponseValidation/multipart/bool_code
+=== RUN   TestResponseValidation/multipart/duplicate_code
+=== RUN   TestResponseValidation/multipart/duplicate_result
+=== RUN   TestResponseValidation/multipart/wrong_case_code
+=== RUN   TestResponseValidation/multipart/null_envelope
+=== RUN   TestResponseValidation/multipart/array_envelope
+=== RUN   TestResponseValidation/multipart/empty_object
+=== RUN   TestResponseValidation/multipart/empty_body
+=== RUN   TestResponseValidation/multipart/empty_204
+=== RUN   TestResponseValidation/multipart/whitespace
+=== RUN   TestResponseValidation/multipart/truncated
+=== RUN   TestResponseValidation/multipart/trailing_JSON
+=== RUN   TestResponseValidation/multipart/trailing_text
+=== RUN   TestResponseValidation/multipart/invalid_message
+=== RUN   TestResponseValidation/multipart/API_failure
+=== RUN   TestResponseValidation/multipart/large_API_message
+--- PASS: TestResponseValidation (0.20s)
+    --- PASS: TestResponseValidation/delete (0.04s)
+        --- PASS: TestResponseValidation/delete/success (0.00s)
+        --- PASS: TestResponseValidation/delete/created (0.00s)
+        --- PASS: TestResponseValidation/delete/forbidden_JSON (0.00s)
+        --- PASS: TestResponseValidation/delete/forbidden_success_envelope (0.00s)
+        --- PASS: TestResponseValidation/delete/unauthorized_success_envelope (0.00s)
+        --- PASS: TestResponseValidation/delete/missing_route (0.00s)
+        --- PASS: TestResponseValidation/delete/rate_limited (0.00s)
+        --- PASS: TestResponseValidation/delete/server_JSON (0.00s)
+        --- PASS: TestResponseValidation/delete/proxy_HTML (0.00s)
+        --- PASS: TestResponseValidation/delete/proxy_text (0.00s)
+        --- PASS: TestResponseValidation/delete/missing_code (0.00s)
+        --- PASS: TestResponseValidation/delete/null_code (0.00s)
+        --- PASS: TestResponseValidation/delete/string_code (0.00s)
+        --- PASS: TestResponseValidation/delete/fractional_code (0.00s)
+        --- PASS: TestResponseValidation/delete/bool_code (0.00s)
+        --- PASS: TestResponseValidation/delete/duplicate_code (0.00s)
+        --- PASS: TestResponseValidation/delete/duplicate_result (0.00s)
+        --- PASS: TestResponseValidation/delete/wrong_case_code (0.00s)
+        --- PASS: TestResponseValidation/delete/null_envelope (0.00s)
+        --- PASS: TestResponseValidation/delete/array_envelope (0.00s)
+        --- PASS: TestResponseValidation/delete/empty_object (0.00s)
+        --- PASS: TestResponseValidation/delete/empty_body (0.00s)
+        --- PASS: TestResponseValidation/delete/empty_204 (0.00s)
+        --- PASS: TestResponseValidation/delete/whitespace (0.00s)
+        --- PASS: TestResponseValidation/delete/truncated (0.00s)
+        --- PASS: TestResponseValidation/delete/trailing_JSON (0.00s)
+        --- PASS: TestResponseValidation/delete/trailing_text (0.00s)
+        --- PASS: TestResponseValidation/delete/invalid_message (0.00s)
+        --- PASS: TestResponseValidation/delete/API_failure (0.00s)
+        --- PASS: TestResponseValidation/delete/large_API_message (0.00s)
+    --- PASS: TestResponseValidation/patch (0.05s)
+        --- PASS: TestResponseValidation/patch/success (0.00s)
+        --- PASS: TestResponseValidation/patch/created (0.00s)
+        --- PASS: TestResponseValidation/patch/forbidden_JSON (0.00s)
+        --- PASS: TestResponseValidation/patch/forbidden_success_envelope (0.00s)
+        --- PASS: TestResponseValidation/patch/unauthorized_success_envelope (0.00s)
+        --- PASS: TestResponseValidation/patch/missing_route (0.00s)
+        --- PASS: TestResponseValidation/patch/rate_limited (0.01s)
+        --- PASS: TestResponseValidation/patch/server_JSON (0.00s)
+        --- PASS: TestResponseValidation/patch/proxy_HTML (0.00s)
+        --- PASS: TestResponseValidation/patch/proxy_text (0.00s)
+        --- PASS: TestResponseValidation/patch/missing_code (0.00s)
+        --- PASS: TestResponseValidation/patch/null_code (0.00s)
+        --- PASS: TestResponseValidation/patch/string_code (0.00s)
+        --- PASS: TestResponseValidation/patch/fractional_code (0.00s)
+        --- PASS: TestResponseValidation/patch/bool_code (0.00s)
+        --- PASS: TestResponseValidation/patch/duplicate_code (0.00s)
+        --- PASS: TestResponseValidation/patch/duplicate_result (0.00s)
+        --- PASS: TestResponseValidation/patch/wrong_case_code (0.00s)
+        --- PASS: TestResponseValidation/patch/null_envelope (0.00s)
+        --- PASS: TestResponseValidation/patch/array_envelope (0.00s)
+        --- PASS: TestResponseValidation/patch/empty_object (0.00s)
+        --- PASS: TestResponseValidation/patch/empty_body (0.00s)
+        --- PASS: TestResponseValidation/patch/empty_204 (0.00s)
+        --- PASS: TestResponseValidation/patch/whitespace (0.00s)
+        --- PASS: TestResponseValidation/patch/truncated (0.00s)
+        --- PASS: TestResponseValidation/patch/trailing_JSON (0.00s)
+        --- PASS: TestResponseValidation/patch/trailing_text (0.00s)
+        --- PASS: TestResponseValidation/patch/invalid_message (0.00s)
+        --- PASS: TestResponseValidation/patch/API_failure (0.00s)
+        --- PASS: TestResponseValidation/patch/large_API_message (0.00s)
+    --- PASS: TestResponseValidation/discovery (0.04s)
+        --- PASS: TestResponseValidation/discovery/success (0.00s)
+        --- PASS: TestResponseValidation/discovery/created (0.00s)
+        --- PASS: TestResponseValidation/discovery/forbidden_JSON (0.00s)
+        --- PASS: TestResponseValidation/discovery/forbidden_success_envelope (0.00s)
+        --- PASS: TestResponseValidation/discovery/unauthorized_success_envelope (0.00s)
+        --- PASS: TestResponseValidation/discovery/missing_route (0.00s)
+        --- PASS: TestResponseValidation/discovery/rate_limited (0.00s)
+        --- PASS: TestResponseValidation/discovery/server_JSON (0.00s)
+        --- PASS: TestResponseValidation/discovery/proxy_HTML (0.00s)
+        --- PASS: TestResponseValidation/discovery/proxy_text (0.00s)
+        --- PASS: TestResponseValidation/discovery/missing_code (0.00s)
+        --- PASS: TestResponseValidation/discovery/null_code (0.00s)
+        --- PASS: TestResponseValidation/discovery/string_code (0.00s)
+        --- PASS: TestResponseValidation/discovery/fractional_code (0.00s)
+        --- PASS: TestResponseValidation/discovery/bool_code (0.00s)
+        --- PASS: TestResponseValidation/discovery/duplicate_code (0.00s)
+        --- PASS: TestResponseValidation/discovery/duplicate_result (0.00s)
+        --- PASS: TestResponseValidation/discovery/wrong_case_code (0.00s)
+        --- PASS: TestResponseValidation/discovery/null_envelope (0.00s)
+        --- PASS: TestResponseValidation/discovery/array_envelope (0.00s)
+        --- PASS: TestResponseValidation/discovery/empty_object (0.00s)
+        --- PASS: TestResponseValidation/discovery/empty_body (0.00s)
+        --- PASS: TestResponseValidation/discovery/empty_204 (0.00s)
+        --- PASS: TestResponseValidation/discovery/whitespace (0.00s)
+        --- PASS: TestResponseValidation/discovery/truncated (0.00s)
+        --- PASS: TestResponseValidation/discovery/trailing_JSON (0.00s)
+        --- PASS: TestResponseValidation/discovery/trailing_text (0.00s)
+        --- PASS: TestResponseValidation/discovery/invalid_message (0.00s)
+        --- PASS: TestResponseValidation/discovery/API_failure (0.00s)
+        --- PASS: TestResponseValidation/discovery/large_API_message (0.00s)
+    --- PASS: TestResponseValidation/login (0.04s)
+        --- PASS: TestResponseValidation/login/success (0.00s)
+        --- PASS: TestResponseValidation/login/created (0.00s)
+        --- PASS: TestResponseValidation/login/forbidden_JSON (0.00s)
+        --- PASS: TestResponseValidation/login/forbidden_success_envelope (0.00s)
+        --- PASS: TestResponseValidation/login/unauthorized_success_envelope (0.00s)
+        --- PASS: TestResponseValidation/login/missing_route (0.00s)
+        --- PASS: TestResponseValidation/login/rate_limited (0.00s)
+        --- PASS: TestResponseValidation/login/server_JSON (0.00s)
+        --- PASS: TestResponseValidation/login/proxy_HTML (0.00s)
+        --- PASS: TestResponseValidation/login/proxy_text (0.00s)
+        --- PASS: TestResponseValidation/login/missing_code (0.00s)
+        --- PASS: TestResponseValidation/login/null_code (0.00s)
+        --- PASS: TestResponseValidation/login/string_code (0.00s)
+        --- PASS: TestResponseValidation/login/fractional_code (0.00s)
+        --- PASS: TestResponseValidation/login/bool_code (0.00s)
+        --- PASS: TestResponseValidation/login/duplicate_code (0.00s)
+        --- PASS: TestResponseValidation/login/duplicate_result (0.00s)
+        --- PASS: TestResponseValidation/login/wrong_case_code (0.00s)
+        --- PASS: TestResponseValidation/login/null_envelope (0.00s)
+        --- PASS: TestResponseValidation/login/array_envelope (0.00s)
+        --- PASS: TestResponseValidation/login/empty_object (0.00s)
+        --- PASS: TestResponseValidation/login/empty_body (0.00s)
+        --- PASS: TestResponseValidation/login/empty_204 (0.00s)
+        --- PASS: TestResponseValidation/login/whitespace (0.00s)
+        --- PASS: TestResponseValidation/login/truncated (0.00s)
+        --- PASS: TestResponseValidation/login/trailing_JSON (0.00s)
+        --- PASS: TestResponseValidation/login/trailing_text (0.00s)
+        --- PASS: TestResponseValidation/login/invalid_message (0.00s)
+        --- PASS: TestResponseValidation/login/API_failure (0.00s)
+        --- PASS: TestResponseValidation/login/large_API_message (0.00s)
+    --- PASS: TestResponseValidation/multipart (0.04s)
+        --- PASS: TestResponseValidation/multipart/success (0.00s)
+        --- PASS: TestResponseValidation/multipart/created (0.00s)
+        --- PASS: TestResponseValidation/multipart/forbidden_JSON (0.00s)
+        --- PASS: TestResponseValidation/multipart/forbidden_success_envelope (0.00s)
+        --- PASS: TestResponseValidation/multipart/unauthorized_success_envelope (0.00s)
+        --- PASS: TestResponseValidation/multipart/missing_route (0.00s)
+        --- PASS: TestResponseValidation/multipart/rate_limited (0.00s)
+        --- PASS: TestResponseValidation/multipart/server_JSON (0.00s)
+        --- PASS: TestResponseValidation/multipart/proxy_HTML (0.00s)
+        --- PASS: TestResponseValidation/multipart/proxy_text (0.00s)
+        --- PASS: TestResponseValidation/multipart/missing_code (0.00s)
+        --- PASS: TestResponseValidation/multipart/null_code (0.00s)
+        --- PASS: TestResponseValidation/multipart/string_code (0.00s)
+        --- PASS: TestResponseValidation/multipart/fractional_code (0.00s)
+        --- PASS: TestResponseValidation/multipart/bool_code (0.00s)
+        --- PASS: TestResponseValidation/multipart/duplicate_code (0.00s)
+        --- PASS: TestResponseValidation/multipart/duplicate_result (0.00s)
+        --- PASS: TestResponseValidation/multipart/wrong_case_code (0.00s)
+        --- PASS: TestResponseValidation/multipart/null_envelope (0.00s)
+        --- PASS: TestResponseValidation/multipart/array_envelope (0.00s)
+        --- PASS: TestResponseValidation/multipart/empty_object (0.00s)
+        --- PASS: TestResponseValidation/multipart/empty_body (0.00s)
+        --- PASS: TestResponseValidation/multipart/empty_204 (0.00s)
+        --- PASS: TestResponseValidation/multipart/whitespace (0.01s)
+        --- PASS: TestResponseValidation/multipart/truncated (0.00s)
+        --- PASS: TestResponseValidation/multipart/trailing_JSON (0.00s)
+        --- PASS: TestResponseValidation/multipart/trailing_text (0.00s)
+        --- PASS: TestResponseValidation/multipart/invalid_message (0.00s)
+        --- PASS: TestResponseValidation/multipart/API_failure (0.00s)
+        --- PASS: TestResponseValidation/multipart/large_API_message (0.00s)
+=== RUN   TestResponseEmptyResult
+=== RUN   TestResponseEmptyResult/{"errorCode":0}
+=== RUN   TestResponseEmptyResult/{"errorCode":0,"result":null}
+=== RUN   TestResponseEmptyResult/{"errorCode":0,"result":{}}
+--- PASS: TestResponseEmptyResult (0.01s)
+    --- PASS: TestResponseEmptyResult/{"errorCode":0} (0.00s)
+    --- PASS: TestResponseEmptyResult/{"errorCode":0,"result":null} (0.00s)
+    --- PASS: TestResponseEmptyResult/{"errorCode":0,"result":{}} (0.00s)
+=== RUN   TestResponseRedirect
+=== RUN   TestResponseRedirect/delete/301
+=== RUN   TestResponseRedirect/delete/302
+=== RUN   TestResponseRedirect/delete/303
+=== RUN   TestResponseRedirect/delete/307
+=== RUN   TestResponseRedirect/delete/308
+=== RUN   TestResponseRedirect/patch/301
+=== RUN   TestResponseRedirect/patch/302
+=== RUN   TestResponseRedirect/patch/303
+=== RUN   TestResponseRedirect/patch/307
+=== RUN   TestResponseRedirect/patch/308
+=== RUN   TestResponseRedirect/discovery/301
+=== RUN   TestResponseRedirect/discovery/302
+=== RUN   TestResponseRedirect/discovery/303
+=== RUN   TestResponseRedirect/discovery/307
+=== RUN   TestResponseRedirect/discovery/308
+=== RUN   TestResponseRedirect/login/301
+=== RUN   TestResponseRedirect/login/302
+=== RUN   TestResponseRedirect/login/303
+=== RUN   TestResponseRedirect/login/307
+=== RUN   TestResponseRedirect/login/308
+=== RUN   TestResponseRedirect/multipart/301
+=== RUN   TestResponseRedirect/multipart/302
+=== RUN   TestResponseRedirect/multipart/303
+=== RUN   TestResponseRedirect/multipart/307
+=== RUN   TestResponseRedirect/multipart/308
+--- PASS: TestResponseRedirect (0.03s)
+    --- PASS: TestResponseRedirect/delete/301 (0.00s)
+    --- PASS: TestResponseRedirect/delete/302 (0.00s)
+    --- PASS: TestResponseRedirect/delete/303 (0.00s)
+    --- PASS: TestResponseRedirect/delete/307 (0.00s)
+    --- PASS: TestResponseRedirect/delete/308 (0.00s)
+    --- PASS: TestResponseRedirect/patch/301 (0.00s)
+    --- PASS: TestResponseRedirect/patch/302 (0.00s)
+    --- PASS: TestResponseRedirect/patch/303 (0.00s)
+    --- PASS: TestResponseRedirect/patch/307 (0.00s)
+    --- PASS: TestResponseRedirect/patch/308 (0.00s)
+    --- PASS: TestResponseRedirect/discovery/301 (0.00s)
+    --- PASS: TestResponseRedirect/discovery/302 (0.00s)
+    --- PASS: TestResponseRedirect/discovery/303 (0.00s)
+    --- PASS: TestResponseRedirect/discovery/307 (0.00s)
+    --- PASS: TestResponseRedirect/discovery/308 (0.00s)
+    --- PASS: TestResponseRedirect/login/301 (0.00s)
+    --- PASS: TestResponseRedirect/login/302 (0.00s)
+    --- PASS: TestResponseRedirect/login/303 (0.00s)
+    --- PASS: TestResponseRedirect/login/307 (0.00s)
+    --- PASS: TestResponseRedirect/login/308 (0.00s)
+    --- PASS: TestResponseRedirect/multipart/301 (0.00s)
+    --- PASS: TestResponseRedirect/multipart/302 (0.00s)
+    --- PASS: TestResponseRedirect/multipart/303 (0.00s)
+    --- PASS: TestResponseRedirect/multipart/307 (0.00s)
+    --- PASS: TestResponseRedirect/multipart/308 (0.00s)
+=== RUN   TestResponseTransport
+=== RUN   TestResponseTransport/delete/transport
+=== RUN   TestResponseTransport/delete/read
+=== RUN   TestResponseTransport/delete/cancel
+=== RUN   TestResponseTransport/delete/deadline
+=== RUN   TestResponseTransport/delete/invalid_URL
+=== RUN   TestResponseTransport/patch/transport
+=== RUN   TestResponseTransport/patch/read
+=== RUN   TestResponseTransport/patch/cancel
+=== RUN   TestResponseTransport/patch/deadline
+=== RUN   TestResponseTransport/patch/invalid_URL
+=== RUN   TestResponseTransport/discovery/transport
+=== RUN   TestResponseTransport/discovery/read
+=== RUN   TestResponseTransport/discovery/cancel
+=== RUN   TestResponseTransport/discovery/deadline
+=== RUN   TestResponseTransport/discovery/invalid_URL
+=== RUN   TestResponseTransport/login/transport
+=== RUN   TestResponseTransport/login/read
+=== RUN   TestResponseTransport/login/cancel
+=== RUN   TestResponseTransport/login/deadline
+=== RUN   TestResponseTransport/login/invalid_URL
+=== RUN   TestResponseTransport/multipart/transport
+=== RUN   TestResponseTransport/multipart/read
+=== RUN   TestResponseTransport/multipart/cancel
+=== RUN   TestResponseTransport/multipart/deadline
+=== RUN   TestResponseTransport/multipart/invalid_URL
+--- PASS: TestResponseTransport (0.00s)
+    --- PASS: TestResponseTransport/delete/transport (0.00s)
+    --- PASS: TestResponseTransport/delete/read (0.00s)
+    --- PASS: TestResponseTransport/delete/cancel (0.00s)
+    --- PASS: TestResponseTransport/delete/deadline (0.00s)
+    --- PASS: TestResponseTransport/delete/invalid_URL (0.00s)
+    --- PASS: TestResponseTransport/patch/transport (0.00s)
+    --- PASS: TestResponseTransport/patch/read (0.00s)
+    --- PASS: TestResponseTransport/patch/cancel (0.00s)
+    --- PASS: TestResponseTransport/patch/deadline (0.00s)
+    --- PASS: TestResponseTransport/patch/invalid_URL (0.00s)
+    --- PASS: TestResponseTransport/discovery/transport (0.00s)
+    --- PASS: TestResponseTransport/discovery/read (0.00s)
+    --- PASS: TestResponseTransport/discovery/cancel (0.00s)
+    --- PASS: TestResponseTransport/discovery/deadline (0.00s)
+    --- PASS: TestResponseTransport/discovery/invalid_URL (0.00s)
+    --- PASS: TestResponseTransport/login/transport (0.00s)
+    --- PASS: TestResponseTransport/login/read (0.00s)
+    --- PASS: TestResponseTransport/login/cancel (0.00s)
+    --- PASS: TestResponseTransport/login/deadline (0.00s)
+    --- PASS: TestResponseTransport/login/invalid_URL (0.00s)
+    --- PASS: TestResponseTransport/multipart/transport (0.00s)
+    --- PASS: TestResponseTransport/multipart/read (0.00s)
+    --- PASS: TestResponseTransport/multipart/cancel (0.00s)
+    --- PASS: TestResponseTransport/multipart/deadline (0.00s)
+    --- PASS: TestResponseTransport/multipart/invalid_URL (0.00s)
+=== RUN   TestResponseSessionRetry
+=== RUN   TestResponseSessionRetry/valid_expiry
+=== RUN   TestResponseSessionRetry/repeated_expiry
+=== RUN   TestResponseSessionRetry/HTTP_unauthorized
+=== RUN   TestResponseSessionRetry/HTTP_forbidden
+=== RUN   TestResponseSessionRetry/HTTP_server_error
+=== RUN   TestResponseSessionRetry/malformed_expiry
+--- PASS: TestResponseSessionRetry (0.01s)
+    --- PASS: TestResponseSessionRetry/valid_expiry (0.01s)
+    --- PASS: TestResponseSessionRetry/repeated_expiry (0.00s)
+    --- PASS: TestResponseSessionRetry/HTTP_unauthorized (0.00s)
+    --- PASS: TestResponseSessionRetry/HTTP_forbidden (0.00s)
+    --- PASS: TestResponseSessionRetry/HTTP_server_error (0.00s)
+    --- PASS: TestResponseSessionRetry/malformed_expiry (0.00s)
+=== RUN   TestResponseSizeLimit
+=== RUN   TestResponseSizeLimit/16777216
+=== RUN   TestResponseSizeLimit/16777217
+--- PASS: TestResponseSizeLimit (0.77s)
+    --- PASS: TestResponseSizeLimit/16777216 (0.63s)
+    --- PASS: TestResponseSizeLimit/16777217 (0.15s)
+=== RUN   TestResponseDiscoveryIdentity
+=== RUN   TestResponseDiscoveryIdentity/{"errorCode":0,"result":{}}
+=== RUN   TestResponseDiscoveryIdentity/{"errorCode":0,"result":null}
+=== RUN   TestResponseDiscoveryIdentity/{"errorCode":0,"result":{"omadacId":""}}
+--- PASS: TestResponseDiscoveryIdentity (0.01s)
+    --- PASS: TestResponseDiscoveryIdentity/{"errorCode":0,"result":{}} (0.00s)
+    --- PASS: TestResponseDiscoveryIdentity/{"errorCode":0,"result":null} (0.00s)
+    --- PASS: TestResponseDiscoveryIdentity/{"errorCode":0,"result":{"omadacId":""}} (0.00s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/client	1.349s

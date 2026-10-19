@@ -1,0 +1,24 @@
+=== RUN   TestResponseErrorTypes
+=== RUN   TestResponseErrorTypes/forbidden
+=== RUN   TestResponseErrorTypes/not_found_status
+=== RUN   TestResponseErrorTypes/server_failure
+=== RUN   TestResponseErrorTypes/agile_API_code
+=== RUN   TestResponseErrorTypes/other_API_code
+=== RUN   TestResponseErrorTypes/protocol
+=== RUN   TestResponseErrorTypes/transport
+--- PASS: TestResponseErrorTypes (0.01s)
+    --- PASS: TestResponseErrorTypes/forbidden (0.00s)
+    --- PASS: TestResponseErrorTypes/not_found_status (0.00s)
+    --- PASS: TestResponseErrorTypes/server_failure (0.00s)
+    --- PASS: TestResponseErrorTypes/agile_API_code (0.00s)
+    --- PASS: TestResponseErrorTypes/other_API_code (0.00s)
+    --- PASS: TestResponseErrorTypes/protocol (0.00s)
+    --- PASS: TestResponseErrorTypes/transport (0.00s)
+=== RUN   TestResponseReadBound
+=== RUN   TestResponseReadBound/200
+=== RUN   TestResponseReadBound/500
+--- PASS: TestResponseReadBound (0.32s)
+    --- PASS: TestResponseReadBound/200 (0.32s)
+    --- PASS: TestResponseReadBound/500 (0.00s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/client	0.360s

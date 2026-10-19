@@ -1,0 +1,13 @@
+?   	github.com/terraform-provider-tplink-omada	[no test files]
+ok  	github.com/terraform-provider-tplink-omada/internal/client	1.797s
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	0.117s
+--- FAIL: TestWirelessNetworkPreservation (0.38s)
+    --- FAIL: TestWirelessNetworkPreservation/read_failure (0.01s)
+        wireless_network_update_test.go:208: missing diagnostic "fixture failure": [{API error -1001 (controller rejected the operation) Error reading wireless network before update}]
+    --- FAIL: TestWirelessNetworkPreservation/PATCH_failure_retains_prior_state (0.00s)
+        wireless_network_update_test.go:208: missing diagnostic "fixture failure": [{API error -1001 (controller rejected the operation) Error updating or reading back wireless network}]
+    --- FAIL: TestWirelessNetworkPreservation/readback_failure_retains_prior_state (0.01s)
+        wireless_network_update_test.go:208: missing diagnostic "fixture failure": [{API error -1001 (controller rejected the operation) Error updating or reading back wireless network}]
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/resources	2.130s
+FAIL

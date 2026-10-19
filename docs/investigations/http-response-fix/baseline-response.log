@@ -1,0 +1,629 @@
+=== RUN   TestResponseValidation
+=== RUN   TestResponseValidation/delete
+=== RUN   TestResponseValidation/delete/success
+=== RUN   TestResponseValidation/delete/created
+=== RUN   TestResponseValidation/delete/forbidden_JSON
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/forbidden_success_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/unauthorized_success_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/missing_route
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/rate_limited
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/server_JSON
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/proxy_HTML
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/delete/proxy_text
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/delete/missing_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/null_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/string_code
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/delete/fractional_code
+=== RUN   TestResponseValidation/delete/bool_code
+=== RUN   TestResponseValidation/delete/duplicate_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/duplicate_result
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/wrong_case_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/null_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/array_envelope
+=== RUN   TestResponseValidation/delete/empty_object
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/delete/empty_body
+=== RUN   TestResponseValidation/delete/empty_204
+=== RUN   TestResponseValidation/delete/whitespace
+=== RUN   TestResponseValidation/delete/truncated
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/delete/trailing_JSON
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/delete/trailing_text
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/delete/invalid_message
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/delete/API_failure
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/delete/large_API_message
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/patch
+=== RUN   TestResponseValidation/patch/success
+=== RUN   TestResponseValidation/patch/created
+=== RUN   TestResponseValidation/patch/forbidden_JSON
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/forbidden_success_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/unauthorized_success_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/missing_route
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/rate_limited
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/server_JSON
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/proxy_HTML
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/patch/proxy_text
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/patch/missing_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/null_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/string_code
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/patch/fractional_code
+=== RUN   TestResponseValidation/patch/bool_code
+=== RUN   TestResponseValidation/patch/duplicate_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/duplicate_result
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/wrong_case_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/null_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/array_envelope
+=== RUN   TestResponseValidation/patch/empty_object
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/patch/empty_body
+=== RUN   TestResponseValidation/patch/empty_204
+=== RUN   TestResponseValidation/patch/whitespace
+=== RUN   TestResponseValidation/patch/truncated
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/patch/trailing_JSON
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/patch/trailing_text
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/patch/invalid_message
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/patch/API_failure
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/patch/large_API_message
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/discovery
+=== RUN   TestResponseValidation/discovery/success
+=== RUN   TestResponseValidation/discovery/created
+=== RUN   TestResponseValidation/discovery/forbidden_JSON
+=== RUN   TestResponseValidation/discovery/forbidden_success_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/unauthorized_success_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/missing_route
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/rate_limited
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/server_JSON
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/proxy_HTML
+=== RUN   TestResponseValidation/discovery/proxy_text
+=== RUN   TestResponseValidation/discovery/missing_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/null_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/string_code
+=== RUN   TestResponseValidation/discovery/fractional_code
+=== RUN   TestResponseValidation/discovery/bool_code
+=== RUN   TestResponseValidation/discovery/duplicate_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/duplicate_result
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/wrong_case_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/null_envelope
+=== RUN   TestResponseValidation/discovery/array_envelope
+=== RUN   TestResponseValidation/discovery/empty_object
+=== RUN   TestResponseValidation/discovery/empty_body
+=== RUN   TestResponseValidation/discovery/empty_204
+=== RUN   TestResponseValidation/discovery/whitespace
+=== RUN   TestResponseValidation/discovery/truncated
+=== RUN   TestResponseValidation/discovery/trailing_JSON
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/trailing_text
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/discovery/invalid_message
+=== RUN   TestResponseValidation/discovery/API_failure
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/discovery/large_API_message
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/login
+=== RUN   TestResponseValidation/login/success
+=== RUN   TestResponseValidation/login/created
+=== RUN   TestResponseValidation/login/forbidden_JSON
+=== RUN   TestResponseValidation/login/forbidden_success_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/unauthorized_success_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/missing_route
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/rate_limited
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/server_JSON
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/proxy_HTML
+=== RUN   TestResponseValidation/login/proxy_text
+=== RUN   TestResponseValidation/login/missing_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/null_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/string_code
+=== RUN   TestResponseValidation/login/fractional_code
+=== RUN   TestResponseValidation/login/bool_code
+=== RUN   TestResponseValidation/login/duplicate_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/duplicate_result
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/wrong_case_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/null_envelope
+=== RUN   TestResponseValidation/login/array_envelope
+=== RUN   TestResponseValidation/login/empty_object
+=== RUN   TestResponseValidation/login/empty_body
+=== RUN   TestResponseValidation/login/empty_204
+=== RUN   TestResponseValidation/login/whitespace
+=== RUN   TestResponseValidation/login/truncated
+=== RUN   TestResponseValidation/login/trailing_JSON
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/trailing_text
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/login/invalid_message
+=== RUN   TestResponseValidation/login/API_failure
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/login/large_API_message
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/multipart
+=== RUN   TestResponseValidation/multipart/success
+=== RUN   TestResponseValidation/multipart/created
+=== RUN   TestResponseValidation/multipart/forbidden_JSON
+=== RUN   TestResponseValidation/multipart/forbidden_success_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/multipart/unauthorized_success_envelope
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/multipart/missing_route
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/multipart/rate_limited
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/multipart/server_JSON
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/multipart/proxy_HTML
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/multipart/proxy_text
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/multipart/missing_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/multipart/null_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/multipart/string_code
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/multipart/fractional_code
+=== RUN   TestResponseValidation/multipart/bool_code
+=== RUN   TestResponseValidation/multipart/duplicate_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/multipart/duplicate_result
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/multipart/wrong_case_code
+    response_behavior_test.go:89: success=true, want false
+=== RUN   TestResponseValidation/multipart/null_envelope
+=== RUN   TestResponseValidation/multipart/array_envelope
+=== RUN   TestResponseValidation/multipart/empty_object
+=== RUN   TestResponseValidation/multipart/empty_body
+=== RUN   TestResponseValidation/multipart/empty_204
+=== RUN   TestResponseValidation/multipart/whitespace
+=== RUN   TestResponseValidation/multipart/truncated
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/multipart/trailing_JSON
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/multipart/trailing_text
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/multipart/invalid_message
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/multipart/API_failure
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+=== RUN   TestResponseValidation/multipart/large_API_message
+    response_behavior_test.go:92: diagnostic contains response secret or exceeds 512 bytes
+--- FAIL: TestResponseValidation (0.12s)
+    --- FAIL: TestResponseValidation/delete (0.03s)
+        --- PASS: TestResponseValidation/delete/success (0.00s)
+        --- PASS: TestResponseValidation/delete/created (0.00s)
+        --- FAIL: TestResponseValidation/delete/forbidden_JSON (0.00s)
+        --- FAIL: TestResponseValidation/delete/forbidden_success_envelope (0.00s)
+        --- FAIL: TestResponseValidation/delete/unauthorized_success_envelope (0.00s)
+        --- FAIL: TestResponseValidation/delete/missing_route (0.00s)
+        --- FAIL: TestResponseValidation/delete/rate_limited (0.00s)
+        --- FAIL: TestResponseValidation/delete/server_JSON (0.00s)
+        --- FAIL: TestResponseValidation/delete/proxy_HTML (0.00s)
+        --- FAIL: TestResponseValidation/delete/proxy_text (0.00s)
+        --- FAIL: TestResponseValidation/delete/missing_code (0.00s)
+        --- FAIL: TestResponseValidation/delete/null_code (0.00s)
+        --- FAIL: TestResponseValidation/delete/string_code (0.00s)
+        --- PASS: TestResponseValidation/delete/fractional_code (0.00s)
+        --- PASS: TestResponseValidation/delete/bool_code (0.00s)
+        --- FAIL: TestResponseValidation/delete/duplicate_code (0.00s)
+        --- FAIL: TestResponseValidation/delete/duplicate_result (0.00s)
+        --- FAIL: TestResponseValidation/delete/wrong_case_code (0.00s)
+        --- FAIL: TestResponseValidation/delete/null_envelope (0.00s)
+        --- PASS: TestResponseValidation/delete/array_envelope (0.00s)
+        --- FAIL: TestResponseValidation/delete/empty_object (0.00s)
+        --- PASS: TestResponseValidation/delete/empty_body (0.00s)
+        --- PASS: TestResponseValidation/delete/empty_204 (0.00s)
+        --- PASS: TestResponseValidation/delete/whitespace (0.00s)
+        --- FAIL: TestResponseValidation/delete/truncated (0.00s)
+        --- FAIL: TestResponseValidation/delete/trailing_JSON (0.00s)
+        --- FAIL: TestResponseValidation/delete/trailing_text (0.00s)
+        --- FAIL: TestResponseValidation/delete/invalid_message (0.00s)
+        --- FAIL: TestResponseValidation/delete/API_failure (0.00s)
+        --- FAIL: TestResponseValidation/delete/large_API_message (0.00s)
+    --- FAIL: TestResponseValidation/patch (0.03s)
+        --- PASS: TestResponseValidation/patch/success (0.00s)
+        --- PASS: TestResponseValidation/patch/created (0.00s)
+        --- FAIL: TestResponseValidation/patch/forbidden_JSON (0.00s)
+        --- FAIL: TestResponseValidation/patch/forbidden_success_envelope (0.00s)
+        --- FAIL: TestResponseValidation/patch/unauthorized_success_envelope (0.00s)
+        --- FAIL: TestResponseValidation/patch/missing_route (0.00s)
+        --- FAIL: TestResponseValidation/patch/rate_limited (0.00s)
+        --- FAIL: TestResponseValidation/patch/server_JSON (0.00s)
+        --- FAIL: TestResponseValidation/patch/proxy_HTML (0.00s)
+        --- FAIL: TestResponseValidation/patch/proxy_text (0.00s)
+        --- FAIL: TestResponseValidation/patch/missing_code (0.00s)
+        --- FAIL: TestResponseValidation/patch/null_code (0.00s)
+        --- FAIL: TestResponseValidation/patch/string_code (0.00s)
+        --- PASS: TestResponseValidation/patch/fractional_code (0.00s)
+        --- PASS: TestResponseValidation/patch/bool_code (0.00s)
+        --- FAIL: TestResponseValidation/patch/duplicate_code (0.00s)
+        --- FAIL: TestResponseValidation/patch/duplicate_result (0.00s)
+        --- FAIL: TestResponseValidation/patch/wrong_case_code (0.00s)
+        --- FAIL: TestResponseValidation/patch/null_envelope (0.00s)
+        --- PASS: TestResponseValidation/patch/array_envelope (0.00s)
+        --- FAIL: TestResponseValidation/patch/empty_object (0.00s)
+        --- PASS: TestResponseValidation/patch/empty_body (0.00s)
+        --- PASS: TestResponseValidation/patch/empty_204 (0.00s)
+        --- PASS: TestResponseValidation/patch/whitespace (0.00s)
+        --- FAIL: TestResponseValidation/patch/truncated (0.00s)
+        --- FAIL: TestResponseValidation/patch/trailing_JSON (0.00s)
+        --- FAIL: TestResponseValidation/patch/trailing_text (0.00s)
+        --- FAIL: TestResponseValidation/patch/invalid_message (0.00s)
+        --- FAIL: TestResponseValidation/patch/API_failure (0.00s)
+        --- FAIL: TestResponseValidation/patch/large_API_message (0.00s)
+    --- FAIL: TestResponseValidation/discovery (0.02s)
+        --- PASS: TestResponseValidation/discovery/success (0.00s)
+        --- PASS: TestResponseValidation/discovery/created (0.00s)
+        --- PASS: TestResponseValidation/discovery/forbidden_JSON (0.00s)
+        --- FAIL: TestResponseValidation/discovery/forbidden_success_envelope (0.00s)
+        --- FAIL: TestResponseValidation/discovery/unauthorized_success_envelope (0.00s)
+        --- FAIL: TestResponseValidation/discovery/missing_route (0.00s)
+        --- FAIL: TestResponseValidation/discovery/rate_limited (0.00s)
+        --- FAIL: TestResponseValidation/discovery/server_JSON (0.00s)
+        --- PASS: TestResponseValidation/discovery/proxy_HTML (0.00s)
+        --- PASS: TestResponseValidation/discovery/proxy_text (0.00s)
+        --- FAIL: TestResponseValidation/discovery/missing_code (0.00s)
+        --- FAIL: TestResponseValidation/discovery/null_code (0.00s)
+        --- PASS: TestResponseValidation/discovery/string_code (0.00s)
+        --- PASS: TestResponseValidation/discovery/fractional_code (0.00s)
+        --- PASS: TestResponseValidation/discovery/bool_code (0.00s)
+        --- FAIL: TestResponseValidation/discovery/duplicate_code (0.00s)
+        --- FAIL: TestResponseValidation/discovery/duplicate_result (0.00s)
+        --- FAIL: TestResponseValidation/discovery/wrong_case_code (0.00s)
+        --- PASS: TestResponseValidation/discovery/null_envelope (0.00s)
+        --- PASS: TestResponseValidation/discovery/array_envelope (0.00s)
+        --- PASS: TestResponseValidation/discovery/empty_object (0.00s)
+        --- PASS: TestResponseValidation/discovery/empty_body (0.00s)
+        --- PASS: TestResponseValidation/discovery/empty_204 (0.00s)
+        --- PASS: TestResponseValidation/discovery/whitespace (0.00s)
+        --- PASS: TestResponseValidation/discovery/truncated (0.00s)
+        --- FAIL: TestResponseValidation/discovery/trailing_JSON (0.00s)
+        --- FAIL: TestResponseValidation/discovery/trailing_text (0.00s)
+        --- PASS: TestResponseValidation/discovery/invalid_message (0.00s)
+        --- FAIL: TestResponseValidation/discovery/API_failure (0.00s)
+        --- FAIL: TestResponseValidation/discovery/large_API_message (0.00s)
+    --- FAIL: TestResponseValidation/login (0.02s)
+        --- PASS: TestResponseValidation/login/success (0.00s)
+        --- PASS: TestResponseValidation/login/created (0.00s)
+        --- PASS: TestResponseValidation/login/forbidden_JSON (0.00s)
+        --- FAIL: TestResponseValidation/login/forbidden_success_envelope (0.00s)
+        --- FAIL: TestResponseValidation/login/unauthorized_success_envelope (0.00s)
+        --- FAIL: TestResponseValidation/login/missing_route (0.00s)
+        --- FAIL: TestResponseValidation/login/rate_limited (0.00s)
+        --- FAIL: TestResponseValidation/login/server_JSON (0.00s)
+        --- PASS: TestResponseValidation/login/proxy_HTML (0.00s)
+        --- PASS: TestResponseValidation/login/proxy_text (0.00s)
+        --- FAIL: TestResponseValidation/login/missing_code (0.00s)
+        --- FAIL: TestResponseValidation/login/null_code (0.00s)
+        --- PASS: TestResponseValidation/login/string_code (0.00s)
+        --- PASS: TestResponseValidation/login/fractional_code (0.00s)
+        --- PASS: TestResponseValidation/login/bool_code (0.00s)
+        --- FAIL: TestResponseValidation/login/duplicate_code (0.00s)
+        --- FAIL: TestResponseValidation/login/duplicate_result (0.00s)
+        --- FAIL: TestResponseValidation/login/wrong_case_code (0.00s)
+        --- PASS: TestResponseValidation/login/null_envelope (0.00s)
+        --- PASS: TestResponseValidation/login/array_envelope (0.00s)
+        --- PASS: TestResponseValidation/login/empty_object (0.00s)
+        --- PASS: TestResponseValidation/login/empty_body (0.00s)
+        --- PASS: TestResponseValidation/login/empty_204 (0.00s)
+        --- PASS: TestResponseValidation/login/whitespace (0.00s)
+        --- PASS: TestResponseValidation/login/truncated (0.00s)
+        --- FAIL: TestResponseValidation/login/trailing_JSON (0.00s)
+        --- FAIL: TestResponseValidation/login/trailing_text (0.00s)
+        --- PASS: TestResponseValidation/login/invalid_message (0.00s)
+        --- FAIL: TestResponseValidation/login/API_failure (0.00s)
+        --- FAIL: TestResponseValidation/login/large_API_message (0.00s)
+    --- FAIL: TestResponseValidation/multipart (0.02s)
+        --- PASS: TestResponseValidation/multipart/success (0.00s)
+        --- PASS: TestResponseValidation/multipart/created (0.00s)
+        --- PASS: TestResponseValidation/multipart/forbidden_JSON (0.00s)
+        --- FAIL: TestResponseValidation/multipart/forbidden_success_envelope (0.00s)
+        --- FAIL: TestResponseValidation/multipart/unauthorized_success_envelope (0.00s)
+        --- FAIL: TestResponseValidation/multipart/missing_route (0.00s)
+        --- FAIL: TestResponseValidation/multipart/rate_limited (0.00s)
+        --- FAIL: TestResponseValidation/multipart/server_JSON (0.00s)
+        --- FAIL: TestResponseValidation/multipart/proxy_HTML (0.00s)
+        --- FAIL: TestResponseValidation/multipart/proxy_text (0.00s)
+        --- FAIL: TestResponseValidation/multipart/missing_code (0.00s)
+        --- FAIL: TestResponseValidation/multipart/null_code (0.00s)
+        --- FAIL: TestResponseValidation/multipart/string_code (0.00s)
+        --- PASS: TestResponseValidation/multipart/fractional_code (0.00s)
+        --- PASS: TestResponseValidation/multipart/bool_code (0.00s)
+        --- FAIL: TestResponseValidation/multipart/duplicate_code (0.00s)
+        --- FAIL: TestResponseValidation/multipart/duplicate_result (0.00s)
+        --- FAIL: TestResponseValidation/multipart/wrong_case_code (0.00s)
+        --- PASS: TestResponseValidation/multipart/null_envelope (0.00s)
+        --- PASS: TestResponseValidation/multipart/array_envelope (0.00s)
+        --- PASS: TestResponseValidation/multipart/empty_object (0.00s)
+        --- PASS: TestResponseValidation/multipart/empty_body (0.00s)
+        --- PASS: TestResponseValidation/multipart/empty_204 (0.00s)
+        --- PASS: TestResponseValidation/multipart/whitespace (0.00s)
+        --- FAIL: TestResponseValidation/multipart/truncated (0.00s)
+        --- FAIL: TestResponseValidation/multipart/trailing_JSON (0.00s)
+        --- FAIL: TestResponseValidation/multipart/trailing_text (0.00s)
+        --- FAIL: TestResponseValidation/multipart/invalid_message (0.00s)
+        --- FAIL: TestResponseValidation/multipart/API_failure (0.00s)
+        --- FAIL: TestResponseValidation/multipart/large_API_message (0.00s)
+=== RUN   TestResponseEmptyResult
+=== RUN   TestResponseEmptyResult/{"errorCode":0}
+=== RUN   TestResponseEmptyResult/{"errorCode":0,"result":null}
+=== RUN   TestResponseEmptyResult/{"errorCode":0,"result":{}}
+--- PASS: TestResponseEmptyResult (0.00s)
+    --- PASS: TestResponseEmptyResult/{"errorCode":0} (0.00s)
+    --- PASS: TestResponseEmptyResult/{"errorCode":0,"result":null} (0.00s)
+    --- PASS: TestResponseEmptyResult/{"errorCode":0,"result":{}} (0.00s)
+=== RUN   TestResponseRedirect
+=== RUN   TestResponseRedirect/delete/301
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/delete/302
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/delete/303
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/delete/307
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/delete/308
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/patch/301
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/patch/302
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/patch/303
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/patch/307
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/patch/308
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/discovery/301
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/discovery/302
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/discovery/303
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/discovery/307
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/discovery/308
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/login/301
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/login/302
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/login/303
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/login/307
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/login/308
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/multipart/301
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/multipart/302
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/multipart/303
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/multipart/307
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+=== RUN   TestResponseRedirect/multipart/308
+    response_behavior_test.go:128: redirect accepted as success
+    response_behavior_test.go:131: redirect forwarded an API request
+--- FAIL: TestResponseRedirect (0.03s)
+    --- FAIL: TestResponseRedirect/delete/301 (0.00s)
+    --- FAIL: TestResponseRedirect/delete/302 (0.00s)
+    --- FAIL: TestResponseRedirect/delete/303 (0.00s)
+    --- FAIL: TestResponseRedirect/delete/307 (0.00s)
+    --- FAIL: TestResponseRedirect/delete/308 (0.00s)
+    --- FAIL: TestResponseRedirect/patch/301 (0.00s)
+    --- FAIL: TestResponseRedirect/patch/302 (0.00s)
+    --- FAIL: TestResponseRedirect/patch/303 (0.00s)
+    --- FAIL: TestResponseRedirect/patch/307 (0.00s)
+    --- FAIL: TestResponseRedirect/patch/308 (0.00s)
+    --- FAIL: TestResponseRedirect/discovery/301 (0.00s)
+    --- FAIL: TestResponseRedirect/discovery/302 (0.00s)
+    --- FAIL: TestResponseRedirect/discovery/303 (0.00s)
+    --- FAIL: TestResponseRedirect/discovery/307 (0.00s)
+    --- FAIL: TestResponseRedirect/discovery/308 (0.00s)
+    --- FAIL: TestResponseRedirect/login/301 (0.00s)
+    --- FAIL: TestResponseRedirect/login/302 (0.00s)
+    --- FAIL: TestResponseRedirect/login/303 (0.00s)
+    --- FAIL: TestResponseRedirect/login/307 (0.00s)
+    --- FAIL: TestResponseRedirect/login/308 (0.00s)
+    --- FAIL: TestResponseRedirect/multipart/301 (0.00s)
+    --- FAIL: TestResponseRedirect/multipart/302 (0.00s)
+    --- FAIL: TestResponseRedirect/multipart/303 (0.00s)
+    --- FAIL: TestResponseRedirect/multipart/307 (0.00s)
+    --- FAIL: TestResponseRedirect/multipart/308 (0.00s)
+=== RUN   TestResponseTransport
+=== RUN   TestResponseTransport/delete/transport
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/delete/read
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/delete/cancel
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/delete/deadline
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/delete/invalid_URL
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/patch/transport
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/patch/read
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/patch/cancel
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/patch/deadline
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/patch/invalid_URL
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/discovery/transport
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/discovery/read
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/discovery/cancel
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/discovery/deadline
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/discovery/invalid_URL
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/login/transport
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/login/read
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/login/cancel
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/login/deadline
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/login/invalid_URL
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/multipart/transport
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/multipart/read
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/multipart/cancel
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/multipart/deadline
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+=== RUN   TestResponseTransport/multipart/invalid_URL
+    response_behavior_test.go:176: diagnostic exposes transport detail or URL
+--- FAIL: TestResponseTransport (0.00s)
+    --- FAIL: TestResponseTransport/delete/transport (0.00s)
+    --- FAIL: TestResponseTransport/delete/read (0.00s)
+    --- FAIL: TestResponseTransport/delete/cancel (0.00s)
+    --- FAIL: TestResponseTransport/delete/deadline (0.00s)
+    --- FAIL: TestResponseTransport/delete/invalid_URL (0.00s)
+    --- FAIL: TestResponseTransport/patch/transport (0.00s)
+    --- FAIL: TestResponseTransport/patch/read (0.00s)
+    --- FAIL: TestResponseTransport/patch/cancel (0.00s)
+    --- FAIL: TestResponseTransport/patch/deadline (0.00s)
+    --- FAIL: TestResponseTransport/patch/invalid_URL (0.00s)
+    --- FAIL: TestResponseTransport/discovery/transport (0.00s)
+    --- FAIL: TestResponseTransport/discovery/read (0.00s)
+    --- FAIL: TestResponseTransport/discovery/cancel (0.00s)
+    --- FAIL: TestResponseTransport/discovery/deadline (0.00s)
+    --- FAIL: TestResponseTransport/discovery/invalid_URL (0.00s)
+    --- FAIL: TestResponseTransport/login/transport (0.00s)
+    --- FAIL: TestResponseTransport/login/read (0.00s)
+    --- FAIL: TestResponseTransport/login/cancel (0.00s)
+    --- FAIL: TestResponseTransport/login/deadline (0.00s)
+    --- FAIL: TestResponseTransport/login/invalid_URL (0.00s)
+    --- FAIL: TestResponseTransport/multipart/transport (0.00s)
+    --- FAIL: TestResponseTransport/multipart/read (0.00s)
+    --- FAIL: TestResponseTransport/multipart/cancel (0.00s)
+    --- FAIL: TestResponseTransport/multipart/deadline (0.00s)
+    --- FAIL: TestResponseTransport/multipart/invalid_URL (0.00s)
+=== RUN   TestResponseSessionRetry
+=== RUN   TestResponseSessionRetry/valid_expiry
+=== RUN   TestResponseSessionRetry/repeated_expiry
+=== RUN   TestResponseSessionRetry/HTTP_unauthorized
+    response_behavior_test.go:227: success=true requests/logins=2/1; want false 1/0
+=== RUN   TestResponseSessionRetry/HTTP_forbidden
+    response_behavior_test.go:227: success=true requests/logins=2/1; want false 1/0
+=== RUN   TestResponseSessionRetry/HTTP_server_error
+    response_behavior_test.go:227: success=true requests/logins=2/1; want false 1/0
+=== RUN   TestResponseSessionRetry/malformed_expiry
+    response_behavior_test.go:227: success=true requests/logins=1/0; want false 1/0
+--- FAIL: TestResponseSessionRetry (0.01s)
+    --- PASS: TestResponseSessionRetry/valid_expiry (0.00s)
+    --- PASS: TestResponseSessionRetry/repeated_expiry (0.00s)
+    --- FAIL: TestResponseSessionRetry/HTTP_unauthorized (0.00s)
+    --- FAIL: TestResponseSessionRetry/HTTP_forbidden (0.00s)
+    --- FAIL: TestResponseSessionRetry/HTTP_server_error (0.00s)
+    --- FAIL: TestResponseSessionRetry/malformed_expiry (0.00s)
+=== RUN   TestResponseSizeLimit
+=== RUN   TestResponseSizeLimit/16777216
+=== RUN   TestResponseSizeLimit/16777217
+    response_behavior_test.go:242: success=true for 16777217-byte response
+--- FAIL: TestResponseSizeLimit (0.65s)
+    --- PASS: TestResponseSizeLimit/16777216 (0.30s)
+    --- FAIL: TestResponseSizeLimit/16777217 (0.35s)
+=== RUN   TestResponseDiscoveryIdentity
+=== RUN   TestResponseDiscoveryIdentity/{"errorCode":0,"result":{}}
+    response_behavior_test.go:254: missing controller identity accepted
+=== RUN   TestResponseDiscoveryIdentity/{"errorCode":0,"result":null}
+    response_behavior_test.go:254: missing controller identity accepted
+=== RUN   TestResponseDiscoveryIdentity/{"errorCode":0,"result":{"omadacId":""}}
+    response_behavior_test.go:254: missing controller identity accepted
+--- FAIL: TestResponseDiscoveryIdentity (0.00s)
+    --- FAIL: TestResponseDiscoveryIdentity/{"errorCode":0,"result":{}} (0.00s)
+    --- FAIL: TestResponseDiscoveryIdentity/{"errorCode":0,"result":null} (0.00s)
+    --- FAIL: TestResponseDiscoveryIdentity/{"errorCode":0,"result":{"omadacId":""}} (0.00s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/client	0.834s
+FAIL

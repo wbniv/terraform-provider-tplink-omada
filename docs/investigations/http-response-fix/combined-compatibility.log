@@ -1,0 +1,100 @@
+?   	github.com/terraform-provider-tplink-omada	[no test files]
+ok  	github.com/terraform-provider-tplink-omada/internal/client	1.306s
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	0.036s
+ok  	github.com/terraform-provider-tplink-omada/internal/resources	0.744s
+=== RUN   TestAccHTTPResponseDelete
+=== RUN   TestAccHTTPResponseDelete/403_JSON
+=== RUN   TestAccHTTPResponseDelete/500_apparent_success
+=== RUN   TestAccHTTPResponseDelete/200_missing_code
+=== RUN   TestAccHTTPResponseDelete/200_null_envelope
+=== RUN   TestAccHTTPResponseDelete/502_HTML
+--- PASS: TestAccHTTPResponseDelete (10.39s)
+    --- PASS: TestAccHTTPResponseDelete/403_JSON (2.06s)
+    --- PASS: TestAccHTTPResponseDelete/500_apparent_success (2.05s)
+    --- PASS: TestAccHTTPResponseDelete/200_missing_code (2.10s)
+    --- PASS: TestAccHTTPResponseDelete/200_null_envelope (2.10s)
+    --- PASS: TestAccHTTPResponseDelete/502_HTML (2.09s)
+=== RUN   TestAccSiteCredentials
+=== RUN   TestAccSiteCredentials/masked
+=== RUN   TestAccSiteCredentials/other_mask
+=== RUN   TestAccSiteCredentials/plaintext
+=== RUN   TestAccSiteCredentials/absent
+=== RUN   TestAccSiteCredentials/adopt
+=== RUN   TestAccSiteCredentials/unknown_credentials
+=== RUN   TestAccSiteCredentials/rejected_PATCH_retry
+=== RUN   TestAccSiteCredentials/accepted_PATCH_read_failure
+=== RUN   TestAccSiteCredentials/site_ownership_migration
+=== RUN   TestAccSiteCredentials/site_bootstrap
+=== RUN   TestAccSiteCredentials/site_unknown_bootstrap
+=== RUN   TestAccSiteCredentials/partial_credentials_rejected
+--- PASS: TestAccSiteCredentials (47.94s)
+    --- PASS: TestAccSiteCredentials/masked (6.84s)
+    --- PASS: TestAccSiteCredentials/other_mask (7.09s)
+    --- PASS: TestAccSiteCredentials/plaintext (6.96s)
+    --- PASS: TestAccSiteCredentials/absent (8.05s)
+    --- PASS: TestAccSiteCredentials/adopt (2.61s)
+    --- PASS: TestAccSiteCredentials/unknown_credentials (1.56s)
+    --- PASS: TestAccSiteCredentials/rejected_PATCH_retry (2.67s)
+    --- PASS: TestAccSiteCredentials/accepted_PATCH_read_failure (2.72s)
+    --- PASS: TestAccSiteCredentials/site_ownership_migration (2.38s)
+    --- PASS: TestAccSiteCredentials/site_bootstrap (2.34s)
+    --- PASS: TestAccSiteCredentials/site_unknown_bootstrap (2.43s)
+    --- PASS: TestAccSiteCredentials/partial_credentials_rejected (2.29s)
+=== RUN   TestAccWirelessNetworkCreate
+=== RUN   TestAccWirelessNetworkCreate/defaults
+=== RUN   TestAccWirelessNetworkCreate/explicit
+=== RUN   TestAccWirelessNetworkCreate/unknown_at_plan
+--- PASS: TestAccWirelessNetworkCreate (4.37s)
+    --- PASS: TestAccWirelessNetworkCreate/defaults (1.39s)
+    --- PASS: TestAccWirelessNetworkCreate/explicit (1.37s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_at_plan (1.61s)
+=== RUN   TestAccWirelessNetworkGroupIdentity
+=== RUN   TestAccWirelessNetworkGroupIdentity/import_retains_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_defaults
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_before_destroy
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_changed_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_same_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/site_replacement
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/delete_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/duplicate_name_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_omitted_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_unknown_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password
+--- PASS: TestAccWirelessNetworkGroupIdentity (32.63s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/import_retains_group (3.83s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_defaults (2.12s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings (2.18s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_before_destroy (2.14s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_changed_group (2.31s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_same_group (2.54s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/site_replacement (2.22s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_failure_retry (2.70s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/delete_failure_retry (2.85s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/duplicate_name_retry (3.21s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_omitted_group (1.62s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_unknown_group (1.91s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password (3.02s)
+=== RUN   TestAccWirelessNetworkPreservation
+=== RUN   TestAccWirelessNetworkPreservation/plaintext
+=== RUN   TestAccWirelessNetworkPreservation/masked
+=== RUN   TestAccWirelessNetworkPreservation/absent
+=== RUN   TestAccWirelessNetworkPreservation/open
+=== RUN   TestAccWirelessNetworkPreservation/unmanaged
+--- PASS: TestAccWirelessNetworkPreservation (31.05s)
+    --- PASS: TestAccWirelessNetworkPreservation/plaintext (7.89s)
+    --- PASS: TestAccWirelessNetworkPreservation/masked (7.32s)
+    --- PASS: TestAccWirelessNetworkPreservation/absent (8.03s)
+    --- PASS: TestAccWirelessNetworkPreservation/open (5.93s)
+    --- PASS: TestAccWirelessNetworkPreservation/unmanaged (1.87s)
+=== RUN   TestAccWirelessNetworkVLANState
+=== RUN   TestAccWirelessNetworkVLANState/default_clears_fields
+=== RUN   TestAccWirelessNetworkVLANState/default_retains_stale_fields
+=== RUN   TestAccWirelessNetworkVLANState/import_default
+--- PASS: TestAccWirelessNetworkVLANState (12.73s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_clears_fields (5.46s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_retains_stale_fields (5.40s)
+    --- PASS: TestAccWirelessNetworkVLANState/import_default (1.87s)
+PASS
+ok  	github.com/terraform-provider-tplink-omada/internal/provider	139.132s

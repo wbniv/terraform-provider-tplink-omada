@@ -1,0 +1,41 @@
+--- a/internal/provider/wireless_network_group_test.go
++++ b/internal/provider/wireless_network_group_test.go
+@@ -254,7 +254,7 @@
+ 				actions = "[create delete]"
+ 				wantEvents = []string{"POST site/group-b", "DELETE site/group-a/ssid-old"}
+ 				if scenario == "duplicate name retry" {
+-					steps = append(steps, resource.TestStep{Config: final, ExpectError: regexp.MustCompile("fixture duplicate name")}, resource.TestStep{Config: initial, PlanOnly: true, Check: check("site/group-a/ssid-old", []string{"POST site/group-b"}, 0)})
++					steps = append(steps, resource.TestStep{Config: final, ExpectError: regexp.MustCompile("API error -1001")}, resource.TestStep{Config: initial, PlanOnly: true, Check: check("site/group-a/ssid-old", []string{"POST site/group-b"}, 0)})
+ 					final = config("site", groupB, "Renamed", "lifecycle { create_before_destroy = true }", "")
+ 					wantEvents = []string{"POST site/group-b", "POST site/group-b", "DELETE site/group-a/ssid-old"}
+ 				}
+@@ -272,11 +272,11 @@
+ 				attr, after = "site_id", "other-site"
+ 				finalIdentity, wantEvents[1] = "other-site/group-a/ssid-new1", "POST other-site/group-a"
+ 			case "create failure retry":
+-				steps = append(steps, resource.TestStep{PreConfig: func() { mu.Lock(); defer mu.Unlock(); failCreate = true }, Config: final, ConfigPlanChecks: checks(actions, attr, after, unknown), ExpectError: regexp.MustCompile("fixture create failure")})
++				steps = append(steps, resource.TestStep{PreConfig: func() { mu.Lock(); defer mu.Unlock(); failCreate = true }, Config: final, ConfigPlanChecks: checks(actions, attr, after, unknown), ExpectError: regexp.MustCompile("API error -1001")})
+ 				wantEvents = append(wantEvents, "POST site/group-b")
+ 				actions = "[create]"
+ 			case "delete failure retry":
+-				steps = append(steps, resource.TestStep{PreConfig: func() { mu.Lock(); defer mu.Unlock(); failDelete = true }, Config: final, ConfigPlanChecks: checks(actions, attr, after, unknown), ExpectError: regexp.MustCompile("fixture delete failure")}, resource.TestStep{Config: initial, PlanOnly: true, Check: check("site/group-a/ssid-old", []string{"DELETE site/group-a/ssid-old"}, 0)})
++				steps = append(steps, resource.TestStep{PreConfig: func() { mu.Lock(); defer mu.Unlock(); failDelete = true }, Config: final, ConfigPlanChecks: checks(actions, attr, after, unknown), ExpectError: regexp.MustCompile("API error -1001")}, resource.TestStep{Config: initial, PlanOnly: true, Check: check("site/group-a/ssid-old", []string{"DELETE site/group-a/ssid-old"}, 0)})
+ 				wantEvents = append([]string{"DELETE site/group-a/ssid-old"}, wantEvents...)
+ 			case "create omitted group", "create unknown group":
+ 				steps = nil
+--- a/internal/resources/wireless_network_update_test.go
++++ b/internal/resources/wireless_network_update_test.go
+@@ -99,10 +99,10 @@
+ 		{name: "invalid VLAN association", mutate: func(raw map[string]any) {
+ 			raw["vlanSetting"].(map[string]any)["customConfig"].(map[string]any)["lanNetworkVlanIds"] = "invalid"
+ 		}, wantError: "invalid value type", noWrite: true},
+-		{name: "read failure", fail: "read", wantError: "fixture failure", noWrite: true},
++		{name: "read failure", fail: "read", wantError: "API error -1001", noWrite: true},
+ 		{name: "missing SSID", fail: "missing", wantError: "not found", noWrite: true},
+-		{name: "PATCH failure retains prior state", fail: "patch", wantError: "fixture failure"},
+-		{name: "readback failure retains prior state", fail: "readback", wantError: "fixture failure"},
++		{name: "PATCH failure retains prior state", fail: "patch", wantError: "API error -1001"},
++		{name: "readback failure retains prior state", fail: "readback", wantError: "API error -1001"},
+ 	} {
+ 		t.Run(tc.name, func(t *testing.T) {
+ 			ctx := context.Background()

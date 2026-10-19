@@ -1,0 +1,25 @@
+=== RUN   TestAccHTTPResponseDelete
+=== RUN   TestAccHTTPResponseDelete/403_JSON
+    http_response_test.go:78: Step 2/4, expected an error but got none
+=== RUN   TestAccHTTPResponseDelete/500_apparent_success
+    http_response_test.go:78: Step 2/4, expected an error but got none
+=== RUN   TestAccHTTPResponseDelete/200_missing_code
+    http_response_test.go:78: Step 2/4, expected an error but got none
+=== RUN   TestAccHTTPResponseDelete/200_null_envelope
+    http_response_test.go:78: Step 2/4, expected an error but got none
+=== RUN   TestAccHTTPResponseDelete/502_HTML
+    http_response_test.go:78: Step 2/4, expected an error with pattern, no match on: Error running destroy: exit status 1
+        
+        Error: Error deleting network
+        
+        decoding response (status 502, body: <html>proxy failure</html>): invalid
+        character '<' looking for beginning of value
+--- FAIL: TestAccHTTPResponseDelete (14.67s)
+    --- FAIL: TestAccHTTPResponseDelete/403_JSON (5.00s)
+    --- FAIL: TestAccHTTPResponseDelete/500_apparent_success (1.63s)
+    --- FAIL: TestAccHTTPResponseDelete/200_missing_code (2.54s)
+    --- FAIL: TestAccHTTPResponseDelete/200_null_envelope (3.54s)
+    --- FAIL: TestAccHTTPResponseDelete/502_HTML (1.96s)
+FAIL
+FAIL	github.com/terraform-provider-tplink-omada/internal/provider	14.731s
+FAIL

@@ -21,10 +21,11 @@ The detailed findings and original logs below describe the reviewed baseline. A,
 | D2 — SSID VLAN state | F14 | Implemented and locally verified on `fix/ssid-vlan-state`, based on D1, committed/pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3); 95 lifecycle cases, three new Terraform scenarios, full D1 regression, and A compatibility pass. [Evidence](ssid-vlan-fix/README.md). |
 | D3 — SSID group identity | F13 | Implemented and locally verified on `fix/ssid-group-identity`, based on D2, committed/pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e); 21 direct cases, 13 new Terraform scenarios, full D1/D2 regression and A compatibility pass. [Evidence](ssid-group-fix/README.md). |
 | E — Credentials | F05, F06, F16 | Implemented and locally verified on `fix/site-credentials`, based on A, committed/pushed as [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5). All 48 direct cases, 12 Terraform scenarios, full Go gates, and combined A + D1–D3 + E checks pass. [Evidence](site-credentials-fix/README.md). |
-| F–H | F09–F12 | Open; F12 HTTP status/envelope validation is next. Scope and dependencies are recorded in the tracker. |
+| F — Response validation | F12 | Implemented and locally verified on `fix/http-responses`, based on E; pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31). 223 client cases, full Go/race gates, and 41 combined Terraform scenarios pass with the recorded SSID diagnostic assertion adjustment. [Evidence](http-response-fix/README.md). |
+| G–H | F09–F11 | Open; complete pagination (F09), then confirmed absence (F10), are next. Scope and dependencies are recorded in the tracker. |
 | I — Switch planning | F15 | New P2 finding discovered during B: importing with the entire `ports` list omitted leaves a persistent update plan. Reproduced on the baseline and B; root cause and fix remain open. [Probe and logs](switch-port-fix/README.md#new-finding-f15-omitted-whole-ports-list-does-not-settle-after-import). |
 
-F15 and F16 are additional to the original 14 findings. B documents the complete-port-list workaround; it does not resolve F15. F16, discovered during E, concerns unrelated site settings becoming zero values and is fixed locally in E. Formatting, vet, build, and full unit tests pass for A, B, C, D1, D2, D3, and E in Go 1.25.6 containers. These results establish local behavior, with hardware compatibility still to be checked.
+F15 and F16 are additional to the original 14 findings. B documents the complete-port-list workaround; it does not resolve F15. F16, discovered during E, concerns unrelated site settings becoming zero values and is fixed locally in E. Formatting, vet, build, and full unit tests pass for A, B, C, D1, D2, D3, E, and F in Go 1.25.6 containers. These results establish local behavior, with hardware compatibility still to be checked.
 
 ## Findings at a glance
 
@@ -248,11 +249,12 @@ Run `bash docs/investigations/reproduce.sh` from this checkout to reproduce in a
 - [x] Implement and locally verify F03 AP radio preservation, including default migration and partial-failure state recovery (C).
 - [x] Fix and locally verify F04 SSID preservation alongside F13/F14 identity and VLAN drift (D1–D3), including actual Terraform unknown-value planning tests. D3 is committed/pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e); hardware/upstream gates remain open.
 - [x] Fix both credential paths, F05/F06, and newly reproduced F16 settings preservation under E; direct and Terraform regressions pass. E is committed and pushed; hardware/submission gates remain open.
-- [ ] Fix F12's HTTP classification, F09's pagination, then F10's missing-resource handling in that order so absence is trustworthy.
+- [x] Fix F12 HTTP/envelope classification, safe diagnostics, and redirect handling under F; Docker behavior, Terraform recovery, combined compatibility, and race checks pass. F is committed and pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31).
+- [ ] Fix F09 pagination, then F10 missing-resource handling, so absence is trustworthy.
 - [x] Fix F13/F14 locally with import, identity-change, and remote-drift acceptance cases.
 - [ ] Fix F11 network adoption under H.
 - [ ] Investigate and fix F15's persistent plan when the whole switch ports list is omitted (I).
-- [ ] Complete controlled-hardware validation and submission review for A–E; record publication and merge separately.
+- [ ] Complete controlled-hardware validation and submission review for A–F; record publication and merge separately.
 - [ ] Add local mock acceptance tests to CI alongside a targeted race job. Keep live-controller compatibility testing as a separate gate for payload/API changes.
 
-The original investigation did not change production code. Subsequent A–E fixes are isolated in the branches recorded above; their evidence is stored separately from the baseline logs. No review comments or PRs have been posted to GitHub by this work.
+The original investigation did not change production code. Subsequent A–F fixes are isolated in the branches recorded above; their evidence is stored separately from the baseline logs. No review comments or PRs have been posted to GitHub by this work.
