@@ -1,0 +1,105 @@
+=== RUN   TestControllerLabEmptyDevices
+    controller_lab_test.go:22: Step 1/1 error: Error running pre-apply plan: exit status 1
+        
+        Error: Invalid function argument
+        
+          on terraform_plugin_test.tf line 13, in output "device_count":
+          13: output "device_count" { value = length(data.omada_devices.lab.devices) }
+            ├────────────────
+            │ while calling length(value)
+            │ data.omada_devices.lab.devices is null
+        
+        Invalid value for "value" parameter: argument must not be null.
+--- FAIL: TestControllerLabEmptyDevices (0.40s)
+=== RUN   TestControllerLabSiteCredentials
+--- PASS: TestControllerLabSiteCredentials (4.66s)
+=== RUN   TestControllerLabWirelessLifecycle
+    controller_lab_test.go:130: Step 1/5 error: Error running apply: exit status 1
+        
+        Error: Error creating wireless network
+        
+          with omada_wireless_network.lab,
+          on terraform_plugin_test.tf line 16, in resource "omada_wireless_network" "lab":
+          16: resource "omada_wireless_network" "lab" {
+        
+        API error -1001 (controller rejected the operation)
+--- FAIL: TestControllerLabWirelessLifecycle (0.88s)
+=== RUN   TestAccDataSourceSites
+--- PASS: TestAccDataSourceSites (1.19s)
+=== RUN   TestAccDataSourceNetworks
+--- PASS: TestAccDataSourceNetworks (1.35s)
+=== RUN   TestAccDataSourceWirelessNetworks
+    provider_acc_test.go:97: Step 1/1 error: Check failed: Check 1/1 error: data.omada_wireless_networks.test: Attribute 'wireless_networks.#' expected to be set
+--- FAIL: TestAccDataSourceWirelessNetworks (0.71s)
+=== RUN   TestAccDataSourcePortProfiles
+--- PASS: TestAccDataSourcePortProfiles (1.19s)
+=== RUN   TestAccDataSourceDevices
+    provider_acc_test.go:153: Step 1/1 error: Check failed: Check 1/1 error: data.omada_devices.test: Attribute 'devices.#' expected to be set
+--- FAIL: TestAccDataSourceDevices (0.75s)
+=== RUN   TestAccDataSourceSiteSettings
+--- PASS: TestAccDataSourceSiteSettings (1.20s)
+=== RUN   TestAccResourceNetwork_CRUD
+--- PASS: TestAccResourceNetwork_CRUD (3.19s)
+=== RUN   TestAccResourcePortProfile_CRUD
+--- PASS: TestAccResourcePortProfile_CRUD (2.88s)
+=== RUN   TestAccDataSourceMDNSReflectors
+--- PASS: TestAccDataSourceMDNSReflectors (1.19s)
+=== RUN   TestAccDataSourceFirewallACLs
+--- PASS: TestAccDataSourceFirewallACLs (1.18s)
+=== RUN   TestAccWirelessNetworkCreate
+=== RUN   TestAccWirelessNetworkCreate/defaults
+=== RUN   TestAccWirelessNetworkCreate/explicit
+=== RUN   TestAccWirelessNetworkCreate/unknown_at_plan
+--- PASS: TestAccWirelessNetworkCreate (3.81s)
+    --- PASS: TestAccWirelessNetworkCreate/defaults (1.22s)
+    --- PASS: TestAccWirelessNetworkCreate/explicit (1.31s)
+    --- PASS: TestAccWirelessNetworkCreate/unknown_at_plan (1.28s)
+=== RUN   TestAccWirelessNetworkGroupIdentity
+=== RUN   TestAccWirelessNetworkGroupIdentity/import_retains_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_defaults
+=== RUN   TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_before_destroy
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_changed_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/unknown_same_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/site_replacement
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/delete_failure_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/duplicate_name_retry
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_omitted_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/create_unknown_group
+=== RUN   TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password
+--- PASS: TestAccWirelessNetworkGroupIdentity (28.76s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/import_retains_group (3.42s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_defaults (1.92s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/replace_with_explicit_settings (1.96s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_before_destroy (1.90s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_changed_group (1.99s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/unknown_same_group (2.03s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/site_replacement (1.94s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_failure_retry (2.23s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/delete_failure_retry (2.53s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/duplicate_name_retry (2.72s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_omitted_group (1.59s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/create_unknown_group (1.54s)
+    --- PASS: TestAccWirelessNetworkGroupIdentity/secured_replacement_requires_password (2.98s)
+=== RUN   TestAccWirelessNetworkPreservation
+=== RUN   TestAccWirelessNetworkPreservation/plaintext
+=== RUN   TestAccWirelessNetworkPreservation/masked
+=== RUN   TestAccWirelessNetworkPreservation/absent
+=== RUN   TestAccWirelessNetworkPreservation/open
+=== RUN   TestAccWirelessNetworkPreservation/unmanaged
+--- PASS: TestAccWirelessNetworkPreservation (28.24s)
+    --- PASS: TestAccWirelessNetworkPreservation/plaintext (7.03s)
+    --- PASS: TestAccWirelessNetworkPreservation/masked (6.72s)
+    --- PASS: TestAccWirelessNetworkPreservation/absent (6.79s)
+    --- PASS: TestAccWirelessNetworkPreservation/open (5.98s)
+    --- PASS: TestAccWirelessNetworkPreservation/unmanaged (1.72s)
+=== RUN   TestAccWirelessNetworkVLANState
+=== RUN   TestAccWirelessNetworkVLANState/default_clears_fields
+=== RUN   TestAccWirelessNetworkVLANState/default_retains_stale_fields
+=== RUN   TestAccWirelessNetworkVLANState/import_default
+--- PASS: TestAccWirelessNetworkVLANState (12.11s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_clears_fields (5.16s)
+    --- PASS: TestAccWirelessNetworkVLANState/default_retains_stale_fields (5.11s)
+    --- PASS: TestAccWirelessNetworkVLANState/import_default (1.84s)
+FAIL

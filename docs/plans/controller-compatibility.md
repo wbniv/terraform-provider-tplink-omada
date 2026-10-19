@@ -6,11 +6,17 @@ Prepared for Will on 2026-10-19 after running the real Software Controller 6.1.0
 
 ### L1 — WLAN groups are an unpaginated object envelope
 
+Collection correction implemented; live SSID follow-ups remain: [L1 evidence](../investigations/wlan-collection-fix/README.md).
+
 - [x] Reproduce on G1: `/setting/wlans` returns the same `data` on pages 1 and 2, without pagination metadata. IDs are valid. G1 errors on the duplicate second page.
-- [ ] Add an explicit per-endpoint collection policy for known unpaginated envelopes. Do not treat arbitrary missing totals, short pages, or repeated rows as proof of completion.
-- [ ] Retain strict paginated behavior for networks, SSIDs, profiles, and other verified paged collections. Test populated variants where only empty responses have been observed.
-- [ ] Add a fixture from the sanitized real shape, verify default/custom group lookup, and rerun D's SSID create/update/import/replacement scenarios on the controller.
-- [ ] Rerun G1's malformed-page/failure gates and the real 102-network test. Commit a focused G1 follow-up before G2 can rely on collection completeness.
+- [x] Add an explicit per-endpoint collection policy for known unpaginated envelopes. Do not treat arbitrary missing totals, short pages, or repeated rows as proof of completion.
+- [x] Retain strict paginated behavior for other collections; paginated mock regressions and the real 102-network case pass.
+- [ ] Test populated variants of collections where only empty real responses have been observed.
+- [x] Add an envelope fixture and verify default/custom lookup; rerun D mock scenarios and real SSID probes.
+- [x] Verify real secured SSID create, import, group replacement, and stable plan.
+- [ ] Finish live SSID update verification after L7 and open-network PMF compatibility after L6.
+- [x] Rerun G1 malformed-page/failure gates and the real 102-network test.
+- [x] Commit the focused L1 correction as `0730101` on `fix/wlan-group-collection`.
 
 ### L2 — Certificate wire format differs from the mocks
 
@@ -41,9 +47,25 @@ Prepared for Will on 2026-10-19 after running the real Software Controller 6.1.0
 - [ ] Initialize empty collections consistently and test `length(data.omada_devices.example.devices) == 0` on a controller without devices.
 - [ ] Audit other collection data sources for the same nil-to-null behavior; retain populated-list coverage.
 
+### L6 — Open SSID PMF defaults disagree with the controller
+
+- [x] After L1 unblocked discovery, reproduce an inconsistent apply: `security = 0` with the provider default `pmf_mode = 2` is read back as `0` by 6.1.0.19.
+- [ ] Verify PMF/security combinations against controller UI and API, including secured SSIDs; do not infer enum meanings from mocks.
+- [ ] Define compatible defaults and validation, preserving explicit user intent and documenting any migration.
+- [ ] Add mock and live create/update/import/stable-plan gates for the supported combinations.
+
+An explicit `pmf_mode = 0` create was rejected with API `-1001`. The final L1 lifecycle uses a secured SSID with mode 2; the open-network mismatch remains unresolved.
+
+### L7 — Real SSID fields exceed the D1 writable contract
+
+- [x] A secured SSID is created, but rename fails with “unsupported SSID field in SSID”; the fail-closed D1 check prevents the PATCH.
+- [ ] Capture sanitized field names/types from the 6.1.0.19 response and compare the controller UI's update payload.
+- [ ] Classify writable, response-only, and conditional fields; extend the contract only with evidence. Preserve unrelated settings and retain rejection of unknown fields.
+- [ ] Add realistic fixtures and complete live rename, security/VLAN updates, import, and stable-plan checks.
+
 ## Review screens and flow
 
-Concrete terminal review states for the next implementation round:
+The first terminal screen below records the baseline; current L1 results are in the linked investigation.
 
 ```text
 $ dev/controller-lab/run.sh up
@@ -71,7 +93,7 @@ Next action: G2 only after complete discovery is verified
 
 | Check | Current review result | Required result |
 | --- | --- | --- |
-| WLAN data-source plan | Duplicate identity error on repeated page 2 | Read complete known-unpaginated group list, then list SSIDs |
+| WLAN data-source plan | Discovery fixed; empty-list assertion now exposed | Read complete known-unpaginated group list, then list SSIDs |
 | Certificate apply | Upload rejected before activation | Nonempty certificate/key IDs; verified activation and TLS presentation |
 | Refresh after lost session | HTTP 302 diagnostic | One bounded, verified reauthentication attempt or an explicit unsupported result |
 | IP-group plan | API `-1600` | Correct typed group inventory from a verified route |
@@ -91,7 +113,7 @@ flowchart TD
 
 ## Publication gates
 
-- [ ] Keep each compatibility correction separately reviewable; the lab/vendoring branch records failures and contains no production correction for L1–L5.
+- [ ] Keep each compatibility correction separately reviewable; the lab/vendoring baseline records failures; `fix/wlan-group-collection` contains the L1 production correction.
 - [ ] Recheck upstream heads and contribution requirements before opening PRs.
 - [ ] Declare exact controller/version/test coverage. Physical AP/switch behavior remains unverified.
 - [ ] Publish upstream only when authorized; fork commits and pushes are already authorized for this work.

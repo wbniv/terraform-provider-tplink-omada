@@ -1,0 +1,54 @@
+=== RUN   TestControllerLabCollections
+=== RUN   TestControllerLabCollections/sites
+    controller_lab_test.go:66: complete collection: 1 rows
+=== RUN   TestControllerLabCollections/networks
+    controller_lab_test.go:66: complete collection: 1 rows
+=== RUN   TestControllerLabCollections/wlan_groups
+    controller_lab_test.go:66: complete collection: 1 rows
+=== RUN   TestControllerLabCollections/profiles
+    controller_lab_test.go:66: complete collection: 3 rows
+=== RUN   TestControllerLabCollections/acls
+    controller_lab_test.go:66: complete collection: 0 rows
+=== RUN   TestControllerLabCollections/ip_groups
+    controller_lab_test.go:64: API error -1600 (controller rejected the operation)
+=== RUN   TestControllerLabCollections/mdns
+    controller_lab_test.go:66: complete collection: 0 rows
+=== RUN   TestControllerLabCollections/saml_idps
+    controller_lab_test.go:66: complete collection: 0 rows
+=== RUN   TestControllerLabCollections/saml_roles
+    controller_lab_test.go:66: complete collection: 0 rows
+=== RUN   TestControllerLabCollections/devices
+    controller_lab_test.go:66: complete collection: 0 rows
+--- FAIL: TestControllerLabCollections (0.29s)
+    --- PASS: TestControllerLabCollections/sites (0.02s)
+    --- PASS: TestControllerLabCollections/networks (0.05s)
+    --- PASS: TestControllerLabCollections/wlan_groups (0.01s)
+    --- PASS: TestControllerLabCollections/profiles (0.02s)
+    --- PASS: TestControllerLabCollections/acls (0.03s)
+    --- FAIL: TestControllerLabCollections/ip_groups (0.01s)
+    --- PASS: TestControllerLabCollections/mdns (0.03s)
+    --- PASS: TestControllerLabCollections/saml_idps (0.01s)
+    --- PASS: TestControllerLabCollections/saml_roles (0.02s)
+    --- PASS: TestControllerLabCollections/devices (0.02s)
+=== RUN   TestControllerLabReauthentication
+    controller_lab_test.go:79: HTTP error 302 (Found)
+--- FAIL: TestControllerLabReauthentication (0.08s)
+=== RUN   TestControllerLabNetworkPagination
+    controller_lab_test.go:120: listed 102 real networks and resolved the final fixture
+--- PASS: TestControllerLabNetworkPagination (97.09s)
+=== RUN   TestControllerLabSiteLifecycle
+    controller_lab_test.go:151: deleted site read: *client.APIError: API error -1505 (controller rejected the operation)
+    controller_lab_test.go:156: repeat delete: *client.APIError: API error -1505 (controller rejected the operation)
+--- PASS: TestControllerLabSiteLifecycle (0.28s)
+=== RUN   TestControllerLabCertificate
+    controller_lab_test.go:165: certificate upload: id_present=false error=uploading certificate: API error -30021 (controller rejected the operation)
+--- FAIL: TestControllerLabCertificate (0.28s)
+=== RUN   TestControllerLabCertificateWireShape
+=== RUN   TestControllerLabCertificateWireShape/certificate
+    controller_lab_test.go:256: wire cerId present=true; provider's generic id present=false
+=== RUN   TestControllerLabCertificateWireShape/key
+    controller_lab_test.go:256: wire keyId present=true; provider's generic id present=false
+--- PASS: TestControllerLabCertificateWireShape (0.29s)
+    --- PASS: TestControllerLabCertificateWireShape/certificate (0.03s)
+    --- PASS: TestControllerLabCertificateWireShape/key (0.03s)
+FAIL

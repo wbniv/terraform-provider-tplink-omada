@@ -1,0 +1,50 @@
+=== RUN   TestControllerLabEmptyDevices
+    controller_lab_test.go:22: Step 1/1 error: Error running pre-apply plan: exit status 1
+        
+        Error: Invalid function argument
+        
+          on terraform_plugin_test.tf line 13, in output "device_count":
+          13: output "device_count" { value = length(data.omada_devices.lab.devices) }
+            ├────────────────
+            │ while calling length(value)
+            │ data.omada_devices.lab.devices is null
+        
+        Invalid value for "value" parameter: argument must not be null.
+--- FAIL: TestControllerLabEmptyDevices (0.92s)
+=== RUN   TestControllerLabSiteCredentials
+--- PASS: TestControllerLabSiteCredentials (7.10s)
+=== RUN   TestControllerLabWirelessLifecycle
+    controller_lab_test.go:129: Step 1/5 error: Error running apply: exit status 1
+        
+        Error: Provider produced inconsistent result after apply
+        
+        When applying changes to omada_wireless_network.lab, provider
+        "provider[\"registry.terraform.io/hashicorp/omada\"]" produced an unexpected
+        new value: .pmf_mode: was cty.NumberIntVal(2), but now cty.NumberIntVal(0).
+        
+        This is a bug in the provider, which should be reported in the provider's own
+        issue tracker.
+--- FAIL: TestControllerLabWirelessLifecycle (3.53s)
+=== RUN   TestAccDataSourceSites
+--- PASS: TestAccDataSourceSites (1.72s)
+=== RUN   TestAccDataSourceNetworks
+--- PASS: TestAccDataSourceNetworks (5.57s)
+=== RUN   TestAccDataSourceWirelessNetworks
+    provider_acc_test.go:97: Step 1/1 error: Check failed: Check 1/1 error: data.omada_wireless_networks.test: Attribute 'wireless_networks.#' expected to be set
+--- FAIL: TestAccDataSourceWirelessNetworks (1.03s)
+=== RUN   TestAccDataSourcePortProfiles
+--- PASS: TestAccDataSourcePortProfiles (2.70s)
+=== RUN   TestAccDataSourceDevices
+    provider_acc_test.go:153: Step 1/1 error: Check failed: Check 1/1 error: data.omada_devices.test: Attribute 'devices.#' expected to be set
+--- FAIL: TestAccDataSourceDevices (0.96s)
+=== RUN   TestAccDataSourceSiteSettings
+--- PASS: TestAccDataSourceSiteSettings (1.85s)
+=== RUN   TestAccResourceNetwork_CRUD
+--- PASS: TestAccResourceNetwork_CRUD (4.67s)
+=== RUN   TestAccResourcePortProfile_CRUD
+--- PASS: TestAccResourcePortProfile_CRUD (3.46s)
+=== RUN   TestAccDataSourceMDNSReflectors
+--- PASS: TestAccDataSourceMDNSReflectors (1.99s)
+=== RUN   TestAccDataSourceFirewallACLs
+--- PASS: TestAccDataSourceFirewallACLs (2.45s)
+FAIL

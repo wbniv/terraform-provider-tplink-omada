@@ -89,3 +89,7 @@ GitHub rejected new LFS objects in the public fork. Will then requested recreati
 Local implementation commits: Go vendor `5555332a65a4b52761c81b67d7b767e377f70fd3`; lab and LFS archive pointer `0d26e723ce833a44c2043b6be23e69282b189a35`. Production source and `go.mod`/`go.sum` are unchanged from G1. The workspace Markdown-history hook adds `.history/README.md` sidecars; these are retained separately from upstream module contents.
 
 Diagnostic follow-up `c953da6ed94021d7774e26e76e55bb1ef2d7b8fc` excludes missing identity fields from page-overlap counts and reports identified rows. The retained page log predates this correction: its IP-group `repeated_ids` values collapse absent `id`/`idpId` fields and **must not be used as evidence of repeated IP-group identities**. Route success and row counts remain observations; L4 still needs the actual identity/type contract. The WLAN records have valid IDs and are unaffected. `source.sha256` records the corrected harness; the full Go/Terraform test source hashes remain in `build.log`.
+
+## L1 follow-up
+
+The [WLAN collection correction](../wlan-collection-fix/README.md) verifies real discovery, 102-network pagination, and secured SSID create/import/group replacement/stable plan. Rename remains blocked by the D1 writable-field contract (L7); open-network PMF behavior is tracked as L6. The baseline failures above remain a historical record.

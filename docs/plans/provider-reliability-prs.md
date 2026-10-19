@@ -180,7 +180,7 @@ Detailed plan: [HTTP response validation](http-responses.md), including status/e
 
 ### G — Pagination and disappearance
 
-Detailed plan: [G1 complete pagination and G2 confirmed disappearance](pagination-and-disappearance.md). G1 is pushed, but its real-controller WLAN-group regression requires [L1](controller-compatibility.md) before G2 can rely on complete discovery.
+Detailed plan: [G1 complete pagination and G2 confirmed disappearance](pagination-and-disappearance.md). G1 is pushed. The WLAN-group collection correction is implemented and passes real discovery and the 102-network regression on `fix/wlan-group-collection`; [L1 evidence](../investigations/wlan-collection-fix/README.md) records remaining SSID compatibility gates (L6/L7).
 
 - [x] Iterate all pages for every affected collection; retain direct-array compatibility.
 - [x] Test more than 100 objects, empty collections, later-page errors, duplicate/stalled pages, and metadata variations.

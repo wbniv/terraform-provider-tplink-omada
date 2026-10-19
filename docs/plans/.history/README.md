@@ -1,5 +1,6 @@
 | Date | Change |
 |------|--------|
+| [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/30d9d92) | docs: record controller lab findings and standalone migration |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/2f9032c) | docs: record complete pagination evidence and integration plan |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/bb5f22c) | docs: record HTTP response fix evidence and software controller lab plan |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/d0e4771) | docs: record credential fixes, verification, and plan status |
@@ -7,6 +8,10 @@
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/4c6433b) | docs: track provider reliability fixes and validation evidence |
 
 <!--history-meta v1
+30d9d92	author	Will Norris
+30d9d92	added	4
+30d9d92	deleted	3
+30d9d92	files	1
 2f9032c	author	Will Norris
 2f9032c	added	2
 2f9032c	deleted	1

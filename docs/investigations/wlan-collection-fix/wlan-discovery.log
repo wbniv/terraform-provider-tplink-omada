@@ -1,0 +1,6 @@
+=== RUN   TestControllerLabCollections
+=== RUN   TestControllerLabCollections/wlan_groups
+    controller_lab_test.go:66: complete collection: 1 rows
+--- PASS: TestControllerLabCollections (0.08s)
+    --- PASS: TestControllerLabCollections/wlan_groups (0.02s)
+PASS
