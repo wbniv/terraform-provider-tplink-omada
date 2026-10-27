@@ -153,12 +153,15 @@ resource "omada_device_switch" "test" {
 			resource.Test(t, resource.TestCase{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Steps: []resource.TestStep{
-					{Config: hcl("Original", minimal) + `
+					{Config: hcl("Original", "") + `
 import {
   to = omada_device_switch.test
   id = "site/02-00-00-00-00-01"
 }
 `, Check: preserved(0)},
+					{Config: hcl("Original", ""), ConfigPlanChecks: resource.ConfigPlanChecks{
+						PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+					}, Check: preserved(0)},
 					{Config: hcl("Renamed Switch", minimal), Check: preserved(0)},
 					{Config: hcl("Renamed Switch", minimal), ConfigPlanChecks: resource.ConfigPlanChecks{
 						PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
@@ -180,6 +183,10 @@ import {
 						resource.TestCheckResourceAttr("omada_device_switch.test", "ports.0.port", "2"),
 						resource.TestCheckResourceAttr("omada_device_switch.test", "ports.1.port", "1"))},
 					{Config: hcl("Another Switch Name", reordered), Check: checkWrites(3)},
+					{Config: hcl("Another Switch Name", ""), Check: checkWrites(3)},
+					{Config: hcl("Another Switch Name", ""), ConfigPlanChecks: resource.ConfigPlanChecks{
+						PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+					}, Check: checkWrites(3)},
 				},
 			})
 		})

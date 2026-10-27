@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/terraform-provider-tplink-omada/internal/client"
 )
 
@@ -329,35 +330,44 @@ func (r *DeviceSwitchResource) Configure(_ context.Context, req resource.Configu
 	r.client = c
 }
 
-// ModifyPlan carries imported port state forward when the entire optional
-// ports list is omitted. Optional+Computed nested lists can otherwise become
-// unknown after Terraform initially compares null configuration with the
-// imported list, producing a perpetual update plan.
-func (r *DeviceSwitchResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.State.Raw.IsNull() {
+// ModifyPlan carries imported state forward when the entire optional ports
+// list is omitted. Terraform can mark that list and other unconfigured
+// computed fields unknown during planning, producing a perpetual update plan.
+func (r *DeviceSwitchResource) ModifyPlan(_ context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
 
-	var state DeviceSwitchResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() || state.Ports.IsNull() {
+	configValues := make(map[string]tftypes.Value)
+	if err := req.Config.Raw.As(&configValues); err != nil {
+		resp.Diagnostics.AddError("Unable to read switch config for planning", err.Error())
+		return
+	}
+	portsConfig := configValues["ports"]
+	if !portsConfig.IsNull() {
 		return
 	}
 
-	var config DeviceSwitchResourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
-	if resp.Diagnostics.HasError() || !config.Ports.IsNull() {
+	planValues := make(map[string]tftypes.Value)
+	if err := req.Plan.Raw.As(&planValues); err != nil {
+		resp.Diagnostics.AddError("Unable to read switch plan", err.Error())
+		return
+	}
+	stateValues := make(map[string]tftypes.Value)
+	if err := req.State.Raw.As(&stateValues); err != nil {
+		resp.Diagnostics.AddError("Unable to read switch state for planning", err.Error())
 		return
 	}
 
-	var plan DeviceSwitchResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() || (!plan.Ports.IsNull() && !plan.Ports.IsUnknown()) {
-		return
+	for name, configValue := range configValues {
+		planValue, planExists := planValues[name]
+		stateValue, stateExists := stateValues[name]
+		if configValue.IsNull() && planExists && !planValue.IsKnown() && stateExists && stateValue.IsKnown() {
+			planValues[name] = stateValue
+		}
 	}
 
-	plan.Ports = state.Ports
-	resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
+	resp.Plan.Raw = tftypes.NewValue(req.Plan.Raw.Type(), planValues)
 }
 
 func applyGeneralSwitchConfig(raw map[string]interface{}, plan *DeviceSwitchResourceModel) {
