@@ -10,6 +10,8 @@ description: |-
 
 Manages a LAN network (VLAN) on the Omada Controller.
 
+Creating a resource adopts an existing same-name network only when its purpose, VLAN, and every explicitly configured setting match. A mismatch returns an error with an import instruction; the provider does not create a duplicate or silently claim a different network. Creation state is populated from the controller response. The built-in `Default` interface network (VLAN 1) is protected from deletion. Destroying another managed or imported network deletes it from the controller.
+
 ## Example Usage
 
 ```terraform
@@ -54,6 +56,6 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-# Import by network ID
-terraform import omada_network.example 6970fd12138b720dda194801
+# Import by site ID and network ID
+terraform import omada_network.example <siteID>/<networkID>
 ```

@@ -140,6 +140,7 @@ type Network struct {
 	DHCPSettings    *DHCPSettings `json:"dhcpSettings,omitempty"`
 	Isolation       bool          `json:"isolation"`
 	IGMPSnoopEnable bool          `json:"igmpSnoopEnable"`
+	IGMPSnoopSet    bool          `json:"-"`
 }
 
 // WlanGroup represents a wireless LAN group.
@@ -631,19 +632,32 @@ func (c *Client) GetNetwork(ctx context.Context, siteID, networkID string) (*Net
 	return nil, notFound("network %q", networkID)
 }
 
-// CreateNetwork creates a new LAN network, or adopts an existing one with the
-// same name (the controller auto-creates a "Default" network on site creation).
+// CreateNetwork creates a new LAN network, or adopts an existing network when
+// its name and configured identity fields match. A same-name network with a
+// different purpose or VLAN is an explicit conflict and must be imported.
 func (c *Client) CreateNetwork(ctx context.Context, siteID string, network *Network) (*Network, error) {
-	// Check for an existing network with the same name (adopt pattern).
+	// Check for an existing network before creating. Matching adoption supports
+	// the controller-created Default network without silently claiming a
+	// different network that happens to have the requested name.
 	existing, err := c.ListNetworks(ctx, siteID)
 	if err != nil {
 		return nil, fmt.Errorf("listing networks for adopt check: %w", err)
 	}
-	for _, n := range existing {
-		if n.Name == network.Name {
-			// Adopt: return the existing network instead of creating a duplicate.
-			return &n, nil
+	var sameName *Network
+	for i := range existing {
+		if existing[i].Name != network.Name {
+			continue
 		}
+		if sameName != nil {
+			return nil, fmt.Errorf("multiple networks are named %q; resolve the duplicate names and import the intended network", network.Name)
+		}
+		sameName = &existing[i]
+	}
+	if sameName != nil {
+		if reason := networkConfigurationMismatch(*sameName, *network); reason != "" {
+			return nil, fmt.Errorf("network %q already exists but %s; import the existing network before managing it", sameName.Name, reason)
+		}
+		return sameName, nil
 	}
 
 	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPost, "/setting/lan/networks", network)
@@ -670,6 +684,22 @@ func (c *Client) CreateNetwork(ctx context.Context, siteID string, network *Netw
 	return nil, fmt.Errorf("network created but no ID in response: %s", string(resp.Result))
 }
 
+func networkConfigurationMismatch(existing, requested Network) string {
+	if existing.Purpose != requested.Purpose || existing.Vlan != requested.Vlan {
+		return fmt.Sprintf("its purpose/VLAN are %q/%d and the requested purpose/VLAN are %q/%d", existing.Purpose, existing.Vlan, requested.Purpose, requested.Vlan)
+	}
+	if requested.GatewaySubnet != "" && existing.GatewaySubnet != requested.GatewaySubnet {
+		return fmt.Sprintf("its gateway subnet is %q and the requested subnet is %q", existing.GatewaySubnet, requested.GatewaySubnet)
+	}
+	if requested.DHCPSettings != nil && (existing.DHCPSettings == nil || *existing.DHCPSettings != *requested.DHCPSettings) {
+		return "its DHCP settings differ from the requested settings"
+	}
+	if requested.IGMPSnoopSet && existing.IGMPSnoopEnable != requested.IGMPSnoopEnable {
+		return fmt.Sprintf("its IGMP snooping setting is %t and the requested setting is %t", existing.IGMPSnoopEnable, requested.IGMPSnoopEnable)
+	}
+	return ""
+}
+
 // UpdateNetwork updates an existing LAN network.
 func (c *Client) UpdateNetwork(ctx context.Context, siteID, networkID string, network *Network) (*Network, error) {
 	resp, err := c.doSiteRequest(ctx, siteID, http.MethodPatch, fmt.Sprintf("/setting/lan/networks/%s", networkID), network)
@@ -688,7 +718,24 @@ func (c *Client) UpdateNetwork(ctx context.Context, siteID, networkID string, ne
 
 // DeleteNetwork deletes a LAN network.
 func (c *Client) DeleteNetwork(ctx context.Context, siteID, networkID string) error {
-	_, err := c.doSiteRequest(ctx, siteID, http.MethodDelete, fmt.Sprintf("/setting/lan/networks/%s", networkID), nil)
+	networks, err := c.ListNetworks(ctx, siteID)
+	if err != nil {
+		return fmt.Errorf("checking network before delete: %w", err)
+	}
+	var target *Network
+	for i := range networks {
+		if networks[i].ID == networkID {
+			target = &networks[i]
+			break
+		}
+	}
+	if target == nil {
+		return nil
+	}
+	if target.Name == "Default" && target.Purpose == "interface" && target.Vlan == 1 {
+		return fmt.Errorf("refusing to delete controller default network %q; it is protected", target.Name)
+	}
+	_, err = c.doSiteRequest(ctx, siteID, http.MethodDelete, fmt.Sprintf("/setting/lan/networks/%s", networkID), nil)
 	return err
 }
 

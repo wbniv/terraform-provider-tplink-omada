@@ -127,6 +127,7 @@ func (r *NetworkResource) Create(ctx context.Context, req resource.CreateRequest
 		Vlan:            int(plan.VlanID.ValueInt64()),
 		GatewaySubnet:   plan.GatewaySubnet.ValueString(),
 		IGMPSnoopEnable: plan.IGMPSnoopEnable.ValueBool(),
+		IGMPSnoopSet:    !plan.IGMPSnoopEnable.IsNull() && !plan.IGMPSnoopEnable.IsUnknown(),
 	}
 	if !plan.Purpose.IsNull() && !plan.Purpose.IsUnknown() {
 		network.Purpose = plan.Purpose.ValueString()
@@ -147,7 +148,9 @@ func (r *NetworkResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	plan.ID = types.StringValue(created.ID)
+	plan.Name = types.StringValue(created.Name)
 	plan.Purpose = types.StringValue(created.Purpose)
+	plan.VlanID = types.Int64Value(int64(created.Vlan))
 	plan.IGMPSnoopEnable = types.BoolValue(created.IGMPSnoopEnable)
 
 	if created.Purpose == "vlan" {
