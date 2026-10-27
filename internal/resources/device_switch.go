@@ -344,6 +344,12 @@ func (r *DeviceSwitchResource) ModifyPlan(ctx context.Context, req resource.Modi
 		return
 	}
 
+	var config DeviceSwitchResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() || !config.Ports.IsNull() {
+		return
+	}
+
 	var plan DeviceSwitchResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() || (!plan.Ports.IsNull() && !plan.Ports.IsUnknown()) {
