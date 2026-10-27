@@ -82,11 +82,12 @@ flowchart TD
 
 ### 2026-10-27 — G2 implementation started
 
-Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`. The current unverified patch adds a typed `client.ErrNotFound` only to successful complete-collection lookups, removes resource state on that typed result for networks, WLAN groups, SSIDs, port profiles, ACLs, IP groups, mDNS rules, SAML IdPs, and SAML roles, and preflights those same resources before Delete so a confirmed-absent object is already deleted. Direct endpoint errors (including HTTP 404), transport/authentication failures, and incomplete collection errors remain diagnostics and retain state. Site, site settings, AP/switch configuration, and controller certificates use direct or singleton endpoints and do not infer absence from endpoint failure.
+Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`; implementation commits are `20dfdd1` and `48e2aad`. The patch adds typed `client.ErrNotFound` only to successful complete-collection lookups, removes resource state on that typed result for networks, WLAN groups, SSIDs, port profiles, ACLs, IP groups, mDNS rules, SAML IdPs, and SAML roles, and preflights those same resources before Delete so confirmed-absent objects are already deleted. Direct endpoint errors (including HTTP 404), transport/authentication failures, and incomplete collection errors remain diagnostics and retain state. Site, site settings, AP/switch configuration, and controller certificates use direct or singleton endpoints and do not infer absence from endpoint failure. Go 1.25.8 formatting and the full `go test ./...` suite pass. Focused G2 regression cases, Terraform acceptance, and controller deletion/recreation checks remain open.
 
 - [x] Add the implementation on an isolated branch based on G1.
+- [x] Run `gofmt` and the full Go unit suite in the Go 1.25.8 container.
 - [ ] Add client and Terraform regressions for confirmed absence, incomplete/error responses, state retention, and already-absent Delete behavior.
-- [ ] Run formatting, Go and Terraform acceptance gates; verify the recorded out-of-band deletion/recreation flow.
+- [ ] Run Terraform acceptance gates and verify the recorded out-of-band deletion/recreation flow.
 - [ ] Update evidence and the tracker only after verification.
 
 ### Conditional — Controller validation and submission
