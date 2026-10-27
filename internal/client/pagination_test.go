@@ -272,3 +272,47 @@ func TestPaginationBounds(t *testing.T) {
 		})
 	}
 }
+
+func TestGetNetworkConfirmedAbsence(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		status   int
+		result   any
+		wantMiss bool
+	}{
+		{
+			name:     "complete empty inventory",
+			result:   PaginatedResult{TotalRows: 0, CurrentPage: 1, CurrentSize: 100, Data: mustMarshal(t, []Network{})},
+			wantMiss: true,
+		},
+		{
+			name:   "incomplete inventory",
+			result: PaginatedResult{TotalRows: 1, CurrentPage: 1, CurrentSize: 100, Data: mustMarshal(t, []Network{})},
+		},
+		{
+			name:   "server failure",
+			status: http.StatusServiceUnavailable,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			server := mockOmadaServer(t, map[string]http.HandlerFunc{
+				"/sites/site/setting/lan/networks": func(w http.ResponseWriter, r *http.Request) {
+					if tc.status != 0 {
+						w.WriteHeader(tc.status)
+						return
+					}
+					json.NewEncoder(w).Encode(APIResponse{ErrorCode: 0, Result: mustMarshal(t, tc.result)})
+				},
+			})
+			defer server.Close()
+
+			_, err := newTestClient(t, server).GetNetwork(context.Background(), "site", "missing")
+			if err == nil {
+				t.Fatal("expected lookup error")
+			}
+			if got := errors.Is(err, ErrNotFound); got != tc.wantMiss {
+				t.Fatalf("errors.Is(err, ErrNotFound) = %v, want %v; err=%v", got, tc.wantMiss, err)
+			}
+		})
+	}
+}
