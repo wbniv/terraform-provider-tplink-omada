@@ -371,6 +371,80 @@ func TestCreateNetwork_AdoptExisting(t *testing.T) {
 	}
 }
 
+func TestCreateNetwork_ConflictsForIncompatibleSameName(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		existing  Network
+		requested Network
+	}{
+		{
+			name:      "different VLAN",
+			existing:  Network{ID: "existing", Name: "Office", Purpose: "vlan", Vlan: 20},
+			requested: Network{Name: "Office", Purpose: "vlan", Vlan: 30},
+		},
+		{
+			name:      "different purpose",
+			existing:  Network{ID: "existing", Name: "Office", Purpose: "interface", Vlan: 20},
+			requested: Network{Name: "Office", Purpose: "vlan", Vlan: 20},
+		},
+		{
+			name:      "different configured IGMP setting",
+			existing:  Network{ID: "existing", Name: "Office", Purpose: "vlan", Vlan: 20, IGMPSnoopEnable: true},
+			requested: Network{Name: "Office", Purpose: "vlan", Vlan: 20, IGMPSnoopSet: true},
+		},
+		{
+			name:      "different configured gateway subnet",
+			existing:  Network{ID: "existing", Name: "Office", Purpose: "interface", Vlan: 20, GatewaySubnet: "192.0.2.1/24"},
+			requested: Network{Name: "Office", Purpose: "interface", Vlan: 20, GatewaySubnet: "192.0.3.1/24"},
+		},
+		{
+			name:      "different configured DHCP settings",
+			existing:  Network{ID: "existing", Name: "Office", Purpose: "interface", Vlan: 20, DHCPSettings: &DHCPSettings{Enable: true, IPAddrStart: "192.0.2.10", IPAddrEnd: "192.0.2.100"}},
+			requested: Network{Name: "Office", Purpose: "interface", Vlan: 20, DHCPSettings: &DHCPSettings{Enable: true, IPAddrStart: "192.0.3.10", IPAddrEnd: "192.0.3.100"}},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			posts := 0
+			server := mockOmadaServer(t, map[string]http.HandlerFunc{
+				"/sites/site-1/setting/lan/networks": func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPost {
+						posts++
+						w.WriteHeader(http.StatusInternalServerError)
+						return
+					}
+					json.NewEncoder(w).Encode(APIResponse{ErrorCode: 0, Result: paginatedResponse(t, []Network{tc.existing})})
+				},
+			})
+			defer server.Close()
+
+			_, err := newTestClient(t, server).CreateNetwork(context.Background(), "site-1", &tc.requested)
+			if err == nil || !strings.Contains(err.Error(), "import the existing network") {
+				t.Fatalf("CreateNetwork error = %v, want an import conflict", err)
+			}
+			if posts != 0 {
+				t.Fatalf("sent %d POST requests for an incompatible same-name network", posts)
+			}
+		})
+	}
+}
+
+func TestCreateNetwork_RejectsAmbiguousSameNames(t *testing.T) {
+	server := mockOmadaServer(t, map[string]http.HandlerFunc{
+		"/sites/site-1/setting/lan/networks": func(w http.ResponseWriter, r *http.Request) {
+			json.NewEncoder(w).Encode(APIResponse{ErrorCode: 0, Result: paginatedResponse(t, []Network{
+				{ID: "net-1", Name: "Office", Purpose: "vlan", Vlan: 20},
+				{ID: "net-2", Name: "Office", Purpose: "vlan", Vlan: 20},
+			})})
+		},
+	})
+	defer server.Close()
+
+	_, err := newTestClient(t, server).CreateNetwork(context.Background(), "site-1", &Network{Name: "Office", Purpose: "vlan", Vlan: 20})
+	if err == nil || !strings.Contains(err.Error(), "multiple networks") {
+		t.Fatalf("CreateNetwork error = %v, want ambiguous-name error", err)
+	}
+}
+
 // =============================================================================
 // URL Builder Tests
 // =============================================================================

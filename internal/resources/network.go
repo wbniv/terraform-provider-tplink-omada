@@ -291,15 +291,20 @@ func (r *NetworkResource) Delete(ctx context.Context, req resource.DeleteRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if _, err := r.client.GetNetwork(ctx, state.SiteID.ValueString(), state.ID.ValueString()); err != nil {
+	network, err := r.client.GetNetwork(ctx, state.SiteID.ValueString(), state.ID.ValueString())
+	if err != nil {
 		if isConfirmedAbsent(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Error checking network before deletion", err.Error())
 		return
 	}
+	if network.Name == "Default" && network.Purpose == "interface" && network.Vlan == 1 {
+		resp.Diagnostics.AddError("Protected default network", "Refusing to delete the controller's built-in Default interface network on VLAN 1.")
+		return
+	}
 
-	err := r.client.DeleteNetwork(ctx, state.SiteID.ValueString(), state.ID.ValueString())
+	err = r.client.DeleteNetwork(ctx, state.SiteID.ValueString(), state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting network", err.Error())
 		return

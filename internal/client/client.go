@@ -718,24 +718,7 @@ func (c *Client) UpdateNetwork(ctx context.Context, siteID, networkID string, ne
 
 // DeleteNetwork deletes a LAN network.
 func (c *Client) DeleteNetwork(ctx context.Context, siteID, networkID string) error {
-	networks, err := c.ListNetworks(ctx, siteID)
-	if err != nil {
-		return fmt.Errorf("checking network before delete: %w", err)
-	}
-	var target *Network
-	for i := range networks {
-		if networks[i].ID == networkID {
-			target = &networks[i]
-			break
-		}
-	}
-	if target == nil {
-		return nil
-	}
-	if target.Name == "Default" && target.Purpose == "interface" && target.Vlan == 1 {
-		return fmt.Errorf("refusing to delete controller default network %q; it is protected", target.Name)
-	}
-	_, err = c.doSiteRequest(ctx, siteID, http.MethodDelete, fmt.Sprintf("/setting/lan/networks/%s", networkID), nil)
+	_, err := c.doSiteRequest(ctx, siteID, http.MethodDelete, fmt.Sprintf("/setting/lan/networks/%s", networkID), nil)
 	return err
 }
 
