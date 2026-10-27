@@ -195,9 +195,9 @@ Detailed plan: [G1 complete pagination and G2 confirmed disappearance](paginatio
 - [x] Iterate all pages for every affected collection; retain direct-array compatibility.
 - [x] Test more than 100 objects, empty collections, later-page errors, duplicate/stalled pages, and metadata variations.
 - [x] Never treat a partial or failed list as proof that a resource is absent.
-- [ ] Remove confirmed absent resources from state during Read; keep state on transient/authentication errors.
-- [ ] Audit all resources and make already-absent deletes idempotent where supported.
-- [ ] Add Terraform refresh/recreation acceptance coverage for a remotely deleted object.
+- [x] Remove confirmed absent collection-backed resources from state during Read; retain state on transient/authentication errors and unconfirmed direct-endpoint failures.
+- [x] Make already-absent deletes idempotent for the supported collection-backed resources.
+- [x] Add Terraform refresh/recreation acceptance coverage and focused real-controller deletion/recreation validation.
 
 ### H — Network adoption
 

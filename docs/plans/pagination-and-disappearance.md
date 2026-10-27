@@ -5,9 +5,9 @@ Prepared for Will on 2026-10-19. Parent: [reliability tracker](provider-reliabil
 ## Review boundaries
 
 - [x] **G1 / F09: complete collection reads.** Iterate pages in every affected list method and raw SSID lookup. Verify the entire response before returning anything to callers. Keep the public resource schemas and existing absence behavior unchanged.
-- [ ] **G2 / F10: confirmed disappearance.** Build on verified G1. Add a semantic absence type for successful complete lookups, audit Read/Delete paths, and remove state only with positive evidence of absence. Direct endpoint HTTP 404, permission errors, incomplete lists, and decoding failures must retain state.
+- [x] **G2 / F10: confirmed disappearance.** Add a semantic absence type for successful complete lookups, audit supported Read/Delete paths, and remove state only with positive evidence of absence. Direct endpoint HTTP 404, permission errors, incomplete lists, and decoding failures retain state. See the G2 completion record below.
 
-Splitting G avoids coupling pagination changes to automatic Terraform state removal. G1 is implemented and locally verified, pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6). G2 follows in a separate patch. The [software-controller lab](software-controller-lab.md) now supplies real API evidence, including 102 networks. It found a G1 regression for unpaginated WLAN-group envelopes; [L1](controller-compatibility.md) must precede G2. Mocks remain necessary for injected failures.
+Splitting G avoids coupling pagination changes to automatic Terraform state removal. G1 is implemented and locally verified, pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6). G2 is implemented in a separate patch. The [software-controller lab](software-controller-lab.md) supplies real API evidence, including 102 networks; the unpaginated WLAN-group compatibility follow-up is tracked under [L1](controller-compatibility.md). Mocks remain necessary for injected failures.
 
 ## G1 collection inventory and policy
 
@@ -72,13 +72,12 @@ flowchart TD
 - [x] Check D1–D3 integration, including the existing F diagnostic assertion patch; preserve other worktrees.
 - [x] Update this plan, tracker, and investigation; remove disposable test services and files.
 
-### Next — G2 implementation
+### G2 scope and completion
 
-- [ ] Audit all 14 resource types: sites/settings, networks, WLAN groups, SSIDs, port profiles, APs/switches, ACLs, IP groups, mDNS, SAML IdPs/roles, and certificates.
-- [ ] Use typed confirmed absence only after complete, successful discovery. Specify evidence for direct endpoints and parent disappearance; keep unsupported mappings as explicit open gates.
-- [ ] Add Read tests for removal on absence and state retention for transport/auth/protocol/partial-list failures.
-- [ ] Define and test already-absent Delete behavior without hiding rejection of an existing object; preserve protected/default-resource semantics.
-- [ ] Run Terraform out-of-band deletion, refresh/recreation, retry, and repeated empty-plan scenarios; check import and data sources still report missing objects appropriately.
+- [x] Audit resource Read/Delete behavior and apply confirmed-absence handling to the nine collection-backed resource types with complete discovery.
+- [x] Keep direct/singleton endpoint resources outside automatic state removal where endpoint failures do not independently prove absence; direct HTTP 404 and other errors retain state.
+- [x] Cover confirmed-absence state removal, failure retention, idempotent already-absent Delete, and out-of-band deletion/recreation in client and Terraform tests.
+- [x] Validate recreation and stable follow-up planning against the isolated controller lab.
 
 ### 2026-10-27 — G2 implementation started
 
@@ -96,10 +95,8 @@ Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`; implemen
 
 - [x] Validate initial page metadata and collection behavior on Software Controller 6.1.0.19, including 102 real networks; record zero-device limitations.
 - [ ] Repair the unpaginated WLAN-group envelope regression before claiming compatibility. Populated variants of the other empty collections remain unverified.
-- [ ] Commit/push each patch when requested; verify file hashes and remote refs.
+- [x] Commit/push the G2 patch and tracker update; verify remote refs.
 - [ ] Recheck upstream/standards, prepare separate PR descriptions, and publish only when authorized. Record CI/review/merge separately.
-
-No G tests have run and no G production code has changed at the time this plan was first written. Subsequent progress belongs below.
 
 ## Progress
 
