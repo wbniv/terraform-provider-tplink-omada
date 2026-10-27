@@ -80,6 +80,15 @@ flowchart TD
 - [ ] Define and test already-absent Delete behavior without hiding rejection of an existing object; preserve protected/default-resource semantics.
 - [ ] Run Terraform out-of-band deletion, refresh/recreation, retry, and repeated empty-plan scenarios; check import and data sources still report missing objects appropriately.
 
+### 2026-10-27 — G2 implementation started
+
+Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`. The current unverified patch adds a typed `client.ErrNotFound` only to successful complete-collection lookups, removes resource state on that typed result for networks, WLAN groups, SSIDs, port profiles, ACLs, IP groups, mDNS rules, SAML IdPs, and SAML roles, and preflights those same resources before Delete so a confirmed-absent object is already deleted. Direct endpoint errors (including HTTP 404), transport/authentication failures, and incomplete collection errors remain diagnostics and retain state. Site, site settings, AP/switch configuration, and controller certificates use direct or singleton endpoints and do not infer absence from endpoint failure.
+
+- [x] Add the implementation on an isolated branch based on G1.
+- [ ] Add client and Terraform regressions for confirmed absence, incomplete/error responses, state retention, and already-absent Delete behavior.
+- [ ] Run formatting, Go and Terraform acceptance gates; verify the recorded out-of-band deletion/recreation flow.
+- [ ] Update evidence and the tracker only after verification.
+
 ### Conditional — Controller validation and submission
 
 - [x] Validate initial page metadata and collection behavior on Software Controller 6.1.0.19, including 102 real networks; record zero-device limitations.
