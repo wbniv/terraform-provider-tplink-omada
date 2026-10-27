@@ -82,13 +82,15 @@ flowchart TD
 
 ### 2026-10-27 — G2 implementation started
 
-Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`; implementation commits are `20dfdd1` and `48e2aad`. The patch adds typed `client.ErrNotFound` only to successful complete-collection lookups, removes resource state on that typed result for networks, WLAN groups, SSIDs, port profiles, ACLs, IP groups, mDNS rules, SAML IdPs, and SAML roles, and preflights those same resources before Delete so confirmed-absent objects are already deleted. Direct endpoint errors (including HTTP 404), transport/authentication failures, and incomplete collection errors remain diagnostics and retain state. Site, site settings, AP/switch configuration, and controller certificates use direct or singleton endpoints and do not infer absence from endpoint failure. Go 1.25.8 formatting and the full `go test ./...` suite pass. Focused G2 regression cases, Terraform acceptance, and controller deletion/recreation checks remain open.
+Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`; implementation commits are `20dfdd1` and `48e2aad`, with regression tests in `3d8bb18`. The patch adds typed `client.ErrNotFound` only to successful complete-collection lookups, removes resource state on that typed result for networks, WLAN groups, SSIDs, port profiles, ACLs, IP groups, mDNS rules, SAML IdPs, and SAML roles, and preflights those same resources before Delete so confirmed-absent objects are already deleted. Direct endpoint errors (including HTTP 404), transport/authentication failures, and incomplete collection errors remain diagnostics and retain state. Site, site settings, AP/switch configuration, and controller certificates use direct or singleton endpoints and do not infer absence from endpoint failure. Go 1.25.8 formatting, the full `go test ./...` suite, focused client absence/error tests, and all `TestAccPagination` mock Terraform acceptance scenarios pass. The mock scenarios cover later-page failure retaining state and confirmed out-of-band deletion followed by a recreation plan. Direct coverage for the already-absent Delete preflight and controller deletion/recreation checks remain open.
 
 - [x] Add the implementation on an isolated branch based on G1.
 - [x] Run `gofmt` and the full Go unit suite in the Go 1.25.8 container.
-- [ ] Add client and Terraform regressions for confirmed absence, incomplete/error responses, state retention, and already-absent Delete behavior.
-- [ ] Run Terraform acceptance gates and verify the recorded out-of-band deletion/recreation flow.
-- [ ] Update evidence and the tracker only after verification.
+- [x] Add client and Terraform regressions for confirmed absence, incomplete/error responses, state retention, and refresh/recreation after out-of-band deletion.
+- [ ] Add direct regression coverage for already-absent Delete preflight behavior.
+- [x] Run all `TestAccPagination` mock Terraform acceptance scenarios, including later-page failure recovery and out-of-band deletion/recreation.
+- [ ] Verify deletion/recreation against a real controller.
+- [x] Update the tracker with local Go and mock acceptance results; retain the open Delete-preflight and real-controller gates.
 
 ### Conditional — Controller validation and submission
 
