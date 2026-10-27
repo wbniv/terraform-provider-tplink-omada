@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -174,7 +173,7 @@ func (r *DeviceAPResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Computed:    true,
 			},
 			"ip_setting_mode": schema.StringAttribute{
-				Description: "IP address mode: 'dhcp' or 'static'.",
+				Description: "IP address mode. Only 'dhcp' can currently be configured; an existing controller static mode is retained when this attribute is omitted.",
 				Optional:    true,
 				Computed:    true,
 			},
@@ -202,7 +201,6 @@ func (r *DeviceAPResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Description: "LED setting: 0=Off, 1=On, 2=Follow site setting.",
 				Optional:    true,
 				Computed:    true,
-				Default:     int64default.StaticInt64(2),
 			},
 			"lldp_enable": schema.Int64Attribute{
 				Description: "LLDP: 0=Off, 1=On, 2=Follow site setting. Null on APs that don't support LLDP.",
@@ -368,8 +366,14 @@ func applyAPPlanToRaw(rawConfig map[string]interface{}, plan *DeviceAPResourceMo
 }
 
 // buildAPAdvancedConfig builds the advanced config payload for PUT /eaps/{mac}/config/advanced.
-func buildAPAdvancedConfig(plan *DeviceAPResourceModel) *client.APAdvancedConfig {
+func buildAPAdvancedConfig(plan *DeviceAPResourceModel, current *client.APConfig) (*client.APAdvancedConfig, error) {
 	config := &client.APAdvancedConfig{}
+	var lb2g, lb5g *client.APLBSetting
+	var rssi2g, rssi5g *client.APRSSISetting
+	if current != nil {
+		lb2g, lb5g = current.LBSetting2g, current.LBSetting5g
+		rssi2g, rssi5g = current.RSSISetting2g, current.RSSISetting5g
+	}
 
 	if !plan.OFDMAEnable2g.IsNull() && !plan.OFDMAEnable2g.IsUnknown() {
 		v := plan.OFDMAEnable2g.ValueBool()
@@ -380,35 +384,93 @@ func buildAPAdvancedConfig(plan *DeviceAPResourceModel) *client.APAdvancedConfig
 		config.OFDMAEnable5g = &v
 	}
 	if !plan.LB2gEnable.IsNull() && !plan.LB2gEnable.IsUnknown() {
-		lb := &client.APLBSetting{LBEnable: plan.LB2gEnable.ValueBool()}
-		if !plan.LB2gMaxClients.IsNull() && !plan.LB2gMaxClients.IsUnknown() {
-			lb.MaxClients = int(plan.LB2gMaxClients.ValueInt64())
+		lb, err := mergeAPLBSetting(plan.LB2gEnable, plan.LB2gMaxClients, lb2g, "2.4 GHz")
+		if err != nil {
+			return nil, err
+		}
+		config.LBSetting2g = lb
+	} else if !plan.LB2gMaxClients.IsNull() && !plan.LB2gMaxClients.IsUnknown() {
+		lb, err := mergeAPLBSetting(plan.LB2gEnable, plan.LB2gMaxClients, lb2g, "2.4 GHz")
+		if err != nil {
+			return nil, err
 		}
 		config.LBSetting2g = lb
 	}
 	if !plan.LB5gEnable.IsNull() && !plan.LB5gEnable.IsUnknown() {
-		lb := &client.APLBSetting{LBEnable: plan.LB5gEnable.ValueBool()}
-		if !plan.LB5gMaxClients.IsNull() && !plan.LB5gMaxClients.IsUnknown() {
-			lb.MaxClients = int(plan.LB5gMaxClients.ValueInt64())
+		lb, err := mergeAPLBSetting(plan.LB5gEnable, plan.LB5gMaxClients, lb5g, "5 GHz")
+		if err != nil {
+			return nil, err
+		}
+		config.LBSetting5g = lb
+	} else if !plan.LB5gMaxClients.IsNull() && !plan.LB5gMaxClients.IsUnknown() {
+		lb, err := mergeAPLBSetting(plan.LB5gEnable, plan.LB5gMaxClients, lb5g, "5 GHz")
+		if err != nil {
+			return nil, err
 		}
 		config.LBSetting5g = lb
 	}
 	if !plan.RSSI2gEnable.IsNull() && !plan.RSSI2gEnable.IsUnknown() {
-		rssi := &client.APRSSISetting{RSSIEnable: plan.RSSI2gEnable.ValueBool()}
-		if !plan.RSSI2gThreshold.IsNull() && !plan.RSSI2gThreshold.IsUnknown() {
-			rssi.Threshold = int(plan.RSSI2gThreshold.ValueInt64())
+		rssi, err := mergeAPRSSISetting(plan.RSSI2gEnable, plan.RSSI2gThreshold, rssi2g, "2.4 GHz")
+		if err != nil {
+			return nil, err
+		}
+		config.RSSISetting2g = rssi
+	} else if !plan.RSSI2gThreshold.IsNull() && !plan.RSSI2gThreshold.IsUnknown() {
+		rssi, err := mergeAPRSSISetting(plan.RSSI2gEnable, plan.RSSI2gThreshold, rssi2g, "2.4 GHz")
+		if err != nil {
+			return nil, err
 		}
 		config.RSSISetting2g = rssi
 	}
 	if !plan.RSSI5gEnable.IsNull() && !plan.RSSI5gEnable.IsUnknown() {
-		rssi := &client.APRSSISetting{RSSIEnable: plan.RSSI5gEnable.ValueBool()}
-		if !plan.RSSI5gThreshold.IsNull() && !plan.RSSI5gThreshold.IsUnknown() {
-			rssi.Threshold = int(plan.RSSI5gThreshold.ValueInt64())
+		rssi, err := mergeAPRSSISetting(plan.RSSI5gEnable, plan.RSSI5gThreshold, rssi5g, "5 GHz")
+		if err != nil {
+			return nil, err
+		}
+		config.RSSISetting5g = rssi
+	} else if !plan.RSSI5gThreshold.IsNull() && !plan.RSSI5gThreshold.IsUnknown() {
+		rssi, err := mergeAPRSSISetting(plan.RSSI5gEnable, plan.RSSI5gThreshold, rssi5g, "5 GHz")
+		if err != nil {
+			return nil, err
 		}
 		config.RSSISetting5g = rssi
 	}
 
-	return config
+	return config, nil
+}
+
+func mergeAPLBSetting(enable types.Bool, maxClients types.Int64, current *client.APLBSetting, band string) (*client.APLBSetting, error) {
+	if current == nil && (enable.IsNull() || enable.IsUnknown() || maxClients.IsNull() || maxClients.IsUnknown()) {
+		return nil, fmt.Errorf("cannot safely update %s load balancing because the current controller setting is unavailable", band)
+	}
+	lb := &client.APLBSetting{}
+	if current != nil {
+		*lb = *current
+	}
+	if !enable.IsNull() && !enable.IsUnknown() {
+		lb.LBEnable = enable.ValueBool()
+	}
+	if !maxClients.IsNull() && !maxClients.IsUnknown() {
+		lb.MaxClients = int(maxClients.ValueInt64())
+	}
+	return lb, nil
+}
+
+func mergeAPRSSISetting(enable types.Bool, threshold types.Int64, current *client.APRSSISetting, band string) (*client.APRSSISetting, error) {
+	if current == nil && (enable.IsNull() || enable.IsUnknown() || threshold.IsNull() || threshold.IsUnknown()) {
+		return nil, fmt.Errorf("cannot safely update %s RSSI settings because the current controller setting is unavailable", band)
+	}
+	rssi := &client.APRSSISetting{}
+	if current != nil {
+		*rssi = *current
+	}
+	if !enable.IsNull() && !enable.IsUnknown() {
+		rssi.RSSIEnable = enable.ValueBool()
+	}
+	if !threshold.IsNull() && !threshold.IsUnknown() {
+		rssi.Threshold = int(threshold.ValueInt64())
+	}
+	return rssi, nil
 }
 
 // buildAPServicesConfig builds the services config payload for PUT /eaps/{mac}/config/services.
@@ -428,6 +490,19 @@ func buildAPServicesConfig(plan *DeviceAPResourceModel) *client.APServicesConfig
 
 // applyAPConfig applies all plan changes across the main PATCH and three dedicated endpoints.
 func (r *DeviceAPResource) applyAPConfig(ctx context.Context, siteID, mac string, plan *DeviceAPResourceModel) error {
+	var currentAdvanced *client.APConfig
+	var err error
+	if hasAPGroupedAdvancedUpdate(plan) {
+		currentAdvanced, err := r.client.GetAPConfig(ctx, siteID, mac)
+		if err != nil {
+			return fmt.Errorf("reading current AP advanced settings: %w", err)
+		}
+	}
+	advanced, err := buildAPAdvancedConfig(plan, currentAdvanced)
+	if err != nil {
+		return fmt.Errorf("preparing AP advanced config: %w", err)
+	}
+
 	// 1. Main PATCH — name, wlanId, ledSetting, ipSetting, mvlanEnable, loopbackDetectEnable
 	rawConfig, err := r.client.GetAPConfigRaw(ctx, siteID, mac)
 	if err != nil {
@@ -455,7 +530,7 @@ func (r *DeviceAPResource) applyAPConfig(ctx context.Context, siteID, mac string
 
 	// 3. Advanced settings — PUT /eaps/{mac}/config/advanced
 	// (OFDMA, load balancing, RSSI — silently ignored by main PATCH)
-	if err := r.client.UpdateAPAdvancedConfig(ctx, siteID, mac, buildAPAdvancedConfig(plan)); err != nil {
+	if err := r.client.UpdateAPAdvancedConfig(ctx, siteID, mac, advanced); err != nil {
 		return fmt.Errorf("updating AP advanced config: %w", err)
 	}
 
@@ -466,6 +541,17 @@ func (r *DeviceAPResource) applyAPConfig(ctx context.Context, siteID, mac string
 	}
 
 	return nil
+}
+
+func hasAPGroupedAdvancedUpdate(plan *DeviceAPResourceModel) bool {
+	return (!plan.LB2gEnable.IsNull() && !plan.LB2gEnable.IsUnknown()) ||
+		(!plan.LB2gMaxClients.IsNull() && !plan.LB2gMaxClients.IsUnknown()) ||
+		(!plan.LB5gEnable.IsNull() && !plan.LB5gEnable.IsUnknown()) ||
+		(!plan.LB5gMaxClients.IsNull() && !plan.LB5gMaxClients.IsUnknown()) ||
+		(!plan.RSSI2gEnable.IsNull() && !plan.RSSI2gEnable.IsUnknown()) ||
+		(!plan.RSSI2gThreshold.IsNull() && !plan.RSSI2gThreshold.IsUnknown()) ||
+		(!plan.RSSI5gEnable.IsNull() && !plan.RSSI5gEnable.IsUnknown()) ||
+		(!plan.RSSI5gThreshold.IsNull() && !plan.RSSI5gThreshold.IsUnknown())
 }
 
 // Create always fails — APs must be adopted through the controller UI
@@ -496,6 +582,16 @@ func (r *DeviceAPResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *DeviceAPResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var config DeviceAPResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !config.IPSettingMode.IsNull() && !config.IPSettingMode.IsUnknown() && config.IPSettingMode.ValueString() != "dhcp" {
+		resp.Diagnostics.AddError("Unsupported AP IP setting mode", "Only 'dhcp' mode can currently be configured. Static mode has no writable IP, mask, or gateway attributes and is retained when unmanaged.")
+		return
+	}
+
 	var plan DeviceAPResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {

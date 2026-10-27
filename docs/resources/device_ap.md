@@ -20,6 +20,8 @@ Leave 5 GHz settings omitted on APs that do not report a 5 GHz radio. Configurin
 
 AP updates use several API calls. If a later call fails, the provider reports the failure and attempts to refresh state to reflect any earlier successful writes. If that refresh also fails, it retains prior state and reports a warning; the next successful refresh is needed to reconcile it. These calls are not an atomic transaction.
 
+Omitted `led_setting` preserves the controller value. For load-balancing and RSSI settings, changing one member reads and carries forward the other member in that band; if the controller does not return the current group, the provider stops before writing rather than substituting zero values. Static IP mode can be read and retained while unmanaged, but cannot be configured because the resource does not expose its required address, mask, and gateway fields. An explicit `ip_setting_mode = "static"` is rejected; DHCP mode remains configurable.
+
 ## Example Usage
 
 ```terraform
@@ -67,13 +69,13 @@ resource "omada_device_ap" "example" {
 - `ip_setting_fallback_gate` (String) Fallback gateway IP (used when ip_setting_fallback = true).
 - `ip_setting_fallback_ip` (String) Fallback static IP address (used when ip_setting_fallback = true).
 - `ip_setting_fallback_mask` (String) Fallback subnet mask (used when ip_setting_fallback = true).
-- `ip_setting_mode` (String) IP address mode: 'dhcp' or 'static'.
+- `ip_setting_mode` (String) IP address mode. Only 'dhcp' can currently be configured; an existing controller static mode is retained when this attribute is omitted.
 - `l3_access_enable` (Boolean) Enable L3 management access.
 - `lb_2g_enable` (Boolean) Enable load balancing on 2.4GHz.
 - `lb_2g_max_clients` (Number) Max clients for 2.4GHz load balancing.
 - `lb_5g_enable` (Boolean) Enable load balancing on 5GHz.
 - `lb_5g_max_clients` (Number) Max clients for 5GHz load balancing.
-- `led_setting` (Number) LED setting: 0=Off, 1=On, 2=Follow site setting.
+- `led_setting` (Number) LED setting: 0=Off, 1=On, 2=Follow site setting. Omission preserves the controller value.
 - `lldp_enable` (Number) LLDP: 0=Off, 1=On, 2=Follow site setting. Null on APs that don't support LLDP.
 - `loopback_detect_enable` (Boolean) Enable loopback detection.
 - `management_vlan_enable` (Boolean) Enable management VLAN.
