@@ -174,7 +174,7 @@ func (r *MDNSReflectorResource) Read(ctx context.Context, req resource.ReadReque
 	rule, err := r.client.GetMDNSRule(ctx, siteID, state.ID.ValueString())
 	if err != nil {
 		if isConfirmedAbsent(err) {
-			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError("Error reading mDNS reflector rule", err.Error())
