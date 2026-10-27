@@ -83,7 +83,7 @@ These are local work labels, not GitHub issue or PR numbers. Keep each patch rev
 | G1 | F09 | Complete pagination across ten collections and raw SSID lookup | Stacked on F; D integration recorded | Implemented and locally verified; pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6) |
 | G2 | F10 | Trustworthy missing-resource handling and state removal | G1 complete discovery; F response classification | Implemented, mock/live validated, pushed. Reconciled with L4/L8 on `fix/confirmed-disappearance-l4` (`0cf3c8a`); combined tree passed Go 1.25.8 `go test -mod=vendor ./...`, `go vet -mod=vendor ./...`, and provider build on 2026-10-27. No combined live-controller retest. [PR draft, branch reconciliation, and dependency review](../investigations/confirmed-disappearance-fix/README.md). Still stacked on earlier work, so resolve the upstream base before submission. |
 | H | F11 | Explicit handling of same-name network adoption and actual state | G2 + L4; `fix/confirmed-disappearance-l4` | Implemented, regression-tested, and pushed through [`307424c`](https://github.com/wbniv/terraform-provider-tplink-omada/commit/307424c); hardware compatibility remains separate |
-| I | F15, found during B | Persistent switch update plan when the entire ports attribute is omitted after import | B; `fix/switch-omitted-ports-plan` | Implemented and pushed through [`896bfef`](https://github.com/wbniv/terraform-provider-tplink-omada/commit/896bfef); acceptance probe remains unrun |
+| I | F15, found during B | Persistent switch update plan when the entire ports attribute is omitted after import | B; `fix/switch-omitted-ports-plan` | Implemented, acceptance-tested, and pushed through [`286a9a2`](https://github.com/wbniv/terraform-provider-tplink-omada/commit/286a9a2) |
 
 Prioritize B–E after A because they can affect live configuration or credential expectations. F–H remain substantive correctness work. If a boundary grows too large, split it while preserving these finding IDs and dependencies.
 
@@ -232,11 +232,11 @@ These were static concerns, not part of the 14 reproduced defects. Establish beh
 
 - [x] Reproduce a nonempty update plan immediately after a successful import with only the switch name configured, on both original main and B.
 - [x] Preserve [the original acceptance probe](../investigations/switch-port-fix/omitted-ports-probe.go.txt), [baseline failure](../investigations/switch-port-fix/omitted-ports-baseline.log), and [patch failure](../investigations/switch-port-fix/omitted-ports-patch.log).
-- [x] Determine the planning cause: with a null configured list, framework planning can mark the Optional+Computed `ports` list unknown after comparing it with imported state.
-- [x] Carry prior `ports` state into the resource plan when the whole configured list is omitted or planned unknown; omission relinquishes port configuration without clearing controller settings.
-- [ ] Run the import, repeated empty-plan, configured-list removal, and unrelated-switch-change acceptance cases. Tests were not run during this implementation turn.
+- [x] Determine the planning cause: after import, framework planning marked the omitted Optional+Computed `ports` list and other unconfigured computed fields unknown, creating an update plan.
+- [x] When the entire `ports` list is omitted, carry forward known prior values for null-config planned attributes. Configured or unknown `ports` expressions remain under Terraform's plan.
+- [x] Run the import, repeated empty-plan, configured-list removal, and unrelated-switch-change mock acceptance cases on standard and Agile series. Both pass with Terraform 1.15.8; full vendored Go tests, vet, and provider build pass with Go 1.25.8.
 
-Priority: P2. The provider exposes `ports` as Optional+Computed. B preserves omitted individual attributes; I now also carries the imported whole list forward during planning when configuration omits it. The original baseline reproduction and patch failure remain historical evidence; the new fix's acceptance cases remain unrun.
+Priority: P2. The provider exposes `ports` as Optional+Computed. B preserves omitted individual attributes; I carries forward imported values when configuration omits the whole list. The original baseline reproduction and patch failure remain historical evidence; I's standard and Agile mock acceptance cases pass.
 
 ### F16 — Site settings updates zero unknown unrelated values
 
