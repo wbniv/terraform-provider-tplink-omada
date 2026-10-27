@@ -182,6 +182,10 @@ func (r *NetworkResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	network, err := r.client.GetNetwork(ctx, siteID, state.ID.ValueString())
 	if err != nil {
+		if isConfirmedAbsent(err) {
+			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading network", err.Error())
 		return
 	}
@@ -282,6 +286,13 @@ func (r *NetworkResource) Delete(ctx context.Context, req resource.DeleteRequest
 	var state NetworkResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if _, err := r.client.GetNetwork(ctx, state.SiteID.ValueString(), state.ID.ValueString()); err != nil {
+		if isConfirmedAbsent(err) {
+			return
+		}
+		resp.Diagnostics.AddError("Error checking network before deletion", err.Error())
 		return
 	}
 

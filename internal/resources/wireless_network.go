@@ -232,6 +232,10 @@ func (r *WirelessNetworkResource) Read(ctx context.Context, req resource.ReadReq
 
 	ssid, err := r.client.GetWirelessNetwork(ctx, siteID, wlanGroupID, state.ID.ValueString())
 	if err != nil {
+		if isConfirmedAbsent(err) {
+			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading wireless network", err.Error())
 		return
 	}
@@ -364,6 +368,13 @@ func (r *WirelessNetworkResource) Delete(ctx context.Context, req resource.Delet
 	var state WirelessNetworkResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if _, err := r.client.GetWirelessNetwork(ctx, state.SiteID.ValueString(), state.WlanGroupID.ValueString(), state.ID.ValueString()); err != nil {
+		if isConfirmedAbsent(err) {
+			return
+		}
+		resp.Diagnostics.AddError("Error checking wireless network before deletion", err.Error())
 		return
 	}
 

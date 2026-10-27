@@ -1,7 +1,10 @@
 package resources
 
 import (
+	"errors"
 	"strings"
+
+	"github.com/terraform-provider-tplink-omada/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -9,6 +12,12 @@ import (
 
 	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
+
+// isConfirmedAbsent reports only semantic absence from a complete collection
+// lookup. HTTP and decoding failures deliberately do not satisfy this check.
+func isConfirmedAbsent(err error) bool {
+	return errors.Is(err, client.ErrNotFound)
+}
 
 // siteIDResourceSchema returns the schema attribute for site_id on resources.
 // The site cannot change after creation (RequiresReplace).

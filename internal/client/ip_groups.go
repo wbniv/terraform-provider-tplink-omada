@@ -144,7 +144,7 @@ func (c *Client) GetIPGroup(ctx context.Context, siteID, groupID string) (*IPGro
 			return &group, nil
 		}
 	}
-	return nil, fmt.Errorf("IP group %q not found", groupID)
+	return nil, notFound("IP group %q", groupID)
 }
 func (c *Client) CreateIPGroup(ctx context.Context, siteID string, group *IPGroup) (*IPGroup, error) {
 	if c.readOnly {

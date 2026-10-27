@@ -142,6 +142,10 @@ func (r *WlanGroupResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	group, err := r.client.GetWlanGroup(ctx, state.SiteID.ValueString(), state.ID.ValueString())
 	if err != nil {
+		if isConfirmedAbsent(err) {
+			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading WLAN group", err.Error())
 		return
 	}
@@ -191,6 +195,13 @@ func (r *WlanGroupResource) Delete(ctx context.Context, req resource.DeleteReque
 	var state WlanGroupResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if _, err := r.client.GetWlanGroup(ctx, state.SiteID.ValueString(), state.ID.ValueString()); err != nil {
+		if isConfirmedAbsent(err) {
+			return
+		}
+		resp.Diagnostics.AddError("Error checking WLAN group before deletion", err.Error())
 		return
 	}
 

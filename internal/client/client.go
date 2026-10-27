@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"mime/multipart"
 	"net/http"
@@ -39,6 +40,14 @@ type authAttempt struct {
 
 // ErrReadOnly is returned when a write operation is attempted in read-only mode.
 var ErrReadOnly = fmt.Errorf("operation blocked: provider is in read_only mode — only data sources and imports are allowed")
+
+// ErrNotFound indicates that a complete, successful collection lookup did not
+// contain the requested identity. Direct endpoint failures must not use it.
+var ErrNotFound = errors.New("resource not found")
+
+func notFound(format string, args ...interface{}) error {
+	return fmt.Errorf("%w: %s", ErrNotFound, fmt.Sprintf(format, args...))
+}
 
 // APIResponse is the standard response envelope from the Omada API.
 type APIResponse struct {
@@ -619,7 +628,7 @@ func (c *Client) GetNetwork(ctx context.Context, siteID, networkID string) (*Net
 			return &n, nil
 		}
 	}
-	return nil, fmt.Errorf("network %q not found", networkID)
+	return nil, notFound("network %q", networkID)
 }
 
 // CreateNetwork creates a new LAN network, or adopts an existing one with the
@@ -713,7 +722,7 @@ func (c *Client) GetWlanGroup(ctx context.Context, siteID, wlanGroupID string) (
 			return &g, nil
 		}
 	}
-	return nil, fmt.Errorf("WLAN group %q not found", wlanGroupID)
+	return nil, notFound("WLAN group %q", wlanGroupID)
 }
 
 // CreateWlanGroup creates a new WLAN group.
@@ -762,7 +771,7 @@ func (c *Client) GetWirelessNetwork(ctx context.Context, siteID, wlanGroupID, ss
 			return &s, nil
 		}
 	}
-	return nil, fmt.Errorf("SSID %q not found in WLAN group %q", ssidID, wlanGroupID)
+	return nil, notFound("SSID %q in WLAN group %q", ssidID, wlanGroupID)
 }
 
 // GetWirelessNetworkRaw returns the raw JSON for a specific SSID (needed for PATCH).
@@ -777,7 +786,7 @@ func (c *Client) GetWirelessNetworkRaw(ctx context.Context, siteID, wlanGroupID,
 			return s, nil
 		}
 	}
-	return nil, fmt.Errorf("SSID %q not found", ssidID)
+	return nil, notFound("SSID %q", ssidID)
 }
 
 // CreateWirelessNetwork creates a new SSID.
@@ -849,7 +858,7 @@ func (c *Client) GetPortProfile(ctx context.Context, siteID, profileID string) (
 			return &p, nil
 		}
 	}
-	return nil, fmt.Errorf("port profile %q not found", profileID)
+	return nil, notFound("port profile %q", profileID)
 }
 
 // CreatePortProfile creates a new port profile, or adopts an existing one with the same name.
@@ -1614,7 +1623,7 @@ func (c *Client) GetACLRule(ctx context.Context, siteID, ruleID string, aclType 
 			return &r, nil
 		}
 	}
-	return nil, fmt.Errorf("ACL rule %q not found", ruleID)
+	return nil, notFound("ACL rule %q", ruleID)
 }
 
 // DeleteACLRule deletes an ACL rule.
@@ -1673,7 +1682,7 @@ func (c *Client) GetMDNSRule(ctx context.Context, siteID, ruleID string) (*MDNSR
 			return &r, nil
 		}
 	}
-	return nil, fmt.Errorf("mDNS rule %q not found", ruleID)
+	return nil, notFound("mDNS rule %q", ruleID)
 }
 
 // CreateMDNSRule creates a new mDNS reflector rule.
@@ -1757,7 +1766,7 @@ func (c *Client) GetSAMLIdP(ctx context.Context, idpID string) (*SAMLIdP, error)
 			return &idp, nil
 		}
 	}
-	return nil, fmt.Errorf("SAML IdP %q not found", idpID)
+	return nil, notFound("SAML IdP %q", idpID)
 }
 
 // CreateSAMLIdP creates a new SAML identity provider connection.
@@ -1871,7 +1880,7 @@ func (c *Client) GetSAMLRole(ctx context.Context, roleID string) (*SAMLRole, err
 			return &r, nil
 		}
 	}
-	return nil, fmt.Errorf("SAML role %s not found", roleID)
+	return nil, notFound("SAML role %s", roleID)
 }
 
 // CreateSAMLRole creates a new SAML external user group.

@@ -186,6 +186,10 @@ func (r *PortProfileResource) Read(ctx context.Context, req resource.ReadRequest
 
 	profile, err := r.client.GetPortProfile(ctx, siteID, state.ID.ValueString())
 	if err != nil {
+		if isConfirmedAbsent(err) {
+			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading port profile", err.Error())
 		return
 	}
@@ -270,6 +274,13 @@ func (r *PortProfileResource) Delete(ctx context.Context, req resource.DeleteReq
 	var state PortProfileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if _, err := r.client.GetPortProfile(ctx, state.SiteID.ValueString(), state.ID.ValueString()); err != nil {
+		if isConfirmedAbsent(err) {
+			return
+		}
+		resp.Diagnostics.AddError("Error checking port profile before deletion", err.Error())
 		return
 	}
 
