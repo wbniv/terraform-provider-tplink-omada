@@ -82,7 +82,7 @@ These are local work labels, not GitHub issue or PR numbers. Keep each patch rev
 | F | F12 | HTTP status/envelope validation, typed errors, bounded diagnostics, redirect protection | Stacked on E, includes A; D compatibility verified with recorded test adjustment | Implemented and locally verified; pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31); controller validation pending |
 | G1 | F09 | Complete pagination across ten collections and raw SSID lookup | Stacked on F; D integration recorded | Implemented and locally verified; pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6) |
 | G2 | F10 | Trustworthy missing-resource handling and state removal | G1 complete discovery; F response classification | Implemented, mock/live validated, pushed. Reconciled with L4/L8 on `fix/confirmed-disappearance-l4` (`0cf3c8a`); combined tree passed Go 1.25.8 `go test -mod=vendor ./...`, `go vet -mod=vendor ./...`, and provider build on 2026-10-27. No combined live-controller retest. [PR draft, branch reconciliation, and dependency review](../investigations/confirmed-disappearance-fix/README.md). Still stacked on earlier work, so resolve the upstream base before submission. |
-| H | F11 | Explicit handling of same-name network adoption and actual state | G2 + L4; `fix/confirmed-disappearance-l4` | Implemented and pushed as [`19e02e5`](https://github.com/wbniv/terraform-provider-tplink-omada/commit/19e02e5); validation cases remain unrun |
+| H | F11 | Explicit handling of same-name network adoption and actual state | G2 + L4; `fix/confirmed-disappearance-l4` | Implemented, regression-tested, and pushed through [`307424c`](https://github.com/wbniv/terraform-provider-tplink-omada/commit/307424c); hardware compatibility remains separate |
 | I | F15, found during B | Persistent switch update plan when the entire ports attribute is omitted after import | B; `fix/switch-omitted-ports-plan` | Implemented and pushed through [`896bfef`](https://github.com/wbniv/terraform-provider-tplink-omada/commit/896bfef); acceptance probe remains unrun |
 
 Prioritize B–E after A because they can affect live configuration or credential expectations. F–H remain substantive correctness work. If a boundary grows too large, split it while preserving these finding IDs and dependencies.
@@ -205,7 +205,9 @@ Detailed plan: [G1 complete pagination and G2 confirmed disappearance](paginatio
 - [x] Preserve adoption only for a unique matching network and populate resource state from the controller response.
 - [x] Protect the built-in `Default` interface/VLAN 1 network from deletion; treat an already absent network as an idempotent delete.
 - [x] Document ownership, import, and destroy behavior in the network resource docs.
-- [ ] Run the same-name/different-VLAN, matching-config, protected-default, and actual-state regressions. Tests were not run during this implementation turn.
+- [x] Cover same-name/different-VLAN and explicitly configured mismatches, matching adoption with controller-derived state, protected-default deletion, and cleanup in client/provider regressions.
+- [x] Run `TF_ACC=1` mock Terraform acceptance for matching adoption and protected-default deletion; full vendored Go tests, vet, and provider build pass with Go 1.25.8.
+- [ ] Validate network behavior against a live controller before claiming controller compatibility.
 
 ## Additional investigations to retain
 
