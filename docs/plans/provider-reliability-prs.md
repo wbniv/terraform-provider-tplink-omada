@@ -82,8 +82,8 @@ These are local work labels, not GitHub issue or PR numbers. Keep each patch rev
 | F | F12 | HTTP status/envelope validation, typed errors, bounded diagnostics, redirect protection | Stacked on E, includes A; D compatibility verified with recorded test adjustment | Implemented and locally verified; pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31); controller validation pending |
 | G1 | F09 | Complete pagination across ten collections and raw SSID lookup | Stacked on F; D integration recorded | Implemented and locally verified; pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6) |
 | G2 | F10 | Trustworthy missing-resource handling and state removal | G1 complete discovery; F response classification | Implemented, mock/live validated, pushed. Also reconciled with L4/L8 on `fix/confirmed-disappearance-l4` (`0cf3c8a`); combined tree not retested. [PR draft, branch reconciliation, and dependency review](../investigations/confirmed-disappearance-fix/README.md). Still stacked on earlier work, so resolve the upstream base before submission. |
-| H | F11 | Explicit handling of same-name network adoption and actual state | G for complete discovery | Open |
-| I | F15, found during B | Persistent switch update plan when the entire ports attribute is omitted after import | Investigate schema/planning interaction | Open; reproduced on baseline and B |
+| H | F11 | Explicit handling of same-name network adoption and actual state | G2 + L4; `fix/confirmed-disappearance-l4` | Implemented and pushed as [`19e02e5`](https://github.com/wbniv/terraform-provider-tplink-omada/commit/19e02e5); validation cases remain unrun |
+| I | F15, found during B | Persistent switch update plan when the entire ports attribute is omitted after import | B; `fix/switch-omitted-ports-plan` | Implemented and pushed through [`896bfef`](https://github.com/wbniv/terraform-provider-tplink-omada/commit/896bfef); acceptance probe remains unrun |
 
 Prioritize B–E after A because they can affect live configuration or credential expectations. F–H remain substantive correctness work. If a boundary grows too large, split it while preserving these finding IDs and dependencies.
 
@@ -201,17 +201,19 @@ Detailed plan: [G1 complete pagination and G2 confirmed disappearance](paginatio
 
 ### H — Network adoption
 
-- [ ] Replace silent incompatible adoption with an explicit conflict/import path, or fully specify and test safe adoption semantics.
-- [ ] Preserve any intentionally supported matching adoption after reviewing compatibility expectations.
-- [ ] Verify same-name/different-VLAN, same-name/matching-config, protected default networks, and truthful response state.
-- [ ] Document ownership and destroy behavior; review the existing adoption test before changing it.
+- [x] Replace silent same-name adoption with an import conflict when purpose, VLAN, or explicitly configured settings differ; reject ambiguous duplicate names.
+- [x] Preserve adoption only for a unique matching network and populate resource state from the controller response.
+- [x] Protect the built-in `Default` interface/VLAN 1 network from deletion; treat an already absent network as an idempotent delete.
+- [x] Document ownership, import, and destroy behavior in the network resource docs.
+- [ ] Run the same-name/different-VLAN, matching-config, protected-default, and actual-state regressions. Tests were not run during this implementation turn.
 
 ## Additional investigations to retain
 
 These were static concerns, not part of the 14 reproduced defects. Establish behavior and scope before making claims in a PR.
 
-- [ ] AP static-IP mode: compare advertised schema with implementation and add a transition test.
-- [ ] AP settings beyond radios: investigate the remaining LED default and grouped load-balancing/RSSI builders, which may overwrite omitted members when another member is configured. C's radio tests do not establish preservation for these fields.
+- [x] AP static-IP mode: the resource lacked writable address/mask/gateway attributes. Explicit `static` configuration now returns a clear error; controller-reported static mode remains readable and is preserved when unmanaged.
+- [x] AP settings beyond radios: removed the implicit LED default and merge omitted load-balancing/RSSI siblings from a fresh controller snapshot before a grouped write. If the current group is unavailable, the update stops before writing. Pushed on `fix/ap-settings-preservation` as [`ed49a99`](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ed49a99).
+- [ ] Run AP LED, static/DHCP, and grouped load-balancing/RSSI preservation regressions. Tests were not run during this implementation turn.
 - [ ] Port-profile updates: capture preservation of nondefault controller settings during a rename.
 - [ ] SAML IdP certificates: verify PEM/base64 import, remote certificate changes, and empty-field clearing.
 - [ ] TLS defaults: decide a compatibility-aware trust/CA strategy; keep any default change separate from bug fixes.
@@ -228,10 +230,11 @@ These were static concerns, not part of the 14 reproduced defects. Establish beh
 
 - [x] Reproduce a nonempty update plan immediately after a successful import with only the switch name configured, on both original main and B.
 - [x] Preserve [the original acceptance probe](../investigations/switch-port-fix/omitted-ports-probe.go.txt), [baseline failure](../investigations/switch-port-fix/omitted-ports-baseline.log), and [patch failure](../investigations/switch-port-fix/omitted-ports-patch.log).
-- [ ] Determine the exact schema/planning cause. Framework trace identifies the `ports` value as different before it marks computed attributes unknown; the root cause is not yet established.
-- [ ] Fix planning for an omitted whole list and verify import, repeated empty plans, later removal of configured ports, and unrelated switch changes.
+- [x] Determine the planning cause: with a null configured list, framework planning can mark the Optional+Computed `ports` list unknown after comparing it with imported state.
+- [x] Carry prior `ports` state into the resource plan when the whole configured list is omitted or planned unknown; omission relinquishes port configuration without clearing controller settings.
+- [ ] Run the import, repeated empty-plan, configured-list removal, and unrelated-switch-change acceptance cases. Tests were not run during this implementation turn.
 
-Priority: P2. The provider currently exposes `ports` as Optional+Computed, but this configuration cannot settle to an empty plan in the reproduction. B preserves omitted individual attributes and documents the existing whole-list limitation. This finding was discovered after the original 14-finding report and remains open.
+Priority: P2. The provider exposes `ports` as Optional+Computed. B preserves omitted individual attributes; I now also carries the imported whole list forward during planning when configuration omits it. The original baseline reproduction and patch failure remain historical evidence; the new fix's acceptance cases remain unrun.
 
 ### F16 — Site settings updates zero unknown unrelated values
 
