@@ -215,7 +215,7 @@ These were static concerns, not part of the 14 reproduced defects. Establish beh
 
 - [x] AP static-IP mode: the resource lacked writable address/mask/gateway attributes. Explicit `static` configuration now returns a clear error; controller-reported static mode remains readable and is preserved when unmanaged.
 - [x] AP settings beyond radios: removed the implicit LED default and merge omitted load-balancing/RSSI siblings from a fresh controller snapshot before a grouped write. If the current group is unavailable, the update stops before writing. Pushed on `fix/ap-settings-preservation` as [`ed49a99`](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ed49a99).
-- [ ] Run AP LED, static/DHCP, and grouped load-balancing/RSSI preservation regressions. Tests were not run during this implementation turn.
+- [x] Run Terraform 1.15.8 mock acceptance for imported LED `0`, unmanaged static-IP retention, explicit static-mode rejection, partial load-balancing/RSSI sibling preservation, and dual-band/single-band radio preservation. Full vendored Go tests, vet, and provider build pass with Go 1.25.8. Committed and pushed on `fix/ap-settings-preservation` as [`bd4762b`](https://github.com/wbniv/terraform-provider-tplink-omada/commit/bd4762b).
 - [ ] Port-profile updates: capture preservation of nondefault controller settings during a rename.
 - [ ] SAML IdP certificates: verify PEM/base64 import, remote certificate changes, and empty-field clearing.
 - [ ] TLS defaults: decide a compatibility-aware trust/CA strategy; keep any default change separate from bug fixes.
