@@ -493,7 +493,7 @@ func (r *DeviceAPResource) applyAPConfig(ctx context.Context, siteID, mac string
 	var currentAdvanced *client.APConfig
 	var err error
 	if hasAPGroupedAdvancedUpdate(plan) {
-		currentAdvanced, err := r.client.GetAPConfig(ctx, siteID, mac)
+		currentAdvanced, err = r.client.GetAPConfig(ctx, siteID, mac)
 		if err != nil {
 			return fmt.Errorf("reading current AP advanced settings: %w", err)
 		}

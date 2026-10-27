@@ -168,8 +168,9 @@ func TestAPRadioUpdates(t *testing.T) {
 			if d := planned.Set(ctx, &plan); d.HasError() {
 				t.Fatal(d)
 			}
+			config := tfsdk.Config{Schema: schema.Schema, Raw: planned.Raw}
 			resp := resource.UpdateResponse{State: state}
-			r.Update(ctx, resource.UpdateRequest{State: state, Plan: planned}, &resp)
+			r.Update(ctx, resource.UpdateRequest{Config: config, State: state, Plan: planned}, &resp)
 			if resp.Diagnostics.HasError() != (tc.wantError != "") {
 				t.Fatalf("diagnostics: %v", resp.Diagnostics)
 			}
