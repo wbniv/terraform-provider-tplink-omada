@@ -53,7 +53,7 @@ resource "omada_device_switch" "example" {
 
 ## Port configuration and upgrades
 
-**Known limitation:** omitting the entire `ports` attribute can produce a persistent update plan after import. This is a pre-existing planning issue tracked separately; configure the complete port list for now. Individual port attributes can be omitted as described below.
+Omitting the entire `ports` attribute preserves the imported/controller port list and produces no port update. When `ports` is configured, provide the complete list of ports to manage. Removing a configured `ports` block returns the resource to controller-managed port settings; it does not clear or reset the switch ports.
 
 Configure every controller port in `ports` and identify each by its port number. Entries may be reordered; refresh preserves their order by port identity. Invalid, duplicate, or missing port numbers are rejected before configuration writes.
 
@@ -77,7 +77,7 @@ Within a configured port, omitted attributes preserve the controller's current s
 - `loopback_detect_enable` (Boolean) Enable loopback detection.
 - `management_vlan_network_id` (String) The LAN network ID used for management VLAN.
 - `name` (String) The display name of the switch.
-- `ports` (Attributes List) Switch port configurations. When configured, include every port. Omitted port attributes preserve controller settings; explicit empty VLAN lists clear those selections. (see [below for nested schema](#nestedatt--ports))
+- `ports` (Attributes List) Switch port configurations. Omit to preserve imported/controller settings; when configured, include every port. Omitted port attributes preserve controller settings; explicit empty VLAN lists clear those selections. (see [below for nested schema](#nestedatt--ports))
 - `snmp_contact` (String) SNMP contact string.
 - `snmp_location` (String) SNMP location string.
 - `stp` (Number) STP mode: 0=disabled, 1=STP, 2=RSTP. Not supported on all models.

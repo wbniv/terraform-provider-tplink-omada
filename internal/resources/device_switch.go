@@ -16,6 +16,7 @@ import (
 
 var _ resource.Resource = &DeviceSwitchResource{}
 var _ resource.ResourceWithImportState = &DeviceSwitchResource{}
+var _ resource.ResourceWithModifyPlan = &DeviceSwitchResource{}
 
 // DeviceSwitchResource manages an Omada switch device configuration.
 type DeviceSwitchResource struct {
@@ -326,6 +327,31 @@ func (r *DeviceSwitchResource) Configure(_ context.Context, req resource.Configu
 		return
 	}
 	r.client = c
+}
+
+// ModifyPlan carries imported port state forward when the entire optional
+// ports list is omitted. Optional+Computed nested lists can otherwise become
+// unknown after Terraform initially compares null configuration with the
+// imported list, producing a perpetual update plan.
+func (r *DeviceSwitchResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.State.Raw.IsNull() {
+		return
+	}
+
+	var state DeviceSwitchResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() || state.Ports.IsNull() {
+		return
+	}
+
+	var plan DeviceSwitchResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() || (!plan.Ports.IsNull() && !plan.Ports.IsUnknown()) {
+		return
+	}
+
+	plan.Ports = state.Ports
+	resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 }
 
 func applyGeneralSwitchConfig(raw map[string]interface{}, plan *DeviceSwitchResourceModel) {
