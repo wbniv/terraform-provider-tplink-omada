@@ -1,11 +1,16 @@
 | Date | Change |
 |------|--------|
+| [2026-10-27](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/6bf965e) | docs: record G2 regression results |
 | [2026-10-27](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/858f416) | docs: record G2 Go verification |
 | [2026-10-27](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/2d891e2) | docs: track confirmed-disappearance implementation |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/30d9d92) | docs: record controller lab findings and standalone migration |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/2f9032c) | docs: record complete pagination evidence and integration plan |
 
 <!--history-meta v1
+6bf965e	author	Will Norris
+6bf965e	added	6
+6bf965e	deleted	4
+6bf965e	files	1
 858f416	author	Will Norris
 858f416	added	3
 858f416	deleted	2

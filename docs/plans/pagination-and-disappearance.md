@@ -82,15 +82,15 @@ flowchart TD
 
 ### 2026-10-27 — G2 implementation started
 
-Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`; implementation commits are `20dfdd1` and `48e2aad`, with regression tests in `3d8bb18`. The patch adds typed `client.ErrNotFound` only to successful complete-collection lookups, removes resource state on that typed result for networks, WLAN groups, SSIDs, port profiles, ACLs, IP groups, mDNS rules, SAML IdPs, and SAML roles, and preflights those same resources before Delete so confirmed-absent objects are already deleted. Direct endpoint errors (including HTTP 404), transport/authentication failures, and incomplete collection errors remain diagnostics and retain state. Site, site settings, AP/switch configuration, and controller certificates use direct or singleton endpoints and do not infer absence from endpoint failure. Go 1.25.8 formatting, the full `go test ./...` suite, focused client absence/error tests, and all `TestAccPagination` mock Terraform acceptance scenarios pass. The mock scenarios cover later-page failure retaining state and confirmed out-of-band deletion followed by a recreation plan. Direct coverage for the already-absent Delete preflight and controller deletion/recreation checks remain open.
+Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`; implementation commits are `20dfdd1` and `48e2aad`, with mock regressions in `3d8bb18`. The patch adds typed `client.ErrNotFound` only to successful complete-collection lookups, removes resource state on that typed result for networks, WLAN groups, SSIDs, port profiles, ACLs, IP groups, mDNS rules, SAML IdPs, and SAML roles, and preflights those same resources before Delete so confirmed-absent objects are already deleted. Direct endpoint errors (including HTTP 404), transport/authentication failures, and incomplete collection errors remain diagnostics and retain state. Site, site settings, AP/switch configuration, and controller certificates use direct or singleton endpoints and do not infer absence from endpoint failure. Go 1.25.8 formatting, the full `go test ./...` suite, focused client absence/error tests, and all five `TestAccPagination` mock Terraform acceptance scenarios pass. They cover later-page failure retaining state, out-of-band deletion followed by a recreation plan, and already-absent Delete preflight with no redundant DELETE request. The opt-in live test also passes against isolated Omada Software Controller 6.1.0.19: out-of-band network deletion, recreation plan/apply, controller readback, and a stable follow-up plan.
 
 - [x] Add the implementation on an isolated branch based on G1.
 - [x] Run `gofmt` and the full Go unit suite in the Go 1.25.8 container.
 - [x] Add client and Terraform regressions for confirmed absence, incomplete/error responses, state retention, and refresh/recreation after out-of-band deletion.
-- [ ] Add direct regression coverage for already-absent Delete preflight behavior.
+- [x] Add direct regression coverage for already-absent Delete preflight behavior.
 - [x] Run all `TestAccPagination` mock Terraform acceptance scenarios, including later-page failure recovery and out-of-band deletion/recreation.
-- [ ] Verify deletion/recreation against a real controller.
-- [x] Update the tracker with local Go and mock acceptance results; retain the open Delete-preflight and real-controller gates.
+- [x] Verify deletion/recreation against an isolated real controller using the focused `TestControllerLabNetworkDisappearance` scenario. The broader lab selector also runs unrelated baseline cases and is not claimed as passing.
+- [x] Update the tracker with Go, mock acceptance, Delete-preflight, and focused real-controller results.
 
 ### Conditional — Controller validation and submission
 
@@ -104,6 +104,6 @@ No G tests have run and no G production code has changed at the time this plan w
 ## Progress
 
 - [x] G1 is implemented and locally verified, pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6). All 94 client cases, full Go/race gates, three new Terraform scenarios/11 steps, and combined 44 scenarios/216 steps pass. [Evidence and integration notes](../investigations/pagination-fix/README.md).
-- [ ] G2 not started.
+- [x] G2 implementation and focused validation are complete for the nine collection-backed resource types. Direct/singleton endpoint resources remain outside automatic state removal because endpoint failures do not prove absence.
 
-Next: correct the measured WLAN-group pagination contract under [L1](controller-compatibility.md), rerun the real-controller suite, then implement G2 confirmed disappearance. Preserve the recorded D integration and fixture patches; original D worktrees remain unchanged.
+Next: review and submit the G2 change; retain the focused controller test as the live evidence. Broader controller-suite findings outside G2 remain tracked under [L1](controller-compatibility.md) and related follow-ups.
