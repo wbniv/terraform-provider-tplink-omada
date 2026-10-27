@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccPagination(t *testing.T) {
-	for _, mode := range []string{"import last page", "first page failure recovery", "data source"} {
+	for _, mode := range []string{"import last page", "first page failure recovery", "confirmed disappearance", "data source"} {
 		t.Run(mode, func(t *testing.T) {
 			var mu sync.Mutex
 			exists, failLater := true, false
@@ -71,6 +71,7 @@ func TestAccPagination(t *testing.T) {
 			}
 			config := provider + fmt.Sprintf("resource \"omada_network\" \"test\" {\nsite_id = \"site\"\nname = \"Network %03d\"\npurpose = \"vlan\"\nvlan_id = 20\n}\n", target)
 			setFailure := func(fail bool) func() { return func() { mu.Lock(); defer mu.Unlock(); failLater = fail } }
+			setAbsent := func() { mu.Lock(); defer mu.Unlock(); exists = false }
 			check := func(s *terraform.State) error {
 				mu.Lock()
 				defer mu.Unlock()
@@ -79,6 +80,13 @@ func TestAccPagination(t *testing.T) {
 					return fmt.Errorf("lost managed identity or changed remote object during refresh")
 				}
 				return nil
+			}
+			if mode == "confirmed disappearance" {
+				resource.Test(t, resource.TestCase{ProtoV6ProviderFactories: testAccProtoV6ProviderFactories, Steps: []resource.TestStep{
+					{Config: config + fmt.Sprintf("import {\nto = omada_network.test\nid = \"site/%s\"\n}\n", id), Check: check},
+					{PreConfig: setAbsent, Config: config, PlanOnly: true, ExpectNonEmptyPlan: true},
+				}})
+				return
 			}
 			resource.Test(t, resource.TestCase{ProtoV6ProviderFactories: testAccProtoV6ProviderFactories, Steps: []resource.TestStep{
 				{Config: config + fmt.Sprintf("import {\nto = omada_network.test\nid = \"site/%s\"\n}\n", id), Check: check},
