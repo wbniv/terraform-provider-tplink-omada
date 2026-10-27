@@ -154,6 +154,10 @@ func (r *SAMLRoleResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	role, err := r.client.GetSAMLRole(ctx, state.ID.ValueString())
 	if err != nil {
+		if isConfirmedAbsent(err) {
+			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading SAML role", err.Error())
 		return
 	}
@@ -214,6 +218,13 @@ func (r *SAMLRoleResource) Delete(ctx context.Context, req resource.DeleteReques
 	var state SAMLRoleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if _, err := r.client.GetSAMLRole(ctx, state.ID.ValueString()); err != nil {
+		if isConfirmedAbsent(err) {
+			return
+		}
+		resp.Diagnostics.AddError("Error checking SAML role before deletion", err.Error())
 		return
 	}
 

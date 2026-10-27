@@ -173,6 +173,10 @@ func (r *MDNSReflectorResource) Read(ctx context.Context, req resource.ReadReque
 
 	rule, err := r.client.GetMDNSRule(ctx, siteID, state.ID.ValueString())
 	if err != nil {
+		if isConfirmedAbsent(err) {
+			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading mDNS reflector rule", err.Error())
 		return
 	}
@@ -248,6 +252,13 @@ func (r *MDNSReflectorResource) Delete(ctx context.Context, req resource.DeleteR
 	var state MDNSReflectorResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if _, err := r.client.GetMDNSRule(ctx, state.SiteID.ValueString(), state.ID.ValueString()); err != nil {
+		if isConfirmedAbsent(err) {
+			return
+		}
+		resp.Diagnostics.AddError("Error checking mDNS rule before deletion", err.Error())
 		return
 	}
 

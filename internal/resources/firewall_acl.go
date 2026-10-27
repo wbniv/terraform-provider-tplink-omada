@@ -216,6 +216,10 @@ func (r *ACLRuleResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	rule, err := r.client.GetACLRule(ctx, siteID, state.ID.ValueString(), aclType)
 	if err != nil {
+		if isConfirmedAbsent(err) {
+			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading ACL rule", err.Error())
 		return
 	}
@@ -290,6 +294,13 @@ func (r *ACLRuleResource) Delete(ctx context.Context, req resource.DeleteRequest
 	var state ACLRuleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if _, err := r.client.GetACLRule(ctx, state.SiteID.ValueString(), state.ID.ValueString(), int(state.Type.ValueInt64())); err != nil {
+		if isConfirmedAbsent(err) {
+			return
+		}
+		resp.Diagnostics.AddError("Error checking ACL rule before deletion", err.Error())
 		return
 	}
 

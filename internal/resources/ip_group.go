@@ -143,6 +143,10 @@ func (r *IPGroupResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	group, err := r.client.GetIPGroup(ctx, siteID, state.ID.ValueString())
 	if err != nil {
+		if isConfirmedAbsent(err) {
+			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading IP group", err.Error())
 		return
 	}
@@ -193,6 +197,13 @@ func (r *IPGroupResource) Delete(ctx context.Context, req resource.DeleteRequest
 	var state IPGroupResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if _, err := r.client.GetIPGroup(ctx, state.SiteID.ValueString(), state.ID.ValueString()); err != nil {
+		if isConfirmedAbsent(err) {
+			return
+		}
+		resp.Diagnostics.AddError("Error checking IP group before deletion", err.Error())
 		return
 	}
 
