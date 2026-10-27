@@ -96,7 +96,7 @@ Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`; implemen
 - [x] Validate initial page metadata and collection behavior on Software Controller 6.1.0.19, including 102 real networks; record zero-device limitations.
 - [ ] Repair the unpaginated WLAN-group envelope regression before claiming compatibility. Populated variants of the other empty collections remain unverified.
 - [x] Commit/push the G2 patch and tracker update; verify remote refs.
-- [ ] Recheck upstream/standards, prepare separate PR descriptions, and publish only when authorized. Record CI/review/merge separately.
+- [x] Recheck upstream and contribution standards; prepare the [G2 PR draft and dependency review](../investigations/confirmed-disappearance-fix/README.md). No PR was opened because the branch includes the unmerged A–F and G1 dependency chain. Publish only when that base is resolved and authorized; record CI/review/merge separately.
 
 ## Progress
 

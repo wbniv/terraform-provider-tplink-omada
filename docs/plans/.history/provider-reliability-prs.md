@@ -1,5 +1,6 @@
 | Date | Change |
 |------|--------|
+| [2026-10-27](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/ff957e6) | docs: reconcile G2 completion checklists |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/68eae38) | docs: record verified ACL and empty collection fixes |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/b79cd0b) | docs: record verified IP group controller protocol |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/a261bcd) | docs: record verified controller session recovery |
@@ -18,6 +19,10 @@
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/4c6433b) | docs: track provider reliability fixes and validation evidence |
 
 <!--history-meta v1
+ff957e6	author	Will Norris
+ff957e6	added	3
+ff957e6	deleted	3
+ff957e6	files	1
 68eae38	author	Will Norris
 68eae38	added	3
 68eae38	deleted	2
