@@ -143,7 +143,7 @@ func (r *WlanGroupResource) Read(ctx context.Context, req resource.ReadRequest, 
 	group, err := r.client.GetWlanGroup(ctx, state.SiteID.ValueString(), state.ID.ValueString())
 	if err != nil {
 		if isConfirmedAbsent(err) {
-			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError("Error reading WLAN group", err.Error())

@@ -187,7 +187,7 @@ func (r *PortProfileResource) Read(ctx context.Context, req resource.ReadRequest
 	profile, err := r.client.GetPortProfile(ctx, siteID, state.ID.ValueString())
 	if err != nil {
 		if isConfirmedAbsent(err) {
-			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError("Error reading port profile", err.Error())

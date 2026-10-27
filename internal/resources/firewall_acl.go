@@ -217,7 +217,7 @@ func (r *ACLRuleResource) Read(ctx context.Context, req resource.ReadRequest, re
 	rule, err := r.client.GetACLRule(ctx, siteID, state.ID.ValueString(), aclType)
 	if err != nil {
 		if isConfirmedAbsent(err) {
-			resp.Diagnostics.Append(resp.State.RemoveResource(ctx)...)
+			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError("Error reading ACL rule", err.Error())
