@@ -10,6 +10,12 @@ Prepared 2026-10-27 for the `fix/confirmed-disappearance` branch, head `3a327c92
 - G2 is stacked on G1 `9343503`, which itself follows F and earlier A–E commits (`52ed681` → `8f24c37` → `c210dec` → `9343503` → G2). Opening the current head against upstream `main` would include that entire series. Keep this draft unsubmitted until the dependency chain has an agreed upstream base or is otherwise integrated.
 - The current G2 branch contains conventional commit subjects and its tested changes. The available record confirms `gofmt` and `go test ./...`; the PR template's exact `make fmt`, `make vet`, and `make test` commands have not been run as a set.
 
+## L4 branch reconciliation
+
+The G2 change was also integrated on top of the L4/L8 compatibility branch as `fix/confirmed-disappearance-l4`, head `0cf3c8a1768bbf290cf6bdb2cffaed6b94ccd223`, based on `5b1b14f` (`fix/acl-create-readback`). It is pushed to Will's fork. L4 had moved IP-group client methods from `client.go` to `internal/client/ip_groups.go`; the G2 patch was reconciled by preserving the new typed `notFound` result in that replacement `GetIPGroup` method. IP-group resource Read and Delete therefore recognize confirmed absence on the integrated branch. The original G1-based G2 branch remains unchanged.
+
+The integrated branch was not retested after cherry-picking and conflict resolution. Existing G2 and L4 validation records apply to their respective source branches, not this combined head. Run the focused IP-group/G2 regressions and repository PR gates before submission.
+
 ## Draft PR description
 
 **Title:** `fix(resources): remove confirmed absent resources from state`

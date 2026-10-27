@@ -91,6 +91,10 @@ Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`; implemen
 - [x] Verify deletion/recreation against an isolated real controller using the focused `TestControllerLabNetworkDisappearance` scenario. The broader lab selector also runs unrelated baseline cases and is not claimed as passing.
 - [x] Update the tracker with Go, mock acceptance, Delete-preflight, and focused real-controller results.
 
+### 2026-10-27 — G2 reconciled with L4/L8
+
+`fix/confirmed-disappearance-l4` (`0cf3c8a`) applies the G2 change on top of `fix/acl-create-readback` (`5b1b14f`), preserving the typed confirmed-absence result after L4 moved IP-group methods to `internal/client/ip_groups.go`. This makes IP-group Read state removal and already-absent Delete use the same sentinel as the other collection-backed resources. The combined branch was pushed; no tests were run after conflict resolution. Existing G2 and L4 test evidence remains attached to the separately validated source branches.
+
 ### Conditional — Controller validation and submission
 
 - [x] Validate initial page metadata and collection behavior on Software Controller 6.1.0.19, including 102 real networks; record zero-device limitations.

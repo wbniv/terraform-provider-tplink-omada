@@ -1,5 +1,6 @@
 | Date | Change |
 |------|--------|
+| [2026-10-27](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/f3776d5) | docs: prepare G2 pull request review package |
 | [2026-10-27](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/ff957e6) | docs: reconcile G2 completion checklists |
 | [2026-10-27](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/2d4c026) | docs: record G2 controller validation |
 | [2026-10-27](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/6bf965e) | docs: record G2 regression results |
@@ -9,6 +10,10 @@
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/2f9032c) | docs: record complete pagination evidence and integration plan |
 
 <!--history-meta v1
+f3776d5	author	Will Norris
+f3776d5	added	1
+f3776d5	deleted	1
+f3776d5	files	1
 ff957e6	author	Will Norris
 ff957e6	added	8
 ff957e6	deleted	11
