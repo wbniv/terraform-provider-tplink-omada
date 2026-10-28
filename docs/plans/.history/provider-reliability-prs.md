@@ -1,5 +1,6 @@
 | Date | Change |
 |------|--------|
+| [2026-10-28](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/9d60ba1) | docs(lab): record ES216G live acceptance results |
 | [2026-10-27](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/8e202b7) | docs: record AP preservation verification |
 | [2026-10-27](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/b5d9ebb) | docs: record F15 acceptance verification |
 | [2026-10-27](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/d27327c) | docs: record network adoption verification |
@@ -26,6 +27,10 @@
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/4c6433b) | docs: track provider reliability fixes and validation evidence |
 
 <!--history-meta v1
+9d60ba1	author	Will Norris
+9d60ba1	added	4
+9d60ba1	deleted	2
+9d60ba1	files	1
 8e202b7	author	Will Norris
 8e202b7	added	1
 8e202b7	deleted	1
