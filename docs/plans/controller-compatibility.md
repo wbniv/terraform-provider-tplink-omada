@@ -62,7 +62,7 @@ Locally verified on `fix/acl-create-readback`, based on L4 (`a2b1baa`); committe
 
 ### L5 — Empty device inventory becomes Terraform null
 
-Locally verified on `fix/empty-data-source-collections`, based on L4 (`a2b1baa`); committed as `6d5a721` in its separate worktree. L8 remains independent. Five top-level slices and nested lists now return empty lists consistently; malformed null device responses remain errors. Go/race/build gates, seven mock Terraform steps across all eight collections, live empty/populated inventory checks with a stable plan, and the existing IP/Port-group lifecycle pass with wrapper exit 0. [L5 evidence](../investigations/empty-collections-fix/README.md).
+Locally verified on `fix/empty-data-source-collections`, based on L4 (`a2b1baa`); committed as `6d5a721` in its separate worktree. L8 was completed independently. Five top-level slices and nested lists now return empty lists consistently; malformed null device responses remain errors. Go/race/build gates, seven mock Terraform steps across all eight collections, live empty/populated inventory checks with a stable plan, and the existing IP/Port-group lifecycle pass with wrapper exit 0. [L5 evidence](../investigations/empty-collections-fix/README.md).
 
 - [x] Observe the real devices endpoint returning `[]` and successful client decoding to zero devices.
 - [x] Locate the uninitialized nil slice in the data source and the failing existing acceptance assertion.
@@ -89,7 +89,7 @@ Implementation and validation: [L7 investigation](../investigations/ssid-control
 - [x] Capture default/custom VLAN response fixtures and compare the bundled controller UI serializers.
 - [x] Exclude response summaries `vlanEnable`/top-level `vlanId` and create-only `deviceType` from PATCH; keep `vlanSetting` and existing unknown-field rejection.
 - [x] Add default/custom real-response fixtures and pass secured rename, password rotation, VLAN assignment/clearing, import, replacement, and stable-plan checks on 6.1.0.19.
-- [x] Verify open/secured transitions with L6. Physical-device validation remains separate.
+- [x] Verify open/secured transitions with L6. Physical AP validation remains separate; switch validation is recorded in the [ES216G acceptance plan](es216g-terraform-acceptance.md).
 
 ## Review screens and flow
 
@@ -115,11 +115,11 @@ L1 review after the proposed correction
   Network inventory         PASS required: 102 rows; last ID found
   Repeated paged identities  ERROR required: no partial success
 
-Review action: inspect diff + logs, then prepare the focused commit
-Next action: G2 only after complete discovery is verified
+Review action at the time: inspect diff + logs, then prepare the focused commit
+Next action at the time: G2 only after complete discovery is verified
 ```
 
-| Check | Current review result | Required result |
+| Check | Recorded review result (2026-10-19) | Required result at that review |
 | --- | --- | --- |
 | WLAN data-source plan | Discovery fixed; empty-list assertion now exposed | Read complete known-unpaginated group list, then list SSIDs |
 | Certificate apply | L2 verified: nested PEM activation, stored JKS IDs, explicit restart, exact TLS match | Nonempty certificate/key IDs; verified activation and TLS presentation |
@@ -136,12 +136,14 @@ flowchart TD
     E --> F{All claimed operations pass?}
     F -->|No| B
     F -->|Yes| G[Update evidence and prepare focused commit]
-    G --> H[L1 complete: proceed to G2 disappearance]
+    G --> H[G2 complete: proceed to remaining compatibility gates]
 ```
+
+As of 2026-10-28, L1's WLAN-group correction and live SSID follow-ups are complete. G2 is reconciled with L4/L8 and has passed focused live IP-group disappearance acceptance. H network adoption still needs live validation; see the [reliability tracker](provider-reliability-prs.md).
 
 ## Publication gates
 
 - [ ] Keep each compatibility correction separately reviewable; the lab/vendoring baseline records failures; `fix/wlan-group-collection` contains the L1 production correction.
 - [ ] Recheck upstream heads and contribution requirements before opening PRs.
-- [ ] Declare exact controller/version/test coverage. Physical AP/switch behavior remains unverified.
+- [ ] Declare exact controller/version/test coverage. ES216G switch import and a reversible port update passed on the recorded hardware/firmware/controller combination; AP radio and AP-settings preservation still need an adopted AP test. Traffic enforcement remains unverified.
 - [ ] Publish upstream only when authorized; fork commits and pushes are already authorized for this work.

@@ -32,4 +32,4 @@ The prior L6 work was committed and pushed before L2: production `a046a36`, lab 
 
 Final wrapper exit: 0. Restart verifier exit: 0. See `test-status.txt`, `acceptance.log`, `client-probes.log`, and `certificate-restart.log`. `tested-followup.patch` records tracked changes; `verify-certificate.py` is saved separately because it was untracked when the patch was captured. No upstream PR has been published.
 
-Remaining prehardware work: L3 session recovery, L4 IP groups, L5 empty collections, and G2 confirmed-disappearance recovery. Hardware provisioning/radio/switch/traffic checks remain separate gates.
+L3 session recovery, L4 IP groups, L5 empty collections, and G2 confirmed-disappearance recovery have since been implemented with separate evidence. Hardware provisioning/traffic checks and AP radio/settings validation remain separate gates; ES216G switch import and reversible port acceptance are recorded in the [live acceptance plan](../../plans/es216g-terraform-acceptance.md).

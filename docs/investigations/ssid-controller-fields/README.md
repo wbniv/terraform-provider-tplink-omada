@@ -47,7 +47,7 @@ LAB_CLIENT_RUN='^TestControllerLabCollections/wlan_groups$' \
 dev/controller-lab/run.sh test
 ```
 
-This runs Go vet/unit/build and the focused Terraform/client selection. It does not claim that the full controller suite passes: L2–L6 and G2 remain open. Compilation and execution use the isolated internal Docker network and vendored Go dependencies.
+This recorded run uses Go vet/unit/build and the focused Terraform/client selection; it does not claim the full controller suite passed at that time. L2–L6 and G2 were then open and have since received separate controller evidence. Compilation and execution used the isolated internal Docker network and vendored Go dependencies.
 
 The new custom-VLAN fixture initially compared response-only nested `currentVlanId`/`currentVlanIds` against the writable copy. That assertion was corrected to require their exclusion while comparing the writable VLAN fields. No production policy was broadened to satisfy the mistaken assertion.
 
@@ -57,7 +57,7 @@ The new custom-VLAN fixture initially compared response-only nested `currentVlan
 
 Both test binaries returned zero. The outer shell returned 2 after the tests because its file was edited while running; this is recorded in `wrapper-status.txt`, not hidden as an all-zero harness run. The final script passes `bash -n`; its cleanup command is verified separately. No test binary or production source was changed during the final test run.
 
-L7 is verified for the recorded secured-SSID contract on 6.1.0.19. L6 open-network PMF handling, L2–L5, G2, physical-device validation and upstream publication remain separate work. No new schema or state migration is required by these three exclusions.
+L7 is verified for the recorded secured-SSID contract on 6.1.0.19. L6 open-network PMF handling, L2–L5, and G2 are now implemented with separate 6.1.0.19 controller evidence. Physical AP validation and upstream publication remain open. No new schema or state migration is required by these three exclusions.
 
 ## L6 follow-up
 

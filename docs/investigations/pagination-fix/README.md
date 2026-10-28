@@ -15,7 +15,7 @@ Prepared for Will on 2026-10-19. Implemented on `fix/complete-pagination` in `/h
 - [x] Verify later-page import, failed-refresh recovery, and complete data-source contents using Terraform.
 - [x] Pass final combined compatibility and client race gates; retain logs and integration patches.
 
-Seven maintained files change: two production Go files, two client test files, one provider acceptance test file, README, and a [collection-read guide](https://github.com/wbniv/terraform-provider-tplink-omada/blob/9343503d13a5428e91d121e0104ce7c36cd93cd6/docs/guides/collection-reads.md). No resource schema or state format changes. G2/F10 state removal remains a separate patch; this code continues reporting a missing-resource error after a successful lookup finds no match.
+Seven maintained files change: two production Go files, two client test files, one provider acceptance test file, README, and a [collection-read guide](https://github.com/wbniv/terraform-provider-tplink-omada/blob/9343503d13a5428e91d121e0104ce7c36cd93cd6/docs/guides/collection-reads.md). No resource schema or state format changes. G2/F10 was implemented as a separate patch; its combined L4 live validation is recorded in the [G2 evidence](../confirmed-disappearance-fix/combined-l4-live-acceptance.md).
 
 ## Regression evidence
 
@@ -85,8 +85,8 @@ Suggested migration note: collection reads now fail on inconsistent metadata, mi
 - [x] Retain final evidence and matching seven host/container hashes. Remove the disposable container and both temporary host patches after saving logs and integration patches. Requested worktrees and deliverables are preserved. Final link checks pass with the previously documented README-to-LICENSE baseline exception; all seven prior code worktrees remain clean.
 - [x] Commit/push G1 as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6); all seven committed file hashes match the tested sources and the fork ref is verified. The commit also updates generated README history.
 - [x] Run the [software-controller lab](../software-controller-lab/README.md) on 6.1.0.19: 102-network listing succeeds.
-- [ ] Correct the measured WLAN-group envelope regression under [L1](../../plans/controller-compatibility.md). The earlier mock evidence does not establish real compatibility for this endpoint.
-- [ ] Implement G2 with typed confirmed absence, audited resource Read/Delete behavior, and Terraform refresh/recreation tests. HTTP 404 remains insufficient evidence of deletion.
+- [x] Correct the measured WLAN-group envelope regression under [L1](../../plans/controller-compatibility.md); the focused fix and live SSID follow-ups are complete.
+- [x] Implement G2 with typed confirmed absence, audited resource Read/Delete behavior, and Terraform refresh/recreation tests. Combined L4 live acceptance is in the [G2 evidence](../confirmed-disappearance-fix/combined-l4-live-acceptance.md). HTTP 404 remains insufficient evidence of deletion.
 - [ ] Recheck upstream/standards before publication; record PR, CI, reviews, and merge separately. No upstream PR or comment has been posted.
 
 Complete pagination cannot guarantee a consistent snapshot while a remote collection changes. Stable totals/unique identities catch detectable inconsistencies; controller behavior and access scope still require real-controller verification. Device provisioning, radio and switch-port behavior require physical test devices separately.

@@ -4,7 +4,7 @@ Date: 2026-10-19. Tracker: [work C](../../plans/provider-reliability-prs.md#c--a
 
 Scope: F03, preserving omitted AP radio settings during Terraform updates. Worktree: `/home/will/terraform-provider-tplink-omada-ap-radios`; branch `fix/ap-radio-updates`; base `6bc71b310bc81a90f3ad32194ba8c17947bf79d6`. Committed and pushed to Will's fork on 2026-10-19 as [9f4b4f8](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9f4b4f8c3ccd1c61f10dd2622f2ae2b3bcb9679b). No upstream PR has been opened. A and B remain separate.
 
-**Status: implemented and locally verified.** No live controller or AP was accessed; hardware validation and submission review remain pending.
+**Status:** implemented and locally verified on 2026-10-19. At that time no live controller or AP had been accessed. As of 2026-10-28, the ES216G controller and switch checks are complete, but C's radio changes and the separate `fix/ap-settings-preservation` change still have no controlled-AP validation. AP hardware validation and upstream submission review remain pending; see the [current tracker](../../plans/provider-reliability-prs.md).
 
 ## Implementation
 
@@ -83,6 +83,7 @@ The removed `true`/`4` defaults change configuration semantics: users who requir
 - [x] Record final commands, logs, file hashes, and compatibility limitations.
 - [x] Remove the disposable test container; verify documentation links/anchors, whitespace, all seven file hashes, and the resource example's match with the documentation. Preserve the worktrees and evidence.
 - [ ] Validate on a controlled AP/controller, recording model, firmware/controller versions, accepted payload fields, single/dual-band behavior, radio changes, and readback. Keep the upstream template's hardware-test checkbox unchecked until performed.
+- [ ] Validate the separate AP-settings preservation fix (`fix/ap-settings-preservation`, `bd4762b`) on a controlled AP, including readback of LED and grouped load-balancing/RSSI settings. It currently has mock acceptance only.
 - [x] Recheck upstream heads/CI and contribution requirements on 2026-10-19; commit the seven selected files as `9f4b4f8` and push to `fork/fix/ap-radio-updates`. Tested hashes match the committed files.
 - [ ] Prepare the upstream PR for authorized publication; verify any required attribution from actual session metadata and recheck upstream heads/CI then.
 - [ ] Record PR URL, CI, review, and merge revision in the tracker.

@@ -48,16 +48,17 @@ flowchart TD
 - [x] Pin the `mbentley/omada-controller:6.1.0.19` community image by digest; verify all 533 application JARs against TP-Link's official archive. Runtime: Java 17.0.20.1 and MongoDB 8.0.32.
 - [x] Add repeatable isolated startup, initialization, test, and cleanup scripts; record resource/port limits.
 - [x] Exercise discovery, local login, JSON/status envelopes, lost-local-session recovery, and certificate uploads. Preserve actual failures; naturally expired sessions and working activation remain open.
-- [x] Exercise network/profile CRUD and site/settings credential rotation. Group discovery fails on G1; live SSID lifecycle remains blocked by L1.
+- [x] At the initial controller run, exercise network/profile CRUD and site/settings credential rotation. Group discovery failed on G1 and SSID rename was blocked by L1; those specific failures were subsequently corrected/retested under L1, L6, and L7.
 - [x] Capture actual pagination metadata, page-size behavior, and a 102-network inventory. Do not infer all controller limits from this sample or invent absence mappings.
 - [x] Write a separate [plan for each observed compatibility failure](controller-compatibility.md).
-- [ ] Correct L1–L5, revise mocks to match observed contracts, and rerun affected regression gates.
+- [x] Correct L1–L5, revise mocks to match observed contracts, and rerun affected regression gates. L1's unpaginated WLAN-group fix and live SSID follow-ups are recorded in [controller compatibility](controller-compatibility.md); L2–L5 evidence is linked from the [reliability tracker](provider-reliability-prs.md).
 - [ ] Add a second controller version only after the first is reproducible. Declare exactly which versions and operations passed in PR evidence.
 
 ### Conditional — Physical-device validation
 
-- [ ] Validate adoption and device credentials using a dedicated test device.
-- [ ] Validate B/C switch-port and radio changes with supported hardware and firmware.
+- [x] Validate adoption and device credentials using a dedicated test device: the ES216G v1.20 was adopted and connected; see the [live ES216G acceptance record](es216g-terraform-acceptance.md).
+- [x] Validate B switch-port import planning and a reversible port update on the ES216G; see the [live acceptance record](es216g-terraform-acceptance.md). Coverage is limited to the recorded hardware, firmware, and controller versions.
+- [ ] Validate C radio preservation with a supported AP and firmware. No AP has been tested on the current controller.
 - [ ] Verify configuration propagation and traffic behavior separately from controller acceptance.
 
 Initial execution: local account and one site initialized without cloud binding or adopted devices. Eight of ten existing Terraform acceptance tests pass, including network and port-profile CRUD. A separate four-step credential scenario passes. WLAN discovery fails because the group endpoint ignores pagination and G1 rejects the repeated second page. Empty device state is null because the data source leaves a nil slice; the earlier hardware-assumption explanation was incorrect. [Evidence and limits](../investigations/software-controller-lab/README.md). These results do not establish compatibility for every fix.

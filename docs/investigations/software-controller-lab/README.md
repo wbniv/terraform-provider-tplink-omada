@@ -4,7 +4,7 @@ Investigation for Will, 2026-10-19. Implementation: `test/software-controller-la
 
 ## Result
 
-The real controller runs without adopted devices and supports useful API/CRUD validation. The first existing acceptance run passes **8 of 10 scenarios**, including network create/update/import/destroy and port-profile create/update/destroy. A separate four-step Terraform site/credential scenario passes bootstrap, settings ownership, two accepted credential writes, preservation of selected unrelated settings, and a stable final plan. A client probe creates **101 temporary VLAN networks**, lists **102 total networks**, resolves the final fixture, and restores the original inventory.
+The isolated first-run results below were captured before the later L1–L8 and G2 work. The controller supported useful API/CRUD validation without adopted devices: the initial acceptance run passed **8 of 10 scenarios**, including network create/update/import/destroy and port-profile create/update/destroy. A separate four-step Terraform site/credential scenario passed bootstrap, settings ownership, two accepted credential writes, preservation of selected unrelated settings, and a stable final plan. A client probe created **101 temporary VLAN networks**, listed **102 total networks**, resolved the final fixture, and restored the original inventory. Current follow-up status is in the [controller compatibility plan](../../plans/controller-compatibility.md).
 
 The suite also exposes real compatibility failures. G1 is **not ready for an upstream compatibility claim**: WLAN groups are returned in an unpaginated `data` envelope. Certificate upload, session recovery, IP-group routing, and empty-device state have separate failures. The lab branch retains failing probes; it does not claim to fix these production paths.
 
@@ -57,7 +57,7 @@ The initial commentary described the WLAN error as an identity-field problem. In
 ## Response observations and limits
 
 - Networks and profiles return pagination metadata. A real 102-network inventory completes successfully. The small-page probe shows profiles honoring page 2. Some empty or out-of-range requests clamp `currentPage` to 1; G1 stops at the stated total and therefore does not request those pages during normal complete reads.
-- WLAN groups ignore page number and return their complete `data` envelope with capability fields. SSID empty responses have explicit zero totals; populated SSID behavior still needs live validation after L1.
+- WLAN groups ignore page number and return their complete `data` envelope with capability fields. SSID empty responses have explicit zero totals. Populated SSID lifecycle validation was subsequently completed on Controller 6.1.0.19 under L1/L6/L7; see the [compatibility plan](../../plans/controller-compatibility.md).
 - Devices use a direct array. Empty ACL/mDNS/IdP/role responses succeed, but empty lists do not establish all populated CRUD behaviors or page limits.
 - Certificate diagnostic uploads were removed. No successful provider certificate activation/TLS claim is made.
 - Initial synthetic passwords were rejected by site creation with `-30105`; the wizard's accepted generated credential succeeds. Those initial failures are fixture diagnostics, not a provider-create defect. A name-only raw site PATCH is also rejected; the provider normally sends the full site fields. Do not generalize that exploratory request into a resource failure.
@@ -84,12 +84,12 @@ GitHub rejected new LFS objects in the public fork. Will then requested recreati
 - [x] Retain final vendored-build/test logs and exact counts above.
 - [x] Stop disposable services and remove owned volumes, credentials, and exploratory files after preserving evidence; verify no lab containers/volumes remain.
 - [x] Commit/push the lab and vendor artifacts, with Git and LFS verified separately. This documentation is published on `docs/provider-reliability-review`.
-- [ ] Complete L1–L5 and then resume G2. Physical-device and upstream-submission gates remain open.
+- [x] Complete L1–L5 and resume G2. L1–L8 and G2 are now implemented with recorded Controller 6.1.0.19 evidence; the combined G2/L4 IP-group disappearance check is [recorded separately](../confirmed-disappearance-fix/combined-l4-live-acceptance.md). Physical AP validation and upstream submission gates remain open.
 
 Local implementation commits: Go vendor `5555332a65a4b52761c81b67d7b767e377f70fd3`; lab and LFS archive pointer `0d26e723ce833a44c2043b6be23e69282b189a35`. Production source and `go.mod`/`go.sum` are unchanged from G1. The workspace Markdown-history hook adds `.history/README.md` sidecars; these are retained separately from upstream module contents.
 
-Diagnostic follow-up `c953da6ed94021d7774e26e76e55bb1ef2d7b8fc` excludes missing identity fields from page-overlap counts and reports identified rows. The retained page log predates this correction: its IP-group `repeated_ids` values collapse absent `id`/`idpId` fields and **must not be used as evidence of repeated IP-group identities**. Route success and row counts remain observations; L4 still needs the actual identity/type contract. The WLAN records have valid IDs and are unaffected. `source.sha256` records the corrected harness; the full Go/Terraform test source hashes remain in `build.log`.
+Diagnostic follow-up `c953da6ed94021d7774e26e76e55bb1ef2d7b8fc` excludes missing identity fields from page-overlap counts and reports identified rows. The retained page log predates this correction: its IP-group `repeated_ids` values collapse absent `id`/`idpId` fields and **must not be used as evidence of repeated IP-group identities**. Route success and row counts are historical observations; the actual identity/type contract was later verified under L4. The WLAN records have valid IDs and are unaffected. `source.sha256` records the corrected harness; the full Go/Terraform test source hashes remain in `build.log`.
 
 ## L1 follow-up
 
-The [WLAN collection correction](../wlan-collection-fix/README.md) verifies real discovery, 102-network pagination, and secured SSID create/import/group replacement/stable plan. Rename remains blocked by the D1 writable-field contract (L7); open-network PMF behavior is tracked as L6. The baseline failures above remain a historical record.
+The [WLAN collection correction](../wlan-collection-fix/README.md) verifies real discovery, 102-network pagination, and secured SSID create/import/group replacement/stable plan. At the time of the initial lab report, rename was blocked by the D1 writable-field contract and open-network PMF behavior remained under investigation. L7 later verified rename and other secured SSID changes; L6 verified open-network PMF handling. The baseline failures above remain a historical record.

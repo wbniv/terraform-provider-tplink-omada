@@ -8,9 +8,9 @@ Reviewed `main` at `6bc71b310bc81a90f3ad32194ba8c17947bf79d6`. The review covers
 
 The baseline reproductions use local HTTP servers. Request contents and returned Terraform state are directly observed. Hardware consequences are inferred from those requests; no live Omada controller, switch, or AP was modified. Within the original investigation, only the AP reproduction runs through Terraform's complete planning/apply flow. Other baseline resource probes invoke lifecycle methods with framework state and plan objects.
 
-## Repair progress — updated 2026-10-19
+## Repair progress — updated 2026-10-28
 
-The detailed findings and original logs below describe the reviewed baseline. A, B, and C pass their regression tests and are committed and pushed to Will's fork. D1 (SSID preservation) also passes local verification and is committed/pushed as [80991a5](https://github.com/wbniv/terraform-provider-tplink-omada/commit/80991a5197674a2ee5e2d93ab8d3b571ef4ea774). D2 (SSID VLAN state) is locally verified on top of D1 and committed/pushed as [0bbd076](https://github.com/wbniv/terraform-provider-tplink-omada/commit/0bbd07687fe76f7203779536bc9b5a24095aa6d3). D3 (SSID group identity) is locally verified on D2 and committed/pushed as [ec2d949](https://github.com/wbniv/terraform-provider-tplink-omada/commit/ec2d949699274c3a6dea6cf3d272f22bde13d12e). Real-controller validation and upstream PR submission remain pending. The [PR tracker](../plans/provider-reliability-prs.md#commits-and-fork-branches--2026-10-19) records the commits and remaining gates.
+The detailed findings and original logs below describe the reviewed baseline. The status summaries here reflect later work: A–I are implemented, committed, and pushed to Will's fork. B/F15 has a focused ES216G live acceptance result; G2/L4 has a focused live IP-group disappearance result. H network adoption and AP radio/settings preservation still need their respective live checks. No upstream PR for these reliability fixes is open as of 2026-10-28. The [PR tracker](../plans/provider-reliability-prs.md) records the dependencies and remaining gates.
 
 | Work | Findings | Current evidence and status |
 | --- | --- | --- |
@@ -23,10 +23,11 @@ The detailed findings and original logs below describe the reviewed baseline. A,
 | E — Credentials | F05, F06, F16 | Implemented and locally verified on `fix/site-credentials`, based on A, committed/pushed as [8f24c37](https://github.com/wbniv/terraform-provider-tplink-omada/commit/8f24c37c643a968e51cc77aeb63d3ffe2f0a96e5). All 48 direct cases, 12 Terraform scenarios, full Go gates, and combined A + D1–D3 + E checks pass. [Evidence](site-credentials-fix/README.md). |
 | F — Response validation | F12 | Implemented and locally verified on `fix/http-responses`, based on E; pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31). 223 client cases, full Go/race gates, and 41 combined Terraform scenarios pass with the recorded SSID diagnostic assertion adjustment. [Evidence](http-response-fix/README.md). |
 | G1 — Pagination | F09 | Implemented and locally verified on `fix/complete-pagination`, based on F; pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6). All 94 client cases, full Go/race gates, and 44 combined Terraform scenarios pass with recorded D integration adjustments. [Evidence](pagination-fix/README.md). |
-| G2–H | F10–F11 | Open; software-controller validation and confirmed absence (F10) are next. [G1/G2 plan](../plans/pagination-and-disappearance.md). |
-| I — Switch planning | F15 | New P2 finding discovered during B: importing with the entire `ports` list omitted leaves a persistent update plan. Reproduced on the baseline and B; root cause and fix remain open. [Probe and logs](switch-port-fix/README.md#new-finding-f15-omitted-whole-ports-list-does-not-settle-after-import). |
+| G2 | F10 | Implemented and reconciled with L4/L8 on `fix/confirmed-disappearance-l4`; Go gates and focused live IP-group disappearance/recreation pass. [Combined evidence](confirmed-disappearance-fix/combined-l4-live-acceptance.md). |
+| H — Network adoption | F11 | Implemented and mock-verified on `fix/confirmed-disappearance-l4`; live controller validation remains open. [Tracker](../plans/provider-reliability-prs.md#h--network-adoption). |
+| I — Switch planning | F15 | Fixed on `fix/switch-omitted-ports-plan`; ES216G import, omitted-ports plans, and reversible port-name update/restore pass. [Probe and live record](../plans/es216g-terraform-acceptance.md). |
 
-F15 and F16 are additional to the original 14 findings. B documents the complete-port-list workaround; it does not resolve F15. F16, discovered during E, concerns unrelated site settings becoming zero values and is fixed locally in E. Formatting, vet, build, and full unit tests pass for A, B, C, D1, D2, D3, E, F, and G1 in Go 1.25.6 containers. These results establish local behavior, with hardware compatibility still to be checked.
+F15 and F16 are additional to the original 14 findings. B documents the complete-port-list workaround; I fixes F15. F16, discovered during E, concerns unrelated site settings becoming zero values and is fixed in E. The controller and hardware limits for each fix are recorded in the reliability tracker; AP behavior and H's network-adoption semantics remain live-validation gaps.
 
 ## Findings at a glance
 
@@ -252,11 +253,11 @@ Run `bash docs/investigations/reproduce.sh` from this checkout to reproduce in a
 - [x] Fix both credential paths, F05/F06, and newly reproduced F16 settings preservation under E; direct and Terraform regressions pass. E is committed and pushed; hardware/submission gates remain open.
 - [x] Fix F12 HTTP/envelope classification, safe diagnostics, and redirect handling under F; Docker behavior, Terraform recovery, combined compatibility, and race checks pass. F is committed and pushed as [c210dec](https://github.com/wbniv/terraform-provider-tplink-omada/commit/c210dec9a4bb10a15881f15a250b7c1843543d31).
 - [x] Fix F09 pagination under G1; [94 client cases and combined Terraform evidence](pagination-fix/README.md).
-- [ ] Fix F10 missing-resource handling under G2 using complete discovery.
+- [x] Fix F10 missing-resource handling under G2 using complete discovery; reconciled with L4/L8 and live-tested on the combined branch.
 - [x] Fix F13/F14 locally with import, identity-change, and remote-drift acceptance cases.
-- [ ] Fix F11 network adoption under H.
-- [ ] Investigate and fix F15's persistent plan when the whole switch ports list is omitted (I).
-- [ ] Complete software-controller and applicable physical-device validation and submission review for A–G1; record publication and merge separately.
+- [x] Fix F11 network adoption under H; live controller validation remains pending.
+- [x] Fix F15's persistent plan when the whole switch ports list is omitted (I); live ES216G acceptance is recorded.
+- [ ] Complete remaining controller/AP validation and submission review for A–I; record publication and merge separately.
 - [ ] Add local mock acceptance tests to CI alongside a targeted race job. Keep live-controller compatibility testing as a separate gate for payload/API changes.
 
-The original investigation did not change production code. Subsequent A–G1 fixes are isolated in the branches recorded above; their evidence is stored separately from the baseline logs. No review comments or PRs have been posted to GitHub by this work.
+The original investigation did not change production code. Subsequent A–I fixes are isolated in the branches recorded above; their evidence is stored separately from the baseline logs. As of 2026-10-28, no upstream PR or review comment for these reliability fixes has been posted by this work.

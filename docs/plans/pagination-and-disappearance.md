@@ -93,12 +93,13 @@ Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`; implemen
 
 ### 2026-10-27 — G2 reconciled with L4/L8
 
-`fix/confirmed-disappearance-l4` (`0cf3c8a`) applies the G2 change on top of `fix/acl-create-readback` (`5b1b14f`), preserving the typed confirmed-absence result after L4 moved IP-group methods to `internal/client/ip_groups.go`. This makes IP-group Read state removal and already-absent Delete use the same sentinel as the other collection-backed resources. The combined branch was pushed; no tests were run after conflict resolution. Existing G2 and L4 test evidence remains attached to the separately validated source branches.
+`fix/confirmed-disappearance-l4` (`0cf3c8a`) applies the G2 change on top of `fix/acl-create-readback` (`5b1b14f`), preserving the typed confirmed-absence result after L4 moved IP-group methods to `internal/client/ip_groups.go`. This makes IP-group Read state removal and already-absent Delete use the same sentinel as the other collection-backed resources. The combined branch passed its Go suite, vet, and provider build on 2026-10-27, then passed a focused live IP-group disappearance/recreation acceptance check on Controller 6.1.0.19 on 2026-10-28. See the [combined live record](../investigations/confirmed-disappearance-fix/combined-l4-live-acceptance.md).
 
 ### Conditional — Controller validation and submission
 
 - [x] Validate initial page metadata and collection behavior on Software Controller 6.1.0.19, including 102 real networks; record zero-device limitations.
-- [ ] Repair the unpaginated WLAN-group envelope regression before claiming compatibility. Populated variants of the other empty collections remain unverified.
+- [x] Repair the unpaginated WLAN-group envelope regression under L1; the focused correction and live SSID follow-ups are recorded in [controller compatibility](controller-compatibility.md).
+- [ ] Verify populated variants of the other collections for which only empty real responses have been observed.
 - [x] Commit/push the G2 patch and tracker update; verify remote refs.
 - [x] Recheck upstream and contribution standards; prepare the [G2 PR draft and dependency review](../investigations/confirmed-disappearance-fix/README.md). No PR was opened because the branch includes the unmerged A–F and G1 dependency chain. Publish only when that base is resolved and authorized; record CI/review/merge separately.
 
@@ -106,5 +107,6 @@ Branch `fix/confirmed-disappearance` is based on verified G1 `9343503`; implemen
 
 - [x] G1 is implemented and locally verified, pushed as [9343503](https://github.com/wbniv/terraform-provider-tplink-omada/commit/9343503d13a5428e91d121e0104ce7c36cd93cd6). All 94 client cases, full Go/race gates, three new Terraform scenarios/11 steps, and combined 44 scenarios/216 steps pass. [Evidence and integration notes](../investigations/pagination-fix/README.md).
 - [x] G2 implementation and focused validation are complete for the nine collection-backed resource types. Direct/singleton endpoint resources remain outside automatic state removal because endpoint failures do not prove absence.
+- [x] Reconcile G2 with L4/L8 and rerun combined Go gates plus focused live IP-group disappearance/recreation on Controller 6.1.0.19; see [combined acceptance evidence](../investigations/confirmed-disappearance-fix/combined-l4-live-acceptance.md).
 
-Next: review and submit the G2 change; retain the focused controller test as the live evidence. Broader controller-suite findings outside G2 remain tracked under [L1](controller-compatibility.md) and related follow-ups.
+G2's implementation and live acceptance are complete. Upstream submission remains pending until its stacked base is agreed and reviewed. The next available live behavior check is H's network adoption validation; broader controller follow-ups remain listed under [L1](controller-compatibility.md) and related sections.

@@ -29,20 +29,20 @@ A fresh initialization rejected the previous generated device password with API 
 - [x] All 24 D1–D3 mock Terraform scenarios pass (3 creation, 13 identity, 5 preservation, 3 VLAN).
 - [x] Real WLAN discovery passes; the real 102-network test passes and removes all temporary networks.
 - [x] Final secured-SSID run passes steps 1–4: create, composite-ID import, custom-group replacement, and stable plan.
-- [ ] Step 5 rename remains blocked by L7. Open-network default behavior remains blocked by L6.
+- [x] The initial step-5 rename and open-network defaults exposed L7 and L6 respectively. Later live L7 rename and L6 PMF transition tests passed; see the [controller compatibility plan](../../plans/controller-compatibility.md).
 
-The full suite intentionally exits nonzero for outstanding controller failures. `acceptance.log` records the explicit mode 0 attempt plus D regressions; `acceptance-initial.log` records the default PMF mismatch. `client-probes.log` retains the expected L2/L3/L4 failures. These are not all-green results.
+The initial full suite exited nonzero for controller failures that were still outstanding at that time. `acceptance.log` records the explicit mode 0 attempt plus D regressions; `acceptance-initial.log` records the default PMF mismatch. `client-probes.log` retains the then-expected L2/L3/L4 failures. These historical logs are not all-green results.
 
-`ssid-lifecycle.log` records the final step-5 failure; the preceding four steps passed, and cleanup reported no failure. `wlan-discovery.log` passes. `focused-status.txt` honestly records acceptance exit 1 and client exit 0. `focused-build.log` hashes the compiled final test source; `source.sha256` identifies the final checkout source. The synthetic passphrase in the test fixture is not a real credential.
+`ssid-lifecycle.log` records the initial step-5 failure; the preceding four steps passed, and cleanup reported no failure. `wlan-discovery.log` passes. `focused-status.txt` records that run's acceptance exit 1 and client exit 0. L6/L7 later closed the open-network PMF and secured-SSID rename gaps. `focused-build.log` hashes the compiled final test source; `source.sha256` identifies the final checkout source. The synthetic passphrase in the test fixture is not a real credential.
 
 An intermediate import attempt incorrectly used the bare SSID ID. The final test uses the required `siteID/wlanGroupID/ssidID` composite; no production import defect was inferred from that fixture mistake.
 
 ## Scope and limits
 
-The production correction is limited to WLAN-group discovery. L2–L7 and G2 remain open. No physical AP or switch behavior is claimed. Existing metadata-free paged collection tests for other endpoints remain unchanged.
+The production correction is limited to WLAN-group discovery. At the time of this L1 change, L2–L7 and G2 were still open; they have since been implemented and their controller evidence is recorded in the [compatibility plan](../../plans/controller-compatibility.md) and [reliability tracker](../../plans/provider-reliability-prs.md). This L1 result does not claim physical AP behavior. ES216G switch validation is recorded separately. Existing metadata-free paged collection tests for other endpoints remain unchanged.
 
 - [x] Removed disposable containers, owned networks/volumes, and private runtime files after preserving evidence.
 
 ## L7 follow-up
 
-The [SSID field correction](../ssid-controller-fields/README.md) now passes the previously blocked secured rename, as well as password rotation, custom/default VLAN updates, and stable plans. L6 open-network PMF behavior remains unresolved; the failures above are the historical L1 results.
+The [SSID field correction](../ssid-controller-fields/README.md) passes the previously blocked secured rename, password rotation, custom/default VLAN updates, and stable plans. L6 also passes open-network PMF transitions. The failures above remain the historical L1 results.

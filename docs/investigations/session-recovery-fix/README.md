@@ -43,4 +43,4 @@ The first Python probe incorrectly installed its no-redirect handler alongside t
 
 All Go/Terraform execution used containers, vendored dependencies, and the isolated controller network. The exact tracked patch, untracked redirect test source, raw probe, compiled source hashes, and controller provenance are retained alongside this report. No private cookies, credentials, keys, or Terraform state are included.
 
-L3 is locally verified and committed as `58610fd` on `fix/controller-session-recovery`. Upstream publication remains pending. Next implementation work: L4 IP groups, L5 empty collections, and G2 disappearance recovery. Natural expiry and hardware validation remain explicit verification gates.
+L3 is locally verified and committed as `58610fd` on `fix/controller-session-recovery`. L4, L5, and G2 are now implemented and have separate evidence. Upstream publication remains pending; natural session expiry and applicable hardware validation remain explicit gates.

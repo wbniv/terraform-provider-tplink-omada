@@ -52,4 +52,4 @@ All required checks pass across the combined lab run and focused correction: vet
 
 This fix changes the port-list schema from optional to required and requires identical lists across entries. Call this out as a breaking compatibility correction when preparing a PR. Code is committed as `a2b1baa` on `fix/ip-group-protocol`. No upstream PR has been published.
 
-Next implementation: L8 ACL creation acknowledgment, then L5 empty collections and G2 confirmed-disappearance recovery. Natural session expiry, additional controller versions, and physical hardware/traffic validation remain separate gates.
+L8 ACL creation acknowledgment, L5 empty collections, and G2 confirmed-disappearance recovery are implemented and recorded. G2's combined L4 live result is [here](../confirmed-disappearance-fix/combined-l4-live-acceptance.md). Natural session expiry, additional controller versions, and physical hardware/traffic validation remain separate gates.

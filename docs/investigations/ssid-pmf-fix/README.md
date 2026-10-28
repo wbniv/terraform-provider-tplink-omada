@@ -67,4 +67,4 @@ Open creation and its stable plan passed. Rename revealed that open responses ca
 
 The password generator was also sampled 100 times against the inspected length, character-class, and adjacent-repeat constraints; all samples passed. The controller accepted the generated initialization credential. Historical reports describing password length as the apparent cause are superseded by this verified adjacent-repeat finding.
 
-L6 is locally verified and committed as `a046a36`; its lab changes are `c026124`. L7 was committed and pushed as `ce80af6`, lab changes as `1c4da91`, and documentation as `d543f6f` before starting L6. Remaining controller work is L2–L5; G2 recovery and physical-device validation are still pending.
+L6 is locally verified and committed as `a046a36`; its lab changes are `c026124`. L7 was committed and pushed as `ce80af6`, lab changes as `1c4da91`, and documentation as `d543f6f` before starting L6. L2–L5 and G2 are now implemented with recorded 6.1.0.19 controller evidence. Physical AP validation and upstream submission remain separate gates.

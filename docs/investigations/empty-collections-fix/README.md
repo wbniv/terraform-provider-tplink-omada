@@ -1,6 +1,6 @@
 # L5 — Empty collection state
 
-Work for Will on 2026-10-19. Branch: `fix/empty-data-source-collections`, based on L4 (`a2b1baa`), in `/home/will/terraform-provider-tplink-omada-empty-collections`. L8 remains independent, committed as `5b1b14f` in its existing worktree. Parent: [controller compatibility plan](../../plans/controller-compatibility.md).
+Work for Will on 2026-10-19. Branch: `fix/empty-data-source-collections`, based on L4 (`a2b1baa`), in `/home/will/terraform-provider-tplink-omada-empty-collections`. L8 was developed independently and is committed as `5b1b14f` in its separate worktree. Parent: [controller compatibility plan](../../plans/controller-compatibility.md).
 
 ## Audit and changes
 
@@ -24,7 +24,7 @@ Terraform outputs evaluate both `length()` and list iteration so a null value ca
 
 ## Compatibility and status
 
-Successful empty reads now produce `[]`. Configurations that used `== null` to detect an empty collection should use `length(collection) == 0`. HTTP and protocol failures remain errors. G2 resource-disappearance recovery, physical-device behavior, and other controller versions remain separate work.
+Successful empty reads now produce `[]`. Configurations that used `== null` to detect an empty collection should use `length(collection) == 0`. HTTP and protocol failures remain errors. G2 resource-disappearance recovery is complete, including the combined L4 live result linked below. Physical-device behavior and other controller versions remain separate compatibility gates.
 
 Verification passed with wrapper exit 0, `acceptance_exit=0`, and `client_exit=0`. Committed as `6d5a721`; no upstream PR has been published.
 
@@ -38,6 +38,6 @@ Verification passed with wrapper exit 0, `acceptance_exit=0`, and `client_exit=0
 
 `build.log` records exact compiled source hashes and tool versions. `provenance.json` verifies all 533 controller application JARs against the pinned official 6.1.0.19 archive. `tested-followup.patch` includes the new Terraform regression test. No dependency versions or vendor contents changed.
 
-Next: G2 confirmed-disappearance recovery. Additional controller versions and physical hardware remain verification gates.
+G2 confirmed-disappearance recovery is complete, including the combined L4 live check recorded [here](../confirmed-disappearance-fix/combined-l4-live-acceptance.md). Additional controller versions and populated variants of some collections remain verification gates.
 
 Cleanup completed with exit 0. The runner, controller, relay, lab networks/volumes, credentials, and disposable runtime files were removed. Source worktrees, evidence, the vendored archive, and reusable container images were preserved.

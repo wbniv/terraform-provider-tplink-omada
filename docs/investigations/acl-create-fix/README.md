@@ -26,7 +26,7 @@ The initial build stopped before tests because the new `int64planmodifier` impor
 
 ## Review and limits
 
-The live scope is disabled gateway ACL configuration referencing IPv4 IP/Port groups on 6.1.0.19, without adopted hardware. Traffic enforcement, switch/EAP variants, and other controller versions remain open. G2 disappearance recovery is separate. Committed as `5b1b14f`; no upstream PR has been published.
+The live scope is disabled gateway ACL configuration referencing IPv4 IP/Port groups on 6.1.0.19, without adopted hardware. Traffic enforcement, switch/EAP variants, and other controller versions remain open. G2 disappearance recovery has since been validated on the combined G2/L4 branch. Committed as `5b1b14f`; no upstream PR has been published.
 
 ## Initial live round
 
@@ -38,6 +38,6 @@ The final wrapper exits **0** with `acceptance_exit=0` and `client_exit=0`. Go v
 
 `build.log` records Go 1.25.6, Terraform 1.15.8, and compiled source hashes. `provenance.json` verifies all 533 controller JARs against the pinned official archive. `tested-followup.patch` includes the new source/test files and regenerated vendor package. Earlier failures are retained separately rather than overwritten as successful runs.
 
-L5 empty collections is now verified separately as `6d5a721`. Next implementation: G2 confirmed resource-disappearance recovery. Hardware enforcement remains a separate gate.
+L5 empty collections is verified separately as `6d5a721`; G2 confirmed resource-disappearance recovery is also complete, including combined G2/L4 live acceptance. Hardware traffic enforcement remains a separate gate.
 
 Cleanup completed with exit 0: the runner, controller, relay, lab networks/volumes, runtime credentials, and disposable logs were removed after saving evidence. Reusable images, the vendored archive, source worktrees, and report artifacts were preserved.
