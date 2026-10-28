@@ -32,6 +32,8 @@ The CSV imported into Chrome Password Manager contains only the local controller
 
 The ES216G is adopted and connected to the physical-test controller. No port settings have been deliberately edited for the Terraform test; adoption side effects have not yet been reconciled against the pre-adoption inventory. No configuration backup was made, per the user's instruction.
 
+The controller API currently reports link up on ports 3, 7, and 16. Ports 1–2, 4–6, and 8–15 report link down; port 5 has historical counters despite being down now. Ports 7 and 16 have high counters and must be treated as protected until the uplink is identified. The home-lab notes say the seven Lenovo cables are connected but do not map them to port numbers. A down link is not proof that a port is physically unused.
+
 Before running Terraform writes:
 
 1. Read the port inventory in the controller and compare it with the switch's observed standalone inventory.

@@ -1,5 +1,6 @@
 | Date | Change |
 |------|--------|
+| [2026-10-28](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/6e4c94d) | chore(lab): add ES216G physical acceptance setup |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/68eae38) | docs: record verified ACL and empty collection fixes |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/b79cd0b) | docs: record verified IP group controller protocol |
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/a261bcd) | docs: record verified controller session recovery |
@@ -15,6 +16,10 @@
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/4c6433b) | docs: track provider reliability fixes and validation evidence |
 
 <!--history-meta v1
+6e4c94d	author	Will Norris
+6e4c94d	added	2
+6e4c94d	deleted	0
+6e4c94d	files	1
 68eae38	author	Will Norris
 68eae38	added	1
 68eae38	deleted	1

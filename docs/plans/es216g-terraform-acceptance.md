@@ -9,7 +9,8 @@
 - Adoption first failed because the controller-generated site device-account credentials in `.es216g-lab/credentials.json` were not the switch's current standalone login. Retrying with the credentials used to sign in to `https://192.168.4.22` succeeded.
 - The controller UI reports the ES216G as **CONNECTED**. The provider lab's device-list query reports MAC `D4-D6-DF-1C-3B-58`, model ES216G, firmware `1.0.1 Build 20260329 Rel.14489`, status `11`.
 - The success screen is preserved in the [ES216G operator instructions](../instructions/es216g-lab.md#successful-adoption).
-- Terraform import, port inventory/reconciliation, omitted-`ports` planning, and reversible port-name testing remain pending.
+- The provider's F15 worktree (`fix/switch-omitted-ports-plan`, commit `286a9a2`) imported the switch successfully using `<site ID>/<MAC>`. Two consecutive refresh/plans with `ports` omitted reported **No changes**. Terraform state and the temporary fixture are under `/tmp/es216g-terraform-acceptance`, outside the repository.
+- Terraform's omitted-`ports` acceptance passed. Port map reconciliation and the reversible port-name test remain pending.
 
 ## Decision
 
@@ -80,7 +81,9 @@ flowchart TD
 
 ### 2. Adopt the ES216G
 
-- [ ] Capture read-only device identity and port inventory from the standalone UI: MAC, model/revision, firmware, port names/link states, and the uplink port.
+- [x] Capture read-only device identity from the controller: MAC, model/revision, and firmware. The controller reports 16 configured ports named `Port1` through `Port16`, all enabled with profile `All`.
+- [x] Capture current controller link state: ports 3, 7, and 16 report link up; ports 1–2, 4–6, and 8–15 report link down. Port 3 reports link-speed code 1; ports 7 and 16 report code 3. Port 5 is down but has nonzero historical counters.
+- [ ] Reconcile the controller view against a pre-adoption standalone inventory and physical cable map. Home-lab notes say the seven Lenovo links are connected but do not map them to switch ports; a link-down state alone does not prove that a port has no cable.
 - [ ] Confirm the test port is unused/non-uplink; do not guess based on the port number.
 - [x] Create the test site and adopt only the discovered ES216G. The first attempt with controller-generated site device-account credentials failed; retrying with the switch's current standalone UI credentials succeeded.
 - [x] Confirm the controller reports the ES216G as connected. Record the MAC, model, and firmware above.
@@ -88,10 +91,10 @@ flowchart TD
 
 ### 3. Verify Terraform read/import behavior
 
-- [ ] Configure the provider against the controller's LAN address and create a temporary resource block for the ES216G.
-- [ ] Import using `<site ID>/<MAC>`.
-- [ ] First omit the whole `ports` attribute and require a stable, empty second plan. This covers F15 on the real controller/device path without changing port configuration.
-- [ ] Check that a refresh preserves the controller-reported device identity and port state.
+- [x] Configure the F15 worktree provider against the controller's LAN address and create a temporary resource block for the ES216G.
+- [x] Import using `<site ID>/<MAC>`.
+- [x] Omit the whole `ports` attribute and require a stable, empty second plan. Two consecutive plans were empty on the real controller/device path, with no port configuration changes.
+- [x] Refresh preserved the controller-reported device identity and configured port state.
 
 ### 4. Verify a reversible port update
 
