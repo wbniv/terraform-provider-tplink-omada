@@ -30,13 +30,15 @@ The CSV imported into Chrome Password Manager contains only the local controller
 
 ## Current state and next steps
 
-The ES216G is adopted and connected to the physical-test controller. No port settings have been deliberately edited for the Terraform test; adoption side effects have not yet been reconciled against the pre-adoption inventory. No configuration backup was made, per the user's instruction.
+The ES216G is adopted and remains listed in the physical-test controller. During acceptance, port 8's name was changed temporarily and restored to `Port8`; controller readback confirmed that all writable port settings match the pre-test snapshot. No configuration backup was made, per the user's instruction. The controller remains running at `192.168.4.24:8043` for Terraform use.
 
-The controller API currently reports link up on ports 3, 7, and 16. Ports 1–2, 4–6, and 8–15 report link down; port 5 has historical counters despite being down now. Ports 7 and 16 have high counters and must be treated as protected until the uplink is identified. The home-lab notes say the seven Lenovo cables are connected but do not map them to port numbers. A down link is not proof that a port is physically unused.
+Will confirmed ports 8–15 are physically empty and port 16 is the uplink. All seven Lenovo cables are connected; only one Lenovo was powered on during testing. The most recent controller read showed link up on ports 2, 4, and 16, so link state should not be used as a substitute for the physical cable map.
 
-Before running Terraform writes:
+For future Terraform work:
 
-1. Read the port inventory in the controller and compare it with the switch's observed standalone inventory.
-2. Identify the uplink and a link-down, unused non-uplink test port; do not guess from port number.
-3. Perform the Terraform import and omitted-`ports` stable-plan check from the acceptance plan.
-4. Only after those checks pass, perform the planned reversible display-name update on the verified unused port.
+1. Keep the controller running, or start it with `bash dev/es216g-lab/run.sh up` before provider operations.
+2. Import the switch as `<site ID>/D4-D6-DF-1C-3B-58`.
+3. When configuring `ports`, declare all 16 ports. The acceptance plan demonstrates preserving current writable fields.
+4. Treat ports 8–15 as physically empty and port 16 as the uplink based on the current cable map; recheck after moving cables.
+
+The temporary CSV imported into Chrome Password Manager was securely deleted after import.
