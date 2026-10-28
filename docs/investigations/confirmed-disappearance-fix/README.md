@@ -14,7 +14,7 @@ Prepared 2026-10-27 for the `fix/confirmed-disappearance` branch, head `3a327c92
 
 The G2 change was also integrated on top of the L4/L8 compatibility branch as `fix/confirmed-disappearance-l4`, head `0cf3c8a1768bbf290cf6bdb2cffaed6b94ccd223`, based on `5b1b14f` (`fix/acl-create-readback`). It is pushed to Will's fork. L4 had moved IP-group client methods from `client.go` to `internal/client/ip_groups.go`; the G2 patch was reconciled by preserving the new typed `notFound` result in that replacement `GetIPGroup` method. IP-group resource Read and Delete therefore recognize confirmed absence on the integrated branch. The original G1-based G2 branch remains unchanged.
 
-The integrated branch was not retested after cherry-picking and conflict resolution. Existing G2 and L4 validation records apply to their respective source branches, not this combined head. Run the focused IP-group/G2 regressions and repository PR gates before submission.
+The integrated branch has now passed a focused live IP-group disappearance acceptance check on Omada Software Controller 6.1.0.19. The [combined L4 live record](combined-l4-live-acceptance.md) covers typed confirmed absence, Terraform state removal/recreation, idempotent delete, and cleanup on `fix/confirmed-disappearance-l4` (`0cf3c8a`). The original G2 live network scenario and the repository PR gates remain separately recorded; this focused check does not replace the upstream base/dependency review.
 
 ## Draft PR description
 
