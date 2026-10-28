@@ -12,6 +12,7 @@
 | [Controller time zone management](controller-time-zone.md) | Establish whether the Global View controller time zone is distinct from the existing Omada site time-zone fields, then plan safe Terraform ownership and live acceptance. | Changed manually in the UI; final value and API/UI mapping remain unverified. |
 | [Controller compatibility follow-ups](controller-compatibility.md) | Separate plans for WLAN pagination, certificate protocol, lost sessions, IP-group routes, and empty devices. | L1–L8 and G2 are implemented and have recorded 6.1.0.19 controller results. Natural session expiry, populated variants of some collections, network-adoption validation, and AP hardware checks remain open. |
 | [Existing upstream PRs](open-pull-requests.md) | Review dependency/workflow upgrades and the switch operational-speed change. | PRs #18, #20, and #23 were still open on 2026-10-28; status snapshot is in the plan. |
+| [Switch port operational-speed write invariant](pr23-operational-speed-interaction-test.md) | Guard the invariant that a port write never sends observed speed as configured `linkSpeed`, even when observed speed changes during apply. | Test-only mock regression check passed on PR #23 head; also passes without its schema change. |
 
 The [baseline investigation](../investigations/2026-10-18-code-review.md) links each finding to its reproductions and current repair status. The documentation is maintained on `docs/provider-reliability-review`; code fixes have separate branches listed in the tracker.
 

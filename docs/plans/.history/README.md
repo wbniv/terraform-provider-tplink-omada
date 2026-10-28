@@ -1,5 +1,6 @@
 | Date | Change |
 |------|--------|
+| [2026-10-28](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/75178a0) | docs: reconcile stale reliability status |
 | [2026-10-28](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/9d60ba1) | docs(lab): record ES216G live acceptance results |
 | [2026-10-28](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/6feb284) | docs(lab): record ES216G import acceptance |
 | [2026-10-28](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/6e4c94d) | chore(lab): add ES216G physical acceptance setup |
@@ -18,6 +19,10 @@
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/4c6433b) | docs: track provider reliability fixes and validation evidence |
 
 <!--history-meta v1
+75178a0	author	Will Norris
+75178a0	added	5
+75178a0	deleted	5
+75178a0	files	1
 9d60ba1	author	Will Norris
 9d60ba1	added	1
 9d60ba1	deleted	1
