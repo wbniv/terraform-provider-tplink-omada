@@ -161,3 +161,7 @@ index 3368afb..1922d82 100644
  	resource.Test(t, resource.TestCase{
  		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 ```
+
+## Submission
+
+Opened [follow-up PR #1](https://github.com/siddolo/terraform-provider-tplink-omada/pull/1) against `siddolo:fix/switch-port-operational-speed`, the head branch for upstream PR #23. Its source is `wbniv/terraform-provider-tplink-omada-upstream-fork:test/switch-operational-speed-write-invariant` at commit `a228358`. Merging the follow-up advances that branch, so the added test will appear in PR #23. It is awaiting review.

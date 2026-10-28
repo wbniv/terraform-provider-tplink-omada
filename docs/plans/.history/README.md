@@ -1,5 +1,6 @@
 | Date | Change |
 |------|--------|
+| [2026-10-28](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/e752363) | docs: document switch speed write invariant test |
 | [2026-10-28](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/75178a0) | docs: reconcile stale reliability status |
 | [2026-10-28](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/9d60ba1) | docs(lab): record ES216G live acceptance results |
 | [2026-10-28](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/6feb284) | docs(lab): record ES216G import acceptance |
@@ -19,6 +20,10 @@
 | [2026-10-19](https://github.com/emanuelbesliu/terraform-provider-tplink-omada/commit/4c6433b) | docs: track provider reliability fixes and validation evidence |
 
 <!--history-meta v1
+e752363	author	Will Norris
+e752363	added	1
+e752363	deleted	0
+e752363	files	1
 75178a0	author	Will Norris
 75178a0	added	5
 75178a0	deleted	5
