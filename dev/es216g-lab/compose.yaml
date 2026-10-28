@@ -1,0 +1,36 @@
+name: omada-es216g-physical
+
+services:
+  controller:
+    container_name: omada-es216g-controller
+    image: mbentley/omada-controller:6.1.0.19@sha256:94571a6544a5db9419681d3cecdaa7dccf9042e586cae9a1c34c3f22994e6b38
+    labels:
+      omada.provider.es216g: "true"
+    restart: unless-stopped
+    mem_limit: 2g
+    cpus: 2
+    environment:
+      TZ: Asia/Bangkok
+      JAVA_MIN_HEAP_SIZE: 128m
+      JAVA_MAX_HEAP_SIZE: 768m
+      MONGOD_EXTRA_ARGS: --wiredTigerCacheSizeGB 0.25
+      SHOW_SERVER_LOGS: "false"
+    ports:
+      - "${ES216G_CONTROLLER_IP:?set by run.sh}:8043:8043/tcp"
+      - "${ES216G_CONTROLLER_IP:?set by run.sh}:8088:8088/tcp"
+      - "${ES216G_CONTROLLER_IP:?set by run.sh}:8044:8044/tcp"
+      - "${ES216G_CONTROLLER_IP:?set by run.sh}:8843:8843/tcp"
+      - "${ES216G_CONTROLLER_IP:?set by run.sh}:27001:27001/udp"
+      - "${ES216G_CONTROLLER_IP:?set by run.sh}:29810:29810/udp"
+      - "${ES216G_CONTROLLER_IP:?set by run.sh}:29811-29817:29811-29817/tcp"
+    volumes:
+      - controller-data:/opt/tplink/EAPController/data
+      - controller-logs:/opt/tplink/EAPController/logs
+
+volumes:
+  controller-data:
+    labels:
+      omada.provider.es216g: "true"
+  controller-logs:
+    labels:
+      omada.provider.es216g: "true"
